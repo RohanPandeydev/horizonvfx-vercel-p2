@@ -6,7 +6,8 @@
       "Bash(netstat:*)",
       "Bash(npm install:*)",
       "Bash(findstr:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(pnpm add:*)"
     ]
   }
 }
