@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, ArrowRight } from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { TW, GRADIENTS } from "@/lib/colors";
 
 interface NavigationProps {
@@ -11,6 +13,7 @@ interface NavigationProps {
 export default function Navigation({ loading }: NavigationProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 100);
@@ -19,11 +22,11 @@ export default function Navigation({ loading }: NavigationProps) {
   }, []);
 
   const navItems = [
-    "Home",
-    "About Us",
-    "Team Player",
-    "Showcase",
-    "Contact Us",
+    { name: "Home", href: "/" },
+    { name: "About Us", href: "/about" },
+    { name: "Team", href: "/team" },
+    { name: "Showcase", href: "/showcase" },
+    { name: "Contact Us", href: "/contact" },
   ];
 
   return (
@@ -39,8 +42,8 @@ export default function Navigation({ loading }: NavigationProps) {
         }`}
       >
         <div className="max-w-[1600px] mx-auto px-6 lg:px-8 flex items-center justify-between">
-          <motion.a
-            href="#home"
+          <Link href="/">
+          <motion.div
             whileHover={{ scale: 1.05, rotate: 2 }}
             whileTap={{ scale: 0.95 }}
             className="cursor-pointer"
@@ -50,21 +53,31 @@ export default function Navigation({ loading }: NavigationProps) {
               alt="HorizonVFX"
               className="h-8 md:h-10 lg:h-12"
             />
-          </motion.a>
-          <div className="hidden md:flex items-center gap-6 lg:gap-8">
+          </motion.div>
+        </Link>
+        <div className="hidden md:flex items-center gap-6 lg:gap-8">
             {navItems.map((item, i) => (
-              <motion.a
-                key={item}
-                href={`#${item.toLowerCase().replace(" ", "-")}`}
-                className="text-xs lg:text-sm font-medium relative group text-white/90 hover:text-white"
-                whileHover={{ y: -2 }}
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.7 + i * 0.1 }}
-              >
-                {item}
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-500 to-green-500 group-hover:w-full transition-all duration-300" />
-              </motion.a>
+              <Link key={item.href} href={item.href}>
+                <motion.span
+                  className={`text-xs lg:text-sm font-medium relative group transition-colors ${
+                    pathname === item.href
+                      ? "text-transparent bg-gradient-to-r from-blue-500 to-green-500 bg-clip-text font-bold"
+                      : "text-white/90 hover:text-white"
+                  }`}
+                  whileHover={{ y: -2 }}
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.7 + i * 0.1 }}
+                >
+                  {item.name}
+                  <span className="absolute -bottom-1 left-0 h-0.5 bg-gradient-to-r from-blue-500 to-green-500 transition-all duration-300"
+                    style={{
+                      width: pathname === item.href ? "100%" : "0"
+                    }}
+                  />
+                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-500 to-green-500 group-hover:w-full transition-all duration-300" />
+                </motion.span>
+              </Link>
             ))}
           </div>
           <button
@@ -104,23 +117,26 @@ export default function Navigation({ loading }: NavigationProps) {
             />
             <div className="relative flex flex-col justify-center h-full px-8 md:px-12 space-y-6 md:space-y-8">
               {navItems.map((item, i) => (
-                <motion.a
-                  key={item}
-                  href={`#${item.toLowerCase().replace(" ", "-")}`}
-                  initial={{ opacity: 0, x: 50 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.1 }}
-                  className="text-3xl md:text-4xl font-bold flex items-center justify-between group"
-                  onClick={() => setMenuOpen(false)}
-                >
-                  <span className="bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent group-hover:from-blue-500 group-hover:to-green-500 transition-all duration-300">
-                    {item}
-                  </span>
-                  <ArrowRight
-                    className="group-hover:translate-x-2 transition-transform"
-                    size={32}
-                  />
-                </motion.a>
+                <Link key={item.href} href={item.href} onClick={() => setMenuOpen(false)}>
+                  <motion.div
+                    initial={{ opacity: 0, x: 50 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.1 }}
+                    className="text-3xl md:text-4xl font-bold flex items-center justify-between group"
+                  >
+                    <span className={`bg-gradient-to-r bg-clip-text text-transparent transition-all duration-300 ${
+                      pathname === item.href
+                        ? "from-blue-500 to-green-500"
+                        : "from-white to-white/60 group-hover:from-blue-500 group-hover:to-green-500"
+                    }`}>
+                      {item.name}
+                    </span>
+                    <ArrowRight
+                      className="group-hover:translate-x-2 transition-transform"
+                      size={32}
+                    />
+                  </motion.div>
+                </Link>
               ))}
             </div>
           </motion.div>

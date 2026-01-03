@@ -11,6 +11,7 @@ import {
   Twitter,
   ArrowRight,
 } from "lucide-react";
+import Link from "next/link";
 import MagneticButton from "./MagneticButton";
 import { GRADIENTS, TW } from "@/lib/colors";
 
@@ -104,21 +105,28 @@ export default function Footer() {
               Quick Links
             </h3>
             <div className="space-y-3">
-              {["Home", "About Us", "Team", "Showcase", "Services", "Contact"].map(
+              {[
+                { name: "Home", href: "/" },
+                { name: "About Us", href: "/about" },
+                { name: "Team", href: "/team" },
+                { name: "Showcase", href: "/showcase" },
+                { name: "Services", href: "/" },
+                { name: "Contact", href: "/contact" },
+              ].map(
                 (item, i) => (
-                  <motion.a
-                    key={item}
-                    href={`#${item.toLowerCase().replace(" ", "-")}`}
-                    className="block text-gray-400 hover:text-blue-400 transition-colors text-sm relative group"
-                    whileHover={{ x: 5 }}
-                    initial={{ opacity: 0, x: -10 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: 0.2 + i * 0.05 }}
-                  >
-                    {item}
-                    <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-500 to-green-500 group-hover:w-full transition-all duration-300" />
-                  </motion.a>
+                  <Link key={item.href} href={item.href}>
+                    <motion.span
+                      className="block text-gray-400 hover:text-blue-400 transition-colors text-sm relative group cursor-pointer"
+                      whileHover={{ x: 5 }}
+                      initial={{ opacity: 0, x: -10 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: 0.2 + i * 0.05 }}
+                    >
+                      {item.name}
+                      <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-500 to-green-500 group-hover:w-full transition-all duration-300" />
+                    </motion.span>
+                  </Link>
                 )
               )}
             </div>
@@ -201,15 +209,16 @@ export default function Footer() {
 
             {/* CTA Button */}
             <MagneticButton>
-              <motion.a
-                href="#contact"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-green-500 rounded-lg font-semibold text-white text-sm"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <span>Start a Project</span>
-                <ArrowRight size={16} />
-              </motion.a>
+              <Link href="/contact">
+                <motion.div
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-green-500 rounded-lg font-semibold text-white text-sm cursor-pointer"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <span>Start a Project</span>
+                  <ArrowRight size={16} />
+                </motion.div>
+              </Link>
             </MagneticButton>
 
             {/* Stats */}

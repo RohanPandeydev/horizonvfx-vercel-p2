@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import ShutterPreloader from "@/components/shared/ShutterPreloader";
+import MainLayout from "@/components/MainLayout";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -10,9 +10,10 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Horizon Studio",
+  title: "HorizonVFX - Where Creativity Meets Horizon",
   description:
-    "A Horizon studio specialized in visual effects, post-production, 3D, compositing, and grading",
+    "Pioneering visual excellence in the digital age. Specialized in VFX, 3D animation, compositing, motion graphics, and post-production services.",
+  keywords: ["VFX", "Visual Effects", "3D Animation", "Motion Graphics", "Post Production", "Compositing", "Color Grading"],
 };
 
 export default function RootLayout({
@@ -21,9 +22,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className="scroll-smooth">
       <body className={`${inter.variable} font-sans antialiased`}>
-        {children}
+        <MainLayout>{children}</MainLayout>
       </body>
     </html>
   );
