@@ -27,7 +27,7 @@ export default function Hero({ loading, scrollY }: HeroProps) {
       <ParticleGalaxy />
 
       <motion.div
-        className="absolute inset-0 mx-4 md:mx-10 p-1 rounded-xl overflow-hidden"
+        className="absolute inset-0 p-1 md:mx-6 p-1 rounded-xl overflow-hidden"
         initial={{ scale: 1.1, opacity: 0 }}
         animate={{ scale: loading ? 1.1 : 1, opacity: 1 }}
         transition={{ duration: 1.5, ease: "easeOut", delay: 0.5 }}

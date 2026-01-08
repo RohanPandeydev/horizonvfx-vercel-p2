@@ -19,7 +19,8 @@ export default function ContactPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
             style={{
-              background: "linear-gradient(135deg, #10b981 0%, #06b6d4 50%, #3b82f6 100%)",
+              background:
+                "linear-gradient(135deg, #10b981 0%, #06b6d4 50%, #3b82f6 100%)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
               backgroundClip: "text",
@@ -119,7 +120,7 @@ export default function ContactPage() {
                     <h3 className="text-lg font-semibold text-white mb-1">
                       Location
                     </h3>
-                    <p className="text-gray-400">Kolkata, India</p>
+                    <p className="text-gray-400">Mumbai, India</p>
                   </div>
                 </motion.div>
               </div>
@@ -130,7 +131,7 @@ export default function ContactPage() {
               initial={{ opacity: 0, x: 50 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.8 }}
-              className="p-8 rounded-2xl bg-gradient-to-br from-zinc-800/50 to-zinc-900/50 backdrop-blur-sm border border-white/10"
+              className="p-10 md:p-12 rounded-2xl bg-gradient-to-br from-zinc-800/50 to-zinc-900/50 backdrop-blur-sm border border-white/10"
             >
               <h2 className="text-2xl font-bold mb-6 text-white">
                 Send us a message

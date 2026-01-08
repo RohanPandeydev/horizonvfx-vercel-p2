@@ -12,7 +12,7 @@ const showcaseProjects = [
     image: "https://horizonvfx.in/images/Pushpa_2.png",
     description: "Mind-bending visual effects for the blockbuster sequel",
     gradient: "from-orange-500 to-red-500",
-    stats: "200+ VFX Shots"
+    stats: "200+ VFX Shots",
   },
   {
     title: "Commercial Campaign",
@@ -20,7 +20,7 @@ const showcaseProjects = [
     image: "https://horizonvfx.in/images/Commercial.jpg",
     description: "Stunning commercial visuals with photorealistic CG",
     gradient: "from-blue-500 to-cyan-500",
-    stats: "50+ Shots"
+    stats: "50+ Shots",
   },
   {
     title: "Game Cinematics",
@@ -28,7 +28,7 @@ const showcaseProjects = [
     image: "https://horizonvfx.in/images/game.jpg",
     description: "Immersive game trailers and cinematic sequences",
     gradient: "from-purple-500 to-pink-500",
-    stats: "15+ Trailers"
+    stats: "15+ Trailers",
   },
   {
     title: "Unreal Engine Integration",
@@ -36,15 +36,15 @@ const showcaseProjects = [
     image: "https://horizonvfx.in/images/unreal.jpg",
     description: "Real-time rendering and virtual production",
     gradient: "from-green-500 to-emerald-500",
-    stats: "30+ Projects"
-  }
+    stats: "30+ Projects",
+  },
 ];
 
 const services = [
   { icon: "🎬", name: "Film & OTT", count: "100+" },
   { icon: "🎮", name: "Gaming", count: "50+" },
   { icon: "📺", name: "Commercial", count: "200+" },
-  { icon: "🖥️", name: "Unreal Engine", count: "30+" }
+  { icon: "🖥️", name: "Unreal Engine", count: "30+" },
 ];
 
 export default function ShowcasePage() {
@@ -74,7 +74,8 @@ export default function ShowcasePage() {
             <motion.h1
               className="text-5xl md:text-7xl lg:text-8xl font-bold mb-8"
               style={{
-                background: "linear-gradient(135deg, #06b6d4 0%, #3b82f6 50%, #10b981 100%)",
+                background:
+                  "linear-gradient(135deg, #06b6d4 0%, #3b82f6 50%, #10b981 100%)",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
                 backgroundClip: "text",
@@ -88,7 +89,8 @@ export default function ShowcasePage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
             >
-              Explore our portfolio of visual effects and animation projects that push the boundaries of creativity
+              Explore our portfolio of visual effects and animation projects
+              that push the boundaries of creativity
             </motion.p>
           </motion.div>
 
@@ -106,7 +108,9 @@ export default function ShowcasePage() {
                 className="p-6 rounded-2xl bg-gradient-to-br from-zinc-800/50 to-zinc-900/50 backdrop-blur-sm border border-white/10"
               >
                 <div className="text-4xl mb-2">{service.icon}</div>
-                <div className="text-3xl font-bold text-white mb-1">{service.count}</div>
+                <div className="text-3xl font-bold text-white mb-1">
+                  {service.count}
+                </div>
                 <div className="text-sm text-gray-400">{service.name}</div>
               </motion.div>
             ))}
@@ -161,17 +165,23 @@ export default function ShowcasePage() {
                       src={project.image}
                       alt={project.title}
                       className="w-full h-full object-cover"
-                      animate={hoveredIndex === index ? { scale: 1.1 } : { scale: 1 }}
+                      animate={
+                        hoveredIndex === index ? { scale: 1.1 } : { scale: 1 }
+                      }
                       transition={{ duration: 0.5 }}
                     />
                     {/* Gradient overlay */}
-                    <div className={`absolute inset-0 bg-gradient-to-t ${project.gradient} opacity-0 group-hover:opacity-70 transition-opacity duration-500`} />
+                    <div
+                      className={`absolute inset-0 bg-gradient-to-t ${project.gradient} opacity-0 group-hover:opacity-70 transition-opacity duration-500`}
+                    />
 
                     {/* Play button */}
                     <motion.div
                       className="absolute inset-0 flex items-center justify-center"
                       initial={{ scale: 0 }}
-                      animate={hoveredIndex === index ? { scale: 1 } : { scale: 0 }}
+                      animate={
+                        hoveredIndex === index ? { scale: 1 } : { scale: 0 }
+                      }
                       transition={{ duration: 0.3, delay: 0.1 }}
                     >
                       <div className="w-20 h-20 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
@@ -187,19 +197,23 @@ export default function ShowcasePage() {
                       animate={hoveredIndex === index ? { x: 0 } : { x: -20 }}
                       className="flex items-center gap-3 mb-3"
                     >
-                      <span className={`px-3 py-1 rounded-full bg-gradient-to-r ${project.gradient} text-white text-xs font-semibold`}>
+                      <span
+                        className={`px-3 py-1 rounded-full bg-gradient-to-r ${project.gradient} text-white text-xs font-semibold`}
+                      >
                         {project.category}
                       </span>
-                      <span className="text-gray-400 text-sm">{project.stats}</span>
+                      <span className="text-gray-400 text-sm">
+                        {project.stats}
+                      </span>
                     </motion.div>
 
-                    <h3 className={`text-3xl font-bold mb-3 bg-gradient-to-r ${project.gradient} bg-clip-text text-transparent`}>
+                    <h3
+                      className={`text-3xl font-bold mb-3 bg-gradient-to-r ${project.gradient} bg-clip-text text-transparent`}
+                    >
                       {project.title}
                     </h3>
 
-                    <p className="text-gray-400 mb-6">
-                      {project.description}
-                    </p>
+                    <p className="text-gray-400 mb-6">{project.description}</p>
 
                     <motion.button
                       className={`inline-flex items-center gap-2 text-transparent bg-gradient-to-r ${project.gradient} bg-clip-text font-semibold`}
@@ -214,7 +228,9 @@ export default function ShowcasePage() {
                   <motion.div
                     className={`absolute bottom-0 left-0 h-1 bg-gradient-to-r ${project.gradient}`}
                     initial={{ width: 0 }}
-                    animate={hoveredIndex === index ? { width: "100%" } : { width: 0 }}
+                    animate={
+                      hoveredIndex === index ? { width: "100%" } : { width: 0 }
+                    }
                     transition={{ duration: 0.3 }}
                   />
                 </div>
@@ -241,7 +257,8 @@ export default function ShowcasePage() {
               Galactic Showcase
             </h2>
             <p className="text-xl text-gray-400 max-w-3xl mx-auto">
-              Dive into our Galactic Showcase for a glimpse into the cosmic tapestry
+              Dive into our Galactic Showcase for a glimpse into the cosmic
+              tapestry
             </p>
           </motion.div>
 
@@ -270,14 +287,38 @@ export default function ShowcasePage() {
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {[
-              { name: "After Effects", icon: "🎨", color: "from-purple-500 to-blue-500" },
+              {
+                name: "After Effects",
+                icon: "🎨",
+                color: "from-purple-500 to-blue-500",
+              },
               { name: "Nuke", icon: "💣", color: "from-blue-500 to-cyan-500" },
               { name: "Maya", icon: "🔷", color: "from-cyan-500 to-teal-500" },
-              { name: "Unreal Engine", icon: "🎮", color: "from-red-500 to-orange-500" },
-              { name: "Houdini", icon: "🌀", color: "from-orange-500 to-yellow-500" },
-              { name: "Blender", icon: "🔶", color: "from-yellow-500 to-green-500" },
-              { name: "Cinema 4D", icon: "📦", color: "from-green-500 to-emerald-500" },
-              { name: "Substance", icon: "🎭", color: "from-pink-500 to-rose-500" }
+              {
+                name: "Unreal Engine",
+                icon: "🎮",
+                color: "from-red-500 to-orange-500",
+              },
+              {
+                name: "Houdini",
+                icon: "🌀",
+                color: "from-orange-500 to-yellow-500",
+              },
+              {
+                name: "Blender",
+                icon: "🔶",
+                color: "from-yellow-500 to-green-500",
+              },
+              {
+                name: "Cinema 4D",
+                icon: "📦",
+                color: "from-green-500 to-emerald-500",
+              },
+              {
+                name: "Substance",
+                icon: "🎭",
+                color: "from-pink-500 to-rose-500",
+              },
             ].map((tech, i) => (
               <motion.div
                 key={i}
@@ -290,11 +331,15 @@ export default function ShowcasePage() {
               >
                 <div className="p-6 rounded-2xl bg-gradient-to-br from-zinc-800/50 to-zinc-900/50 backdrop-blur-sm border border-white/10 text-center">
                   <div className="text-5xl mb-3">{tech.icon}</div>
-                  <div className={`text-sm font-semibold bg-gradient-to-r ${tech.color} bg-clip-text text-transparent`}>
+                  <div
+                    className={`text-sm font-semibold bg-gradient-to-r ${tech.color} bg-clip-text text-transparent`}
+                  >
                     {tech.name}
                   </div>
                   {/* Hover glow */}
-                  <div className={`absolute inset-0 rounded-2xl bg-gradient-to-r ${tech.color} opacity-0 group-hover:opacity-10 transition-opacity duration-300 -z-10 blur-xl`} />
+                  <div
+                    className={`absolute inset-0 rounded-2xl bg-gradient-to-r ${tech.color} opacity-0 group-hover:opacity-10 transition-opacity duration-300 -z-10 blur-xl`}
+                  />
                 </div>
               </motion.div>
             ))}
@@ -316,12 +361,13 @@ export default function ShowcasePage() {
             <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-full blur-3xl" />
             <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-br from-green-500/20 to-emerald-500/20 rounded-full blur-3xl" />
 
-            <div className="relative z-10">
+            {/* <div className="relative z-10">
               <h3 className="text-3xl md:text-4xl font-bold text-white mb-4">
                 Ready to Create Something Amazing?
               </h3>
               <p className="text-gray-400 mb-8 max-w-2xl mx-auto">
-                Let's bring your vision to life with our cutting-edge visual effects and creative expertise
+                Let's bring your vision to life with our cutting-edge visual
+                effects and creative expertise
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <motion.button
@@ -333,14 +379,17 @@ export default function ShowcasePage() {
                 </motion.button>
                 <motion.button
                   className="px-8 py-4 bg-white/5 border border-white/20 rounded-lg font-semibold text-white flex items-center justify-center gap-2"
-                  whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.1)" }}
+                  whileHover={{
+                    scale: 1.05,
+                    backgroundColor: "rgba(255,255,255,0.1)",
+                  }}
                   whileTap={{ scale: 0.95 }}
                 >
                   View Full Portfolio
                   <ExternalLink size={20} />
                 </motion.button>
               </div>
-            </div>
+            </div> */}
           </motion.div>
         </div>
       </section>

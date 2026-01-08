@@ -45,8 +45,9 @@ export default function Footer() {
               whileHover={{ scale: 1.05, rotate: 2 }}
             />
             <p className="text-gray-400 text-sm leading-relaxed">
-              We craft visual experiences that push the boundaries of imagination.
-              From concept to final delivery, we bring your vision to life.
+              We craft visual experiences that push the boundaries of
+              imagination. From concept to final delivery, we bring your vision
+              to life.
             </p>
 
             {/* Contact Details */}
@@ -89,7 +90,7 @@ export default function Footer() {
                 whileHover={{ x: 5 }}
               >
                 <MapPin size={18} className="text-purple-500" />
-                <span className="text-sm">Kolkata, India</span>
+                <span className="text-sm">Mumbai, India</span>
               </motion.div>
             </div>
           </motion.div>
@@ -112,23 +113,21 @@ export default function Footer() {
                 { name: "Showcase", href: "/showcase" },
                 { name: "Services", href: "/" },
                 { name: "Contact", href: "/contact" },
-              ].map(
-                (item, i) => (
-                  <Link key={item.href} href={item.href}>
-                    <motion.span
-                      className="block text-gray-400 hover:text-blue-400 transition-colors text-sm relative group cursor-pointer"
-                      whileHover={{ x: 5 }}
-                      initial={{ opacity: 0, x: -10 }}
-                      whileInView={{ opacity: 1, x: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: 0.2 + i * 0.05 }}
-                    >
-                      {item.name}
-                      <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-500 to-green-500 group-hover:w-full transition-all duration-300" />
-                    </motion.span>
-                  </Link>
-                )
-              )}
+              ].map((item, i) => (
+                <Link key={item.href} href={item.href}>
+                  <motion.span
+                    className="block text-gray-400 hover:text-blue-400 transition-colors text-sm relative group cursor-pointer"
+                    whileHover={{ x: 5 }}
+                    initial={{ opacity: 0, x: -10 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.2 + i * 0.05 }}
+                  >
+                    {item.name}
+                    <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-500 to-green-500 group-hover:w-full transition-all duration-300" />
+                  </motion.span>
+                </Link>
+              ))}
             </div>
           </motion.div>
 
@@ -175,12 +174,12 @@ export default function Footer() {
             transition={{ delay: 0.3 }}
             className="space-y-6"
           >
-            <h3 className="text-xl font-bold mb-6 bg-gradient-to-r from-white to-purple-200 bg-clip-text text-transparent">
+            {/* <h3 className="text-xl font-bold mb-6 bg-gradient-to-r from-white to-purple-200 bg-clip-text text-transparent">
               Connect With Us
-            </h3>
+            </h3> */}
 
             {/* Social Links */}
-            <div className="flex gap-4">
+            {/* <div className="flex gap-4">
               {[
                 {
                   icon: Instagram,
@@ -205,10 +204,10 @@ export default function Footer() {
                   <social.icon size={20} />
                 </motion.a>
               ))}
-            </div>
+            </div> */}
 
             {/* CTA Button */}
-            <MagneticButton>
+            {/* <MagneticButton>
               <Link href="/contact">
                 <motion.div
                   className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-green-500 rounded-lg font-semibold text-white text-sm cursor-pointer"
@@ -219,7 +218,7 @@ export default function Footer() {
                   <ArrowRight size={16} />
                 </motion.div>
               </Link>
-            </MagneticButton>
+            </MagneticButton> */}
 
             {/* Stats */}
             <div className="pt-4 border-t border-white/10">

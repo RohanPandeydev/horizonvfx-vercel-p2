@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { motion, useMotionValue, useSpring } from "framer-motion";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
@@ -12,11 +13,17 @@ interface MainLayoutProps {
 }
 
 export default function MainLayout({ children }: MainLayoutProps) {
+  const pathname = usePathname();
   const [loading, setLoading] = useState(true);
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
   const smoothMouseX = useSpring(mouseX, { damping: 20, stiffness: 100 });
   const smoothMouseY = useSpring(mouseY, { damping: 20, stiffness: 100 });
+
+  // Don't use MainLayout for admin routes
+  if (pathname?.startsWith("/admin")) {
+    return <>{children}</>;
+  }
 
   useEffect(() => {
     const timer = setTimeout(() => {
