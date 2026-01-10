@@ -24,6 +24,7 @@ export default function Navigation({ loading }: NavigationProps) {
   const navItems = [
     { name: "Home", href: "/" },
     { name: "About Us", href: "/about" },
+    { name: "Services", href: "/services" },
     { name: "Team", href: "/team" },
     { name: "Showcase", href: "/showcase" },
     { name: "Contact Us", href: "/contact" },

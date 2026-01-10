@@ -111,10 +111,10 @@ export default function Footer() {
                 { name: "About Us", href: "/about" },
                 { name: "Team", href: "/team" },
                 { name: "Showcase", href: "/showcase" },
-                { name: "Services", href: "/" },
+                { name: "Services", href: "/#services" },
                 { name: "Contact", href: "/contact" },
               ].map((item, i) => (
-                <Link key={item.href} href={item.href}>
+                <Link key={`${item.href}-${item.name}`} href={item.href}>
                   <motion.span
                     className="block text-gray-400 hover:text-blue-400 transition-colors text-sm relative group cursor-pointer"
                     whileHover={{ x: 5 }}

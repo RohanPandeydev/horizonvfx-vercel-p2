@@ -1,347 +1,649 @@
 "use client";
-
-import { useState } from "react";
-import { Plus, Search, Edit, Trash2, Eye } from "lucide-react";
+import React, { useState } from "react";
+import { motion } from "framer-motion";
+import {
+  Save,
+  Eye,
+  Type,
+  Users,
+  Image as ImageIcon,
+  Plus,
+  Trash2,
+  GripVertical,
+} from "lucide-react";
+import Link from "next/link";
 
 interface TeamMember {
-  id: string;
+  id: number;
   name: string;
   role: string;
   image: string;
+  gradient: string;
   bio: string;
-  order: number;
-  status: "active" | "inactive";
 }
 
-export default function TeamAdminPage() {
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([
+export default function TeamPageEditor() {
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
+  const [activeTab, setActiveTab] = useState<"hero" | "leadership" | "team" | "cta">("hero");
+
+  // Hero Section State
+  const [heroTitle, setHeroTitle] = useState("The Creative Minds");
+  const [heroSubtitle, setHeroSubtitle] = useState(
+    "Meet the talented artists who bring extraordinary visions to life"
+  );
+
+  // Leadership Section State
+  const [leadershipHeading, setLeadershipHeading] = useState("Leadership");
+  const [leadershipMembers, setLeadershipMembers] = useState<TeamMember[]>([
     {
-      id: "1",
-      name: "John Smith",
-      role: "Lead VFX Artist",
-      image: "/images/team/john.jpg",
-      bio: "10+ years of experience in visual effects",
-      order: 1,
-      status: "active",
+      id: 1,
+      name: "Bhuvnesh Kumar Varshney",
+      role: "Creative Animation Supervisor",
+      image: "https://horizonvfx.in/images/tm1.jpg",
+      gradient: "from-blue-500 to-cyan-500",
+      bio: "15+ years of experience in animation and creative direction",
     },
     {
-      id: "2",
-      name: "Sarah Johnson",
-      role: "3D Animator",
-      image: "/images/team/sarah.jpg",
-      bio: "Specialist in character animation",
-      order: 2,
-      status: "active",
-    },
-    {
-      id: "3",
-      name: "Mike Chen",
-      role: "Compositor",
-      image: "/images/team/mike.jpg",
-      bio: "Expert in color grading and compositing",
-      order: 3,
-      status: "active",
+      id: 2,
+      name: "Dibakar Chakraborty",
+      role: "Founder & VFX Supervisor",
+      image: "https://horizonvfx.in/images/tm2.jpg",
+      gradient: "from-purple-500 to-pink-500",
+      bio: "Visionary leader with 20+ years in VFX industry",
     },
   ]);
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const [addMemberModalOpen, setAddMemberModalOpen] = useState(false);
-  const [editingMember, setEditingMember] = useState<TeamMember | null>(null);
+  // Team Members State
+  const [teamHeading, setTeamHeading] = useState("Our Team");
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([
+    {
+      id: 3,
+      name: "Rahul Sharma",
+      role: "3D Artist",
+      image: "https://horizonvfx.in/images/tm3.jpg",
+      gradient: "from-green-500 to-emerald-500",
+      bio: "Specialized in 3D modeling and realistic texturing",
+    },
+    {
+      id: 4,
+      name: "Priya Singh",
+      role: "Compositor",
+      image: "https://horizonvfx.in/images/tm4.jpg",
+      gradient: "from-orange-500 to-red-500",
+      bio: "Expert in compositing and color grading",
+    },
+    {
+      id: 5,
+      name: "Amit Patel",
+      role: "Motion Graphics Artist",
+      image: "https://horizonvfx.in/images/tm5.jpg",
+      gradient: "from-cyan-500 to-blue-500",
+      bio: "Creative motion designer with passion for typography",
+    },
+  ]);
 
-  const filteredMembers = teamMembers.filter(
-    (member) =>
-      member.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      member.role.toLowerCase().includes(searchQuery.toLowerCase())
+  // CTA Section State
+  const [ctaHeading, setCtaHeading] = useState("Join Our Creative Team");
+  const [ctaDescription, setCtaDescription] = useState(
+    "Be part of our journey to create extraordinary visual experiences"
   );
+  const [ctaButtonText, setCtaButtonText] = useState("View Open Positions");
 
-  const handleDelete = (id: string) => {
-    if (confirm("Are you sure you want to remove this team member?")) {
+  const handleSave = () => {
+    setSaveStatus("saving");
+    setTimeout(() => {
+      setSaveStatus("saved");
+      setTimeout(() => setSaveStatus("idle"), 2000);
+    }, 1000);
+  };
+
+  const updateLeadershipMember = (id: number, field: string, value: string) => {
+    setLeadershipMembers(leadershipMembers.map((member) =>
+      member.id === id ? { ...member, [field]: value } : member
+    ));
+  };
+
+  const addLeadershipMember = () => {
+    const newId = Math.max(...leadershipMembers.map((m) => m.id), 0) + 1;
+    setLeadershipMembers([
+      ...leadershipMembers,
+      {
+        id: newId,
+        name: "New Member",
+        role: "Role",
+        image: "",
+        gradient: "from-blue-500 to-cyan-500",
+        bio: "Bio description",
+      },
+    ]);
+  };
+
+  const removeLeadershipMember = (id: number) => {
+    if (leadershipMembers.length > 1) {
+      setLeadershipMembers(leadershipMembers.filter((member) => member.id !== id));
+    }
+  };
+
+  const updateTeamMember = (id: number, field: string, value: string) => {
+    setTeamMembers(teamMembers.map((member) =>
+      member.id === id ? { ...member, [field]: value } : member
+    ));
+  };
+
+  const addTeamMember = () => {
+    const newId = Math.max(...teamMembers.map((m) => m.id), 0) + 1;
+    setTeamMembers([
+      ...teamMembers,
+      {
+        id: newId,
+        name: "New Member",
+        role: "Role",
+        image: "",
+        gradient: "from-blue-500 to-cyan-500",
+        bio: "Bio description",
+      },
+    ]);
+  };
+
+  const removeTeamMember = (id: number) => {
+    if (teamMembers.length > 1) {
       setTeamMembers(teamMembers.filter((member) => member.id !== id));
     }
-  };
-
-  const handleStatusToggle = (id: string) => {
-    setTeamMembers(
-      teamMembers.map((member) =>
-        member.id === id
-          ? { ...member, status: member.status === "active" ? "inactive" : "active" }
-          : member
-      )
-    );
-  };
-
-  const handleSave = (member: TeamMember) => {
-    if (editingMember) {
-      setTeamMembers(
-        teamMembers.map((m) => (m.id === member.id ? member : m))
-      );
-    } else {
-      setTeamMembers([...teamMembers, { ...member, id: Date.now().toString() }]);
-    }
-    setEditingMember(null);
-    setAddMemberModalOpen(false);
   };
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-white mb-2">Team Members</h1>
-          <p className="text-gray-400">Manage your team profiles</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+            <Users className="text-green-600" size={24} />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">Team Page</h1>
+            <p className="text-sm text-slate-600">Manage team page content</p>
+          </div>
         </div>
-        <button
-          onClick={() => {
-            setEditingMember(null);
-            setAddMemberModalOpen(true);
-          }}
-          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]"
-        >
-          <Plus className="w-5 h-5" />
-          Add Member
-        </button>
-      </div>
-
-      {/* Search */}
-      <div className="bg-black/50 backdrop-blur-xl border border-gray-800 rounded-xl p-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500" />
-          <input
-            type="text"
-            placeholder="Search team members..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-black/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all"
-          />
-        </div>
-      </div>
-
-      {/* Team Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredMembers.map((member) => (
-          <div
-            key={member.id}
-            className="bg-black/50 backdrop-blur-xl border border-gray-800 rounded-xl overflow-hidden hover:border-gray-700 transition-all"
+        <div className="flex items-center gap-3">
+          <Link
+            href="/team"
+            target="_blank"
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
           >
-            {/* Image */}
-            <div className="relative aspect-square bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center">
-              <span className="text-6xl">👤</span>
-              <div className="absolute top-3 right-3">
-                <span
-                  className={`px-2 py-1 text-xs font-medium rounded-full ${
-                    member.status === "active"
-                      ? "bg-green-500/20 text-green-400"
-                      : "bg-gray-500/20 text-gray-400"
-                  }`}
-                >
-                  {member.status}
-                </span>
-              </div>
-            </div>
-
-            {/* Info */}
-            <div className="p-4 space-y-3">
-              <div>
-                <h3 className="text-lg font-semibold text-white">
-                  {member.name}
-                </h3>
-                <p className="text-purple-400 text-sm">{member.role}</p>
-              </div>
-              <p className="text-gray-400 text-sm line-clamp-2">{member.bio}</p>
-
-              {/* Actions */}
-              <div className="flex items-center gap-2 pt-3 border-t border-gray-800">
-                <button
-                  onClick={() => {
-                    setEditingMember(member);
-                    setAddMemberModalOpen(true);
-                  }}
-                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-purple-500/10 border border-purple-500/30 text-purple-400 rounded-lg hover:bg-purple-500/20 transition-all text-sm"
-                >
-                  <Edit className="w-4 h-4" />
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleStatusToggle(member.id)}
-                  className="px-3 py-2 text-gray-400 hover:text-white border border-gray-700 rounded-lg hover:bg-gray-800 transition-all text-sm"
-                >
-                  {member.status === "active" ? "Hide" : "Show"}
-                </button>
-                <button
-                  onClick={() => handleDelete(member.id)}
-                  className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-all"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          </div>
-        ))}
+            <Eye size={18} />
+            Preview Page
+          </Link>
+          <button
+            onClick={handleSave}
+            disabled={saveStatus === "saving"}
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            <Save size={18} />
+            {saveStatus === "saving" ? "Saving..." : saveStatus === "saved" ? "Saved!" : "Save Changes"}
+          </button>
+        </div>
       </div>
 
-      {filteredMembers.length === 0 && (
-        <div className="text-center py-12 bg-black/50 backdrop-blur-xl border border-gray-800 rounded-xl">
-          <p className="text-gray-400">No team members found.</p>
+      {/* Tabs */}
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="border-b border-slate-200">
+          <nav className="flex">
+            <button
+              onClick={() => setActiveTab("hero")}
+              className={`flex items-center gap-2 px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === "hero"
+                  ? "border-green-600 text-green-600"
+                  : "border-transparent text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              <Type size={18} />
+              Hero Section
+            </button>
+            <button
+              onClick={() => setActiveTab("leadership")}
+              className={`flex items-center gap-2 px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === "leadership"
+                  ? "border-green-600 text-green-600"
+                  : "border-transparent text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              <Users size={18} />
+              Leadership
+            </button>
+            <button
+              onClick={() => setActiveTab("team")}
+              className={`flex items-center gap-2 px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === "team"
+                  ? "border-green-600 text-green-600"
+                  : "border-transparent text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              <Users size={18} />
+              Team Members
+            </button>
+            <button
+              onClick={() => setActiveTab("cta")}
+              className={`flex items-center gap-2 px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === "cta"
+                  ? "border-green-600 text-green-600"
+                  : "border-transparent text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              <Type size={18} />
+              Call to Action
+            </button>
+          </nav>
         </div>
-      )}
 
-      {/* Add/Edit Member Modal */}
-      {addMemberModalOpen && (
-        <TeamMemberForm
-          member={editingMember}
-          onSave={handleSave}
-          onCancel={() => {
-            setEditingMember(null);
-            setAddMemberModalOpen(false);
-          }}
-        />
-      )}
-    </div>
-  );
-}
-
-// Team Member Form Component
-function TeamMemberForm({
-  member,
-  onSave,
-  onCancel,
-}: {
-  member: TeamMember | null;
-  onSave: (member: TeamMember) => void;
-  onCancel: () => void;
-}) {
-  const [formData, setFormData] = useState<TeamMember>(
-    member || {
-      id: "",
-      name: "",
-      role: "",
-      image: "",
-      bio: "",
-      order: 0,
-      status: "active",
-    }
-  );
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSave(formData);
-  };
-
-  return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-black border border-gray-800 rounded-xl p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto">
-        <h2 className="text-xl font-semibold text-white mb-6">
-          {member ? "Edit Team Member" : "Add Team Member"}
-        </h2>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Name *
-            </label>
-            <input
-              type="text"
-              required
-              value={formData.name}
-              onChange={(e) =>
-                setFormData({ ...formData, name: e.target.value })
-              }
-              className="w-full px-4 py-2 bg-black/50 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-purple-500 transition-all"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Role *
-            </label>
-            <input
-              type="text"
-              required
-              value={formData.role}
-              onChange={(e) =>
-                setFormData({ ...formData, role: e.target.value })
-              }
-              className="w-full px-4 py-2 bg-black/50 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-purple-500 transition-all"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Bio
-            </label>
-            <textarea
-              value={formData.bio}
-              onChange={(e) =>
-                setFormData({ ...formData, bio: e.target.value })
-              }
-              rows={3}
-              className="w-full px-4 py-2 bg-black/50 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-purple-500 transition-all resize-none"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Image URL
-            </label>
-            <input
-              type="url"
-              value={formData.image}
-              onChange={(e) =>
-                setFormData({ ...formData, image: e.target.value })
-              }
-              className="w-full px-4 py-2 bg-black/50 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-purple-500 transition-all"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Display Order
-            </label>
-            <input
-              type="number"
-              value={formData.order}
-              onChange={(e) =>
-                setFormData({ ...formData, order: parseInt(e.target.value) })
-              }
-              className="w-full px-4 py-2 bg-black/50 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-purple-500 transition-all"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Status
-            </label>
-            <select
-              value={formData.status}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  status: e.target.value as "active" | "inactive",
-                })
-              }
-              className="w-full px-4 py-2 bg-black/50 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-purple-500 transition-all"
+        <div className="p-6">
+          {/* Hero Section */}
+          {activeTab === "hero" && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-6"
             >
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
-          </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Page Title
+                </label>
+                <input
+                  type="text"
+                  value={heroTitle}
+                  onChange={(e) => setHeroTitle(e.target.value)}
+                  className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  placeholder="The Creative Minds"
+                />
+              </div>
 
-          <div className="flex justify-end gap-3 pt-4">
-            <button
-              type="button"
-              onClick={onCancel}
-              className="px-4 py-2 border border-gray-700 text-white rounded-lg hover:bg-gray-800 transition-all"
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Subtitle
+                </label>
+                <textarea
+                  value={heroSubtitle}
+                  onChange={(e) => setHeroSubtitle(e.target.value)}
+                  rows={3}
+                  className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
+                  placeholder="Meet the talented artists who bring extraordinary visions to life"
+                />
+              </div>
+
+              {/* Preview */}
+              <div className="bg-gradient-to-br from-slate-900 to-zinc-950 rounded-xl p-8 mt-6">
+                <div className="text-center">
+                  <h2 className="text-4xl md:text-5xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400">
+                    {heroTitle || "Your Title Here"}
+                  </h2>
+                  <p className="text-xl text-gray-300">
+                    {heroSubtitle || "Your subtitle here"}
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Leadership Section */}
+          {activeTab === "leadership" && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-6"
             >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all"
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Section Heading
+                </label>
+                <input
+                  type="text"
+                  value={leadershipHeading}
+                  onChange={(e) => setLeadershipHeading(e.target.value)}
+                  className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <label className="block text-sm font-medium text-slate-700">
+                    Leadership Members
+                  </label>
+                  <button
+                    onClick={addLeadershipMember}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-green-600 bg-green-50 rounded-lg hover:bg-green-100 transition-colors"
+                  >
+                    <Plus size={14} />
+                    Add Member
+                  </button>
+                </div>
+                <div className="space-y-4">
+                  {leadershipMembers.map((member, index) => (
+                    <div
+                      key={member.id}
+                      className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-4"
+                    >
+                      <div className="flex items-center gap-2">
+                        <GripVertical size={16} className="text-slate-400" />
+                        <span className="text-sm font-semibold text-slate-700">
+                          Member {index + 1}
+                        </span>
+                        {leadershipMembers.length > 1 && (
+                          <button
+                            onClick={() => removeLeadershipMember(member.id)}
+                            className="ml-auto p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="grid md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-medium text-slate-600 mb-1.5">
+                            Name
+                          </label>
+                          <input
+                            type="text"
+                            value={member.name}
+                            onChange={(e) => updateLeadershipMember(member.id, "name", e.target.value)}
+                            className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-slate-600 mb-1.5">
+                            Role
+                          </label>
+                          <input
+                            type="text"
+                            value={member.role}
+                            onChange={(e) => updateLeadershipMember(member.id, "role", e.target.value)}
+                            className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-medium text-slate-600 mb-1.5">
+                          Image URL
+                        </label>
+                        <input
+                          type="url"
+                          value={member.image}
+                          onChange={(e) => updateLeadershipMember(member.id, "image", e.target.value)}
+                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          placeholder="https://example.com/image.jpg"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-medium text-slate-600 mb-1.5">
+                          Bio
+                        </label>
+                        <textarea
+                          value={member.bio}
+                          onChange={(e) => updateLeadershipMember(member.id, "bio", e.target.value)}
+                          rows={2}
+                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-medium text-slate-600 mb-1.5">
+                          Gradient Color
+                        </label>
+                        <select
+                          value={member.gradient}
+                          onChange={(e) => updateLeadershipMember(member.id, "gradient", e.target.value)}
+                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        >
+                          <option value="from-blue-500 to-cyan-500">Blue to Cyan</option>
+                          <option value="from-purple-500 to-pink-500">Purple to Pink</option>
+                          <option value="from-green-500 to-emerald-500">Green to Emerald</option>
+                          <option value="from-orange-500 to-red-500">Orange to Red</option>
+                          <option value="from-cyan-500 to-blue-500">Cyan to Blue</option>
+                        </select>
+                      </div>
+
+                      {/* Card Preview */}
+                      <div className="bg-slate-900 rounded-lg p-4">
+                        <div className="flex gap-4">
+                          {member.image && (
+                            <img
+                              src={member.image}
+                              alt={member.name}
+                              className="w-20 h-20 object-cover rounded-lg"
+                            />
+                          )}
+                          <div className="flex-1">
+                            <h5 className={`text-base font-bold bg-gradient-to-r ${member.gradient} bg-clip-text text-transparent`}>
+                              {member.name}
+                            </h5>
+                            <p className={`text-xs bg-gradient-to-r ${member.gradient} bg-clip-text text-transparent font-semibold mb-1`}>
+                              {member.role}
+                            </p>
+                            <p className="text-gray-400 text-xs">{member.bio}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Team Members Section */}
+          {activeTab === "team" && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-6"
             >
-              {member ? "Update" : "Add"} Member
-            </button>
-          </div>
-        </form>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Section Heading
+                </label>
+                <input
+                  type="text"
+                  value={teamHeading}
+                  onChange={(e) => setTeamHeading(e.target.value)}
+                  className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <label className="block text-sm font-medium text-slate-700">
+                    Team Members
+                  </label>
+                  <button
+                    onClick={addTeamMember}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-green-600 bg-green-50 rounded-lg hover:bg-green-100 transition-colors"
+                  >
+                    <Plus size={14} />
+                    Add Member
+                  </button>
+                </div>
+                <div className="grid md:grid-cols-2 gap-4">
+                  {teamMembers.map((member, index) => (
+                    <div
+                      key={member.id}
+                      className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3"
+                    >
+                      <div className="flex items-center gap-2">
+                        <GripVertical size={16} className="text-slate-400" />
+                        <span className="text-sm font-semibold text-slate-700">
+                          Member {index + 1}
+                        </span>
+                        {teamMembers.length > 1 && (
+                          <button
+                            onClick={() => removeTeamMember(member.id)}
+                            className="ml-auto p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-medium text-slate-600 mb-1.5">
+                          Name
+                        </label>
+                        <input
+                          type="text"
+                          value={member.name}
+                          onChange={(e) => updateTeamMember(member.id, "name", e.target.value)}
+                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-medium text-slate-600 mb-1.5">
+                          Role
+                        </label>
+                        <input
+                          type="text"
+                          value={member.role}
+                          onChange={(e) => updateTeamMember(member.id, "role", e.target.value)}
+                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-medium text-slate-600 mb-1.5">
+                          Image URL
+                        </label>
+                        <input
+                          type="url"
+                          value={member.image}
+                          onChange={(e) => updateTeamMember(member.id, "image", e.target.value)}
+                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-medium text-slate-600 mb-1.5">
+                          Bio
+                        </label>
+                        <textarea
+                          value={member.bio}
+                          onChange={(e) => updateTeamMember(member.id, "bio", e.target.value)}
+                          rows={2}
+                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-medium text-slate-600 mb-1.5">
+                          Gradient Color
+                        </label>
+                        <select
+                          value={member.gradient}
+                          onChange={(e) => updateTeamMember(member.id, "gradient", e.target.value)}
+                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        >
+                          <option value="from-blue-500 to-cyan-500">Blue to Cyan</option>
+                          <option value="from-purple-500 to-pink-500">Purple to Pink</option>
+                          <option value="from-green-500 to-emerald-500">Green to Emerald</option>
+                          <option value="from-orange-500 to-red-500">Orange to Red</option>
+                          <option value="from-cyan-500 to-blue-500">Cyan to Blue</option>
+                        </select>
+                      </div>
+
+                      {/* Card Preview */}
+                      <div className="bg-slate-900 rounded-lg p-3">
+                        <div className="flex gap-3">
+                          {member.image && (
+                            <img
+                              src={member.image}
+                              alt={member.name}
+                              className="w-16 h-16 object-cover rounded-lg"
+                            />
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <h5 className={`text-sm font-bold bg-gradient-to-r ${member.gradient} bg-clip-text text-transparent truncate`}>
+                              {member.name}
+                            </h5>
+                            <p className={`text-xs bg-gradient-to-r ${member.gradient} bg-clip-text text-transparent font-semibold truncate`}>
+                              {member.role}
+                            </p>
+                            <p className="text-gray-400 text-xs truncate">{member.bio}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* CTA Section */}
+          {activeTab === "cta" && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-6"
+            >
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Heading
+                </label>
+                <input
+                  type="text"
+                  value={ctaHeading}
+                  onChange={(e) => setCtaHeading(e.target.value)}
+                  className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Description
+                </label>
+                <textarea
+                  value={ctaDescription}
+                  onChange={(e) => setCtaDescription(e.target.value)}
+                  rows={3}
+                  className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Button Text
+                </label>
+                <input
+                  type="text"
+                  value={ctaButtonText}
+                  onChange={(e) => setCtaButtonText(e.target.value)}
+                  className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                />
+              </div>
+
+              {/* Preview */}
+              <div className="bg-gradient-to-br from-slate-900 to-zinc-950 rounded-xl p-8 mt-6">
+                <div className="text-center">
+                  <h3 className="text-3xl font-bold text-white mb-4">{ctaHeading}</h3>
+                  <p className="text-gray-400 mb-6 max-w-2xl mx-auto">{ctaDescription}</p>
+                  <button className="px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl font-semibold text-white">
+                    {ctaButtonText}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </div>
+      </div>
+
+      {/* Quick Tips */}
+      <div className="bg-green-50 border border-green-200 rounded-xl p-6">
+        <h3 className="text-sm font-semibold text-green-900 mb-2">💡 Tips</h3>
+        <ul className="text-sm text-green-800 space-y-1">
+          <li>• Use high-quality images for team members (recommended: 400x500px)</li>
+          <li>• Keep bios concise and professional</li>
+          <li>• Leadership section shows first 2-3 members prominently</li>
+          <li>• Team members appear in a slider on the live page</li>
+        </ul>
       </div>
     </div>
   );
