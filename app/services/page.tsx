@@ -279,56 +279,78 @@ function InteractiveFlowchart({
   const activeNodeData = flowchartNodes[activeNode];
 
   return (
-    <div className="relative">
-      {/* Main Content - Split Layout */}
-      <div className="grid lg:grid-cols-2 gap-12 items-start">
-        {/* Left Side - Flowchart Nodes */}
-        <div className="relative space-y-6" style={{ paddingTop: "2%", paddingBottom: "2%" }}>
-          {/* Connection Lines */}
-          <svg
-            className="absolute inset-0 w-full h-full pointer-events-none"
-            style={{ zIndex: 0 }}
-          >
-            {flowchartNodes.map((_, index) => {
-              if (index === flowchartNodes.length - 1) return null;
+    <>
+      {/* Main Flowchart Structure */}
+      <div className="relative max-w-6xl mx-auto">
+        <div className="relative">
+        {/* Connection SVG Lines */}
+        <svg
+          className="absolute inset-0 w-full h-full pointer-events-none"
+          style={{ zIndex: 0, minHeight: "800px" }}
+        >
+          {flowchartNodes.map((_, index) => {
+            if (index === flowchartNodes.length - 1) return null;
 
-              const startX = 50;
-              const endX = 50;
+              const isVertical = index % 2 === 0;
+              const startX = isVertical ? 50 : 25;
+              const endX = isVertical ? 50 : 75;
               const startY = index * 16.66 + 8.33;
               const endY = (index + 1) * 16.66 + 8.33;
 
               return (
                 <g key={`line-${index}`}>
                   {/* Animated connection line */}
-                  <motion.line
-                    x1={`${startX}%`}
-                    y1={`${startY}%`}
-                    x2={`${endX}%`}
-                    y2={`${endY}%`}
+                  <motion.path
+                    d={`M ${startX}% ${startY}% Q ${startX}% ${(startY + endY) / 2}% ${endX}% ${endY}%`}
                     stroke="url(#lineGradient)"
-                    strokeWidth="3"
+                    strokeWidth="4"
+                    fill="none"
                     strokeLinecap="round"
                     initial={{ pathLength: 0 }}
                     animate={{ pathLength: activeNode > index ? 1 : 0 }}
-                    transition={{ duration: 1, delay: index * 0.2 }}
-                    opacity={activeNode > index ? 0.8 : 0.2}
+                    transition={{ duration: 1.2, delay: index * 0.15 }}
+                    opacity={activeNode > index ? 1 : 0.15}
                   />
 
-                  {/* Animated particles flowing along the line */}
+                  {/* Animated particles */}
                   {activeNode > index && (
-                    <motion.circle
-                      r="4"
-                      fill="url(#particleGradient)"
-                      animate={{
-                        cx: [`${startX}%`, `${endX}%`],
-                        cy: [`${startY}%`, `${endY}%`],
-                      }}
-                      transition={{
-                        duration: 2,
-                        repeat: Infinity,
-                        ease: "linear",
-                      }}
-                    />
+                    <>
+                      <motion.circle
+                        r="6"
+                        fill="url(#particleGradient)"
+                        animate={{
+                          cx: [`${startX}%`, `${endX}%`],
+                          cy: [`${startY}%`, `${endY}%`],
+                        }}
+                        transition={{
+                          duration: 2.5,
+                          repeat: Infinity,
+                          ease: "linear",
+                        }}
+                      />
+                    </>
+                  )}
+
+                  {/* Glowing dots at connection points */}
+                  {activeNode > index && (
+                    <>
+                      <motion.circle
+                        cx={`${startX}%`}
+                        cy={`${startY}%`}
+                        r="4"
+                        fill="url(#glowGradient)"
+                        animate={{ r: [4, 8, 4], opacity: [0.5, 1, 0.5] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                      />
+                      <motion.circle
+                        cx={`${endX}%`}
+                        cy={`${endY}%`}
+                        r="4"
+                        fill="url(#glowGradient)"
+                        animate={{ r: [4, 8, 4], opacity: [0.5, 1, 0.5] }}
+                        transition={{ duration: 2, repeat: Infinity, delay: 1 }}
+                      />
+                    </>
                   )}
                 </g>
               );
@@ -341,211 +363,337 @@ function InteractiveFlowchart({
                 <stop offset="100%" stopColor="#a855f7" />
               </linearGradient>
               <radialGradient id="particleGradient">
-                <stop offset="0%" stopColor="#06b6d4" />
-                <stop offset="100%" stopColor="#a855f7" />
+                <stop offset="0%" stopColor="#ffffff" stopOpacity="1" />
+                <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.8" />
+              </radialGradient>
+              <radialGradient id="glowGradient">
+                <stop offset="0%" stopColor="#06b6d4" stopOpacity="1" />
+                <stop offset="100%" stopColor="#a855f7" stopOpacity="0" />
               </radialGradient>
             </defs>
           </svg>
 
-          {/* Flowchart Nodes */}
-          <div className="relative z-10">
-            {flowchartNodes.map((node, index) => (
-              <motion.div
-                key={node.id}
-                initial={{ opacity: 0, x: -50 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                onClick={() => setActiveNode(node.id)}
-                onMouseEnter={() => setHoveredNode(node.id)}
-                onMouseLeave={() => setHoveredNode(null)}
-                className={`relative group cursor-pointer mb-4 transition-all duration-300 ${
-                  activeNode === node.id ? "scale-105" : hoveredNode === node.id ? "scale-102" : ""
-                }`}
-              >
-                {/* 3D Card */}
+          {/* Flowchart Nodes - Zigzag Layout */}
+          <div className="relative z-10 space-y-12 py-8">
+            {flowchartNodes.map((node, index) => {
+              const isLeft = index % 2 === 0;
+
+              return (
                 <motion.div
-                  className={`bg-gradient-to-br from-zinc-800/80 to-zinc-900/80 backdrop-blur-sm rounded-2xl p-6 border relative overflow-hidden transition-all duration-300 ${
-                    activeNode === node.id ? "border-cyan-500/50 shadow-lg shadow-cyan-500/20" : "border-white/10"
-                  }`}
-                  style={{
-                    transformStyle: "preserve-3d",
-                    perspective: "1000px",
+                  key={node.id}
+                  initial={{ opacity: 0, x: isLeft ? -100 : 100, y: 50 }}
+                  animate={{ opacity: 1, x: 0, y: 0 }}
+                  transition={{
+                    duration: 0.6,
+                    delay: index * 0.1,
+                    type: "spring",
+                    stiffness: 100,
                   }}
-                  whileHover={{
-                    scale: 1.02,
-                    rotateX: 5,
-                    rotateY: -5,
-                    boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)",
-                  }}
-                  transition={{ duration: 0.3 }}
+                  className={`flex items-center ${isLeft ? "justify-start" : "justify-end"}`.trim()}
                 >
-                  {/* Glow effect */}
                   <motion.div
-                    className={`absolute inset-0 bg-gradient-to-r ${node.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300`}
-                  />
-
-                  {/* Active indicator */}
-                  {activeNode === node.id && (
+                    onClick={() => setActiveNode(node.id)}
+                    onMouseEnter={() => setHoveredNode(node.id)}
+                    onMouseLeave={() => setHoveredNode(null)}
+                    className={`relative group cursor-pointer ${isLeft ? "" : "order-2"}`.trim()}
+                    style={{ width: "45%" }}
+                  >
+                    {/* Node Card */}
                     <motion.div
-                      className={`absolute top-0 left-0 w-1 h-full bg-gradient-to-r ${node.gradient}`}
-                      layoutId="activeIndicator"
-                    />
-                  )}
-
-                  {/* Content */}
-                  <div className="relative z-10">
-                    <div className="flex items-center gap-4">
-                      {/* Icon */}
+                      className="bg-gradient-to-br from-zinc-800/90 to-zinc-900/90 backdrop-blur-xl rounded-3xl p-6 border relative overflow-hidden"
+                      style={{
+                        borderColor: activeNode === node.id ? "rgba(6, 182, 212, 0.5)" : "rgba(255, 255, 255, 0.1)",
+                        boxShadow: activeNode === node.id ? "0 35px 60px -15px rgba(6, 182, 212, 0.3)" : "none",
+                        transformStyle: "preserve-3d",
+                        perspective: "1000px",
+                      }}
+                      whileHover={{
+                        scale: 1.03,
+                        rotateY: isLeft ? 3 : -3,
+                        rotateX: 3,
+                        boxShadow: "0 35px 60px -15px rgba(6, 182, 212, 0.3)",
+                      }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      {/* Animated background glow */}
                       <motion.div
-                        className={`text-4xl md:text-5xl flex-shrink-0`}
+                        className={`absolute inset-0 bg-gradient-to-r ${node.gradient} opacity-0 group-hover:opacity-20 transition-opacity duration-500`}
                         animate={
-                          activeNode === node.id ? { rotate: [0, 10, -10, 0] } : {}
+                          activeNode === node.id
+                            ? {
+                                opacity: [0.1, 0.2, 0.1],
+                                scale: [1, 1.1, 1],
+                              }
+                            : {}
                         }
-                        transition={{
-                          duration: 0.5,
-                          repeat: activeNode === node.id ? Infinity : 0,
-                        }}
-                      >
-                        {node.icon}
-                      </motion.div>
+                        transition={{ duration: 3, repeat: Infinity }}
+                      />
 
-                      {/* Main content */}
-                      <div className="flex-1">
-                        <h3
-                          className={`text-xl md:text-2xl font-bold mb-1 bg-gradient-to-r ${node.gradient} bg-clip-text text-transparent`}
-                        >
-                          {node.title}
-                        </h3>
-                        <p className="text-gray-400 text-sm">{node.description}</p>
-                      </div>
+                      {/* Pulsing border */}
+                      {activeNode === node.id && (
+                        <motion.div
+                          className={`absolute inset-0 rounded-3xl bg-gradient-to-r ${node.gradient} opacity-30`}
+                          animate={{
+                            scale: [1, 1.05, 1],
+                              opacity: [0.2, 0.4, 0.2],
+                            }}
+                            transition={{ duration: 2, repeat: Infinity }}
+                        />
+                      )}
 
-                      {/* Step number */}
-                      <div
-                        className={`flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-r ${node.gradient} flex items-center justify-center text-white font-bold`}
-                      >
-                        {index + 1}
+                      {/* Content */}
+                      <div className="relative z-10">
+                        <div className="flex items-start gap-4">
+                          {/* Icon with glow */}
+                          <div className="relative">
+                            <motion.div
+                              className={`text-5xl md:text-6xl`}
+                              animate={
+                                activeNode === node.id
+                                  ? {
+                                      rotate: [0, 15, -15, 0],
+                                      scale: [1, 1.1, 1],
+                                    }
+                                  : {}
+                              }
+                              transition={{
+                                duration: 0.6,
+                                repeat: activeNode === node.id ? Infinity : 0,
+                              }}
+                            >
+                              {node.icon}
+                            </motion.div>
+                            {/* Glow effect behind icon */}
+                            {activeNode === node.id && (
+                              <motion.div
+                                className={`absolute inset-0 bg-gradient-to-r ${node.gradient} blur-2xl opacity-50 -z-10`}
+                                animate={{
+                                  scale: [1, 1.3, 1],
+                                  opacity: [0.3, 0.6, 0.3],
+                                }}
+                                transition={{ duration: 2, repeat: Infinity }}
+                              />
+                            )}
+                          </div>
+
+                          {/* Main content */}
+                          <div className="flex-1">
+                            {/* Step badge */}
+                            <motion.div
+                              className={`inline-block px-3 py-1 rounded-full bg-gradient-to-r ${node.gradient} text-white text-xs font-bold mb-2 shadow-lg`}
+                              animate={
+                                activeNode === node.id
+                                  ? { scale: [1, 1.05, 1] }
+                                  : {}
+                              }
+                              transition={{ duration: 2, repeat: Infinity }}
+                            >
+                              0{index + 1}
+                            </motion.div>
+
+                            <h3
+                              className={`text-xl md:text-2xl font-bold mb-2 bg-gradient-to-r ${node.gradient} bg-clip-text text-transparent`}
+                            >
+                              {node.title}
+                            </h3>
+                            <p className="text-gray-400 text-sm leading-relaxed">
+                              {node.description}
+                            </p>
+
+                            {/* Active indicator */}
+                            {activeNode === node.id && (
+                              <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: "100%" }}
+                                className={`h-1 mt-3 rounded-full bg-gradient-to-r ${node.gradient}`}
+                              />
+                            )}
+                          </div>
+
+                          {/* Arrow indicator */}
+                          <motion.div
+                            className={`text-2xl ${
+                              activeNode === node.id ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                            } transition-opacity`}
+                            animate={activeNode === node.id ? { x: [0, 5, 0] } : {}}
+                            transition={{ duration: 1.5, repeat: Infinity }}
+                          >
+                            {isLeft ? "→" : "←"}
+                          </motion.div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
+                    </motion.div>
+                  </motion.div>
                 </motion.div>
-              </motion.div>
-            ))}
+              );
+            })}
           </div>
         </div>
+      </div>
 
-        {/* Right Side - Info View Panel */}
-        <div className="relative">
-          <motion.div
-            key={activeNode}
-            initial={{ opacity: 0, y: 20, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.5 }}
-            className="sticky top-24"
-          >
-            {/* Info Panel Card */}
-            <div className="bg-gradient-to-br from-zinc-800/90 to-zinc-900/90 backdrop-blur-xl rounded-3xl p-8 border border-white/10 relative overflow-hidden">
-              {/* Animated background glow */}
+      {/* Detailed Info Panel - Fixed at Bottom */}
+      <motion.div
+          key={activeNode}
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="mt-16"
+        >
+          <div className="bg-gradient-to-br from-zinc-900/95 to-zinc-950/95 backdrop-blur-2xl rounded-3xl p-8 md:p-12 border border-white/10 relative overflow-hidden shadow-2xl">
+            {/* Animated background */}
+            <motion.div
+              className={`absolute inset-0 bg-gradient-to-r ${activeNodeData.gradient} opacity-5`}
+              animate={{
+                backgroundPosition: ["0% 0%", "100% 100%", "0% 0%"],
+                scale: [1, 1.2, 1],
+              }}
+              transition={{
+                duration: 10,
+                repeat: Infinity,
+                ease: "linear",
+              }}
+              style={{ backgroundSize: "200% 200%" }}
+            />
+
+            {/* Header */}
+            <div className="relative z-10 mb-8">
               <motion.div
-                className={`absolute inset-0 bg-gradient-to-r ${activeNodeData.gradient} opacity-5`}
-                animate={{
-                  scale: [1, 1.2, 1],
-                  rotate: [0, 180, 360],
-                }}
-                transition={{
-                  duration: 10,
-                  repeat: Infinity,
-                  ease: "linear",
-                }}
-              />
-
-              {/* Header */}
-              <div className="relative z-10 mb-8">
+                className="flex items-center gap-6 mb-6"
+                initial={{ opacity: 0, x: -30 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.1 }}
+              >
                 <motion.div
-                  className="text-7xl mb-6"
-                  animate={{ rotate: [0, 10, -10, 0] }}
-                  transition={{ duration: 0.5, repeat: Infinity }}
+                  className="text-8xl md:text-9xl"
+                  animate={{ rotate: [0, 15, -15, 0] }}
+                  transition={{ duration: 0.6, repeat: Infinity }}
                 >
                   {activeNodeData.icon}
                 </motion.div>
-
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.1 }}
-                >
-                  <div
-                    className={`inline-block px-4 py-1 rounded-full bg-gradient-to-r ${activeNodeData.gradient} text-white text-sm font-semibold mb-4`}
+                <div className="flex-1">
+                  <motion.div
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
                   >
-                    Step {activeNode + 1}
-                  </div>
-                </motion.div>
-
-                <h2
-                  className={`text-3xl md:text-4xl font-bold mb-3 bg-gradient-to-r ${activeNodeData.gradient} bg-clip-text text-transparent`}
-                >
-                  {activeNodeData.title}
-                </h2>
-
-                <p className="text-gray-400 text-lg leading-relaxed">
-                  {activeNodeData.description}
-                </p>
-              </div>
-
-              {/* Details List */}
-              <div className="relative z-10">
-                <h4 className="text-white font-semibold mb-4 flex items-center gap-2">
-                  <span className="w-1 h-6 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-full" />
-                  Key Activities
-                </h4>
-
-                <ul className="space-y-4">
-                  {activeNodeData.details.map((detail, idx) => (
-                    <motion.li
-                      key={idx}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.2 + idx * 0.1 }}
-                      className="flex items-start gap-3 p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
+                    <div
+                      className={`inline-block px-5 py-2 rounded-full bg-gradient-to-r ${activeNodeData.gradient} text-white text-sm font-bold mb-3 shadow-lg`}
                     >
-                      <motion.div
-                        className={`flex-shrink-0 w-8 h-8 rounded-lg bg-gradient-to-r ${activeNodeData.gradient} flex items-center justify-center text-white font-bold`}
-                        whileHover={{ scale: 1.1, rotate: 5 }}
-                      >
-                        {idx + 1}
-                      </motion.div>
-                      <span className="text-gray-300 leading-relaxed">{detail}</span>
-                    </motion.li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Progress indicator */}
-              <div className="relative z-10 mt-8 pt-6 border-t border-white/10">
-                <div className="flex items-center justify-between text-sm text-gray-400 mb-2">
-                  <span>Progress</span>
-                  <span>{Math.round(((activeNode + 1) / flowchartNodes.length) * 100)}%</span>
+                      STEP {activeNode + 1} OF {flowchartNodes.length}
+                    </div>
+                  </motion.div>
+                  <h2
+                    className={`text-4xl md:text-5xl font-bold mb-2 bg-gradient-to-r ${activeNodeData.gradient} bg-clip-text text-transparent`}
+                  >
+                    {activeNodeData.title}
+                  </h2>
+                  <p className="text-gray-400 text-lg max-w-2xl">
+                    {activeNodeData.description}
+                  </p>
                 </div>
-                <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+              </motion.div>
+
+              {/* Progress bar */}
+              <div className="flex items-center gap-4">
+                <div className="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
                   <motion.div
                     className={`h-full bg-gradient-to-r ${activeNodeData.gradient}`}
                     initial={{ width: 0 }}
                     animate={{ width: `${((activeNode + 1) / flowchartNodes.length) * 100}%` }}
-                    transition={{ duration: 0.5 }}
+                    transition={{ duration: 0.8 }}
                   />
                 </div>
+                <span className="text-white font-bold text-lg">
+                  {Math.round(((activeNode + 1) / flowchartNodes.length) * 100)}%
+                </span>
+              </div>
+            </div>
+
+            {/* Details Grid */}
+            <div className="relative z-10">
+              <h4 className="text-white font-bold text-xl mb-6 flex items-center gap-3">
+                <motion.span
+                  className={`w-2 h-8 bg-gradient-to-r ${activeNodeData.gradient} rounded-full`}
+                  animate={{ height: [32, 40, 32] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                />
+                Key Activities & Deliverables
+              </h4>
+
+              <div className="grid md:grid-cols-2 gap-4">
+                {activeNodeData.details.map((detail, idx) => (
+                  <motion.div
+                    key={idx}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 + idx * 0.08 }}
+                    whileHover={{ scale: 1.02, y: -3 }}
+                    className="group"
+                  >
+                    <div className="flex items-start gap-4 p-5 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all duration-300">
+                      <motion.div
+                        className={`flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-r ${activeNodeData.gradient} flex items-center justify-center text-white font-bold text-lg shadow-lg`}
+                        whileHover={{ scale: 1.1, rotate: 5 }}
+                      >
+                        {idx + 1}
+                      </motion.div>
+                      <div className="flex-1">
+                        <span className="text-gray-200 leading-relaxed font-medium">
+                          {detail}
+                        </span>
+                      </div>
+                      <motion.div
+                        className={`text-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity`}
+                        animate={{ x: [0, 5, 0] }}
+                        transition={{ duration: 1.5, repeat: Infinity }}
+                      >
+                        →
+                      </motion.div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+
+            {/* Navigation */}
+            <div className="relative z-10 mt-10 flex items-center justify-between gap-4 pt-8 border-t border-white/10">
+              {/* Step indicators */}
+              <div className="flex items-center gap-2">
+                {flowchartNodes.map((_, idx) => {
+                  const isActive = idx === activeNode;
+                  const isCompleted = idx < activeNode;
+
+                  return (
+                    <motion.button
+                      key={idx}
+                      onClick={() => setActiveNode(idx)}
+                      className="rounded-full transition-all"
+                      style={{
+                        width: isActive ? "2rem" : "0.75rem",
+                        height: "0.75rem",
+                        background: isActive
+                          ? `linear-gradient(to right, #06b6d4, #a855f7)`
+                          : isCompleted
+                          ? "rgba(6, 182, 212, 0.5)"
+                          : "rgba(255, 255, 255, 0.2)",
+                      }}
+                      whileHover={{ scale: 1.2 }}
+                      whileTap={{ scale: 0.9 }}
+                    />
+                  );
+                })}
               </div>
 
               {/* Navigation buttons */}
-              <div className="relative z-10 mt-6 flex gap-3">
+              <div className="flex gap-3">
                 <motion.button
                   onClick={() => setActiveNode(Math.max(0, activeNode - 1))}
                   disabled={activeNode === 0}
-                  className={`flex-1 px-6 py-3 rounded-lg font-semibold transition-all ${
-                    activeNode === 0
-                      ? "bg-white/5 text-gray-600 cursor-not-allowed"
-                      : "bg-white/10 text-white hover:bg-white/20"
-                  }`}
-                  whileHover={activeNode > 0 ? { scale: 1.05 } : {}}
+                  className="px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{
+                    background: activeNode === 0 ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.1)",
+                  }}
+                  whileHover={activeNode > 0 ? { x: -5 } : {}}
                   whileTap={activeNode > 0 ? { scale: 0.95 } : {}}
                 >
                   ← Previous
@@ -553,22 +701,28 @@ function InteractiveFlowchart({
                 <motion.button
                   onClick={() => setActiveNode(Math.min(flowchartNodes.length - 1, activeNode + 1))}
                   disabled={activeNode === flowchartNodes.length - 1}
-                  className={`flex-1 px-6 py-3 rounded-lg font-semibold transition-all ${
-                    activeNode === flowchartNodes.length - 1
-                      ? "bg-white/5 text-gray-600 cursor-not-allowed"
-                      : `bg-gradient-to-r ${activeNodeData.gradient} text-white hover:opacity-90`
-                  }`}
-                  whileHover={activeNode < flowchartNodes.length - 1 ? { scale: 1.05 } : {}}
+                  className="px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{
+                    background: activeNode === flowchartNodes.length - 1
+                      ? "rgba(255,255,255,0.05)"
+                      : undefined
+                  }}
+                  whileHover={activeNode < flowchartNodes.length - 1 ? { x: 5 } : {}}
                   whileTap={activeNode < flowchartNodes.length - 1 ? { scale: 0.95 } : {}}
                 >
-                  Next →
+                  {activeNode === flowchartNodes.length - 1 ? (
+                    <span>Next →</span>
+                  ) : (
+                    <span className={`bg-gradient-to-r ${activeNodeData.gradient} bg-clip-text block`}>
+                      Next →
+                    </span>
+                  )}
                 </motion.button>
               </div>
             </div>
-          </motion.div>
-        </div>
-      </div>
-    </div>
+          </div>
+        </motion.div>
+    </>
   );
 }
 

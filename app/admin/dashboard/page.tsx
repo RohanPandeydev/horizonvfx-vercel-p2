@@ -78,7 +78,7 @@ export default function AdminDashboard() {
                 <p className="text-sm font-medium text-slate-900">Action {item}</p>
                 <p className="text-xs text-slate-500">2 hours ago</p>
               </div>
-              <ChevronRight className="text-slate-400" size={18} />
+              <ChevronRight className="text-slate-400" />
             </div>
           ))}
         </div>

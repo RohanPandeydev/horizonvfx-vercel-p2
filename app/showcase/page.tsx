@@ -121,7 +121,7 @@ export default function ShowcasePage() {
       const timestamp = Date.now();
       const newProjects = allProjects.map((p, index) => ({
         ...p,
-        id: `${p.id}-${timestamp}-${index}`,
+        id: parseInt(`${p.id}${timestamp}${index}`),
       }));
       setDisplayedProjects((prev) => [...prev, ...newProjects]);
       setIsLoading(false);

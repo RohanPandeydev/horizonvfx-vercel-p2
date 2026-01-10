@@ -15,6 +15,8 @@ import {
   Mail,
   BookOpen,
   Film,
+  Wrench,
+  Home as HomeIcon,
 } from "lucide-react";
 
 interface AdminLayoutProps {
@@ -32,6 +34,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       icon: LayoutDashboard,
     },
     {
+      name: "Home",
+      href: "/admin/home",
+      icon: HomeIcon,
+    },
+    {
       name: "Pages",
       href: "/admin/pages",
       icon: FileText,
@@ -45,6 +52,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       name: "Contact",
       href: "/admin/contact",
       icon: Mail,
+    },
+    {
+      name: "Services",
+      href: "/admin/services",
+      icon: Wrench,
     },
     {
       name: "Showcase",
