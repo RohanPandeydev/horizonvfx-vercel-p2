@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Save,
@@ -14,63 +14,162 @@ import {
   Trash2,
 } from "lucide-react";
 import Link from "next/link";
-import EmojiPicker from "@/components/admin/EmojiPicker";
+import { useToast } from "@/lib/toast-context";
+
+interface FormField {
+  id: string;
+  label: string;
+  placeholder: string;
+  type: "text" | "email" | "textarea";
+}
+
+interface ContactContent {
+  hero: {
+    title: string;
+    subtitle: string;
+  };
+  contactInfo: {
+    heading: string;
+    description: string;
+    email: string;
+    phoneNumbers: string[];
+    location: string;
+  };
+  form: {
+    heading: string;
+    fields: FormField[];
+  };
+}
+
+const DEFAULT_CONTENT: ContactContent = {
+  hero: {
+    title: "Get In Touch",
+    subtitle: "Let's create something amazing together",
+  },
+  contactInfo: {
+    heading: "Contact Information",
+    description:
+      "We'd love to hear from you. Fill out the form or reach out directly through any of these channels.",
+    email: "info@horizonvfx.in",
+    phoneNumbers: ["+91 974 871 2372", "+91 876 702 5601"],
+    location: "Mumbai, India",
+  },
+  form: {
+    heading: "Send us a message",
+    fields: [
+      { id: "name", label: "Your Name", placeholder: "John Doe", type: "text" },
+      { id: "email", label: "Email Address", placeholder: "john@example.com", type: "email" },
+      { id: "subject", label: "Subject", placeholder: "Project Inquiry", type: "text" },
+      { id: "message", label: "Message", placeholder: "Tell us about your project...", type: "textarea" },
+    ],
+  },
+};
 
 export default function ContactPageEditor() {
+  const { showSuccess, showError } = useToast();
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
   const [activeTab, setActiveTab] = useState<"hero" | "contact" | "form">("hero");
+  const [content, setContent] = useState<ContactContent>(DEFAULT_CONTENT);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Hero Section State
-  const [heroTitle, setHeroTitle] = useState("Get In Touch");
-  const [heroSubtitle, setHeroSubtitle] = useState(
-    "Let's create something amazing together"
-  );
+  // Custom input class with black placeholder
+  const inputClass = "w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black placeholder:text-black";
+  const inputClassSm = "w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black placeholder:text-black";
 
-  // Contact Info State
-  const [contactHeading, setContactHeading] = useState("Contact Information");
-  const [contactDescription, setContactDescription] = useState(
-    "We'd love to hear from you. Fill out the form or reach out directly through any of these channels."
-  );
-  const [email, setEmail] = useState("info@horizonvfx.in");
-  const [phoneNumbers, setPhoneNumbers] = useState([
-    "+91 974 871 2372",
-    "+91 876 702 5601",
-  ]);
-  const [location, setLocation] = useState("Mumbai, India");
+  // Load content on mount
+  useEffect(() => {
+    loadContent();
+  }, []);
 
-  // Form State
-  const [formHeading, setFormHeading] = useState("Send us a message");
-  const [formFields, setFormFields] = useState([
-    { id: "name", label: "Your Name", placeholder: "John Doe", type: "text" },
-    { id: "email", label: "Email Address", placeholder: "john@example.com", type: "email" },
-    { id: "subject", label: "Subject", placeholder: "Project Inquiry", type: "text" },
-    { id: "message", label: "Message", placeholder: "Tell us about your project...", type: "textarea" },
-  ]);
+  const loadContent = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch("/api/admin/pages/contact");
+      const result = await response.json();
 
-  const handleSave = () => {
-    setSaveStatus("saving");
-    // Simulate API call
-    setTimeout(() => {
-      setSaveStatus("saved");
-      setTimeout(() => setSaveStatus("idle"), 2000);
-    }, 1000);
+      if (result.success && result.data) {
+        setContent(result.data.content);
+      }
+    } catch (error) {
+      console.error("Error loading content:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    try {
+      setSaveStatus("saving");
+
+      const response = await fetch("/api/admin/pages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          slug: "contact",
+          title: "Contact Page",
+          content,
+          published: true,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setSaveStatus("saved");
+        showSuccess("Contact page saved successfully!");
+        setTimeout(() => setSaveStatus("idle"), 2000);
+      } else {
+        throw new Error(result.error || "Failed to save");
+      }
+    } catch (error) {
+      setSaveStatus("idle");
+      const message = error instanceof Error ? error.message : "Failed to save content";
+      showError(message);
+    }
+  };
+
+  const updateContent = (section: keyof ContactContent, data: Partial<ContactContent[keyof ContactContent]>) => {
+    setContent((prev) => ({
+      ...prev,
+      [section]: { ...prev[section], ...data },
+    }));
   };
 
   const addPhoneNumber = () => {
-    setPhoneNumbers([...phoneNumbers, ""]);
+    setContent((prev) => ({
+      ...prev,
+      contactInfo: {
+        ...prev.contactInfo,
+        phoneNumbers: [...prev.contactInfo.phoneNumbers, ""],
+      },
+    }));
   };
 
   const removePhoneNumber = (index: number) => {
-    if (phoneNumbers.length > 1) {
-      setPhoneNumbers(phoneNumbers.filter((_, i) => i !== index));
+    if (content.contactInfo.phoneNumbers.length > 1) {
+      setContent((prev) => ({
+        ...prev,
+        contactInfo: {
+          ...prev.contactInfo,
+          phoneNumbers: prev.contactInfo.phoneNumbers.filter((_, i) => i !== index),
+        },
+      }));
     }
   };
 
   const updatePhoneNumber = (index: number, value: string) => {
-    const newNumbers = [...phoneNumbers];
+    const newNumbers = [...content.contactInfo.phoneNumbers];
     newNumbers[index] = value;
-    setPhoneNumbers(newNumbers);
+    updateContent("contactInfo", { phoneNumbers: newNumbers });
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-slate-600">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -159,9 +258,9 @@ export default function ContactPageEditor() {
                 </label>
                 <input
                   type="text"
-                  value={heroTitle}
-                  onChange={(e) => setHeroTitle(e.target.value)}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  value={content.hero.title}
+                  onChange={(e) => updateContent("hero", { title: e.target.value })}
+                  className={inputClass}
                   placeholder="Get In Touch"
                 />
                 <p className="mt-1 text-xs text-slate-500">Main heading displayed at the top of the page</p>
@@ -172,10 +271,10 @@ export default function ContactPageEditor() {
                   Subtitle / Tagline
                 </label>
                 <textarea
-                  value={heroSubtitle}
-                  onChange={(e) => setHeroSubtitle(e.target.value)}
+                  value={content.hero.subtitle}
+                  onChange={(e) => updateContent("hero", { subtitle: e.target.value })}
                   rows={3}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  className={inputClass + " resize-none"}
                   placeholder="Let's create something amazing together"
                 />
                 <p className="mt-1 text-xs text-slate-500">Supporting text below the main title</p>
@@ -185,10 +284,10 @@ export default function ContactPageEditor() {
               <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-xl p-8 mt-6">
                 <div className="text-center">
                   <h2 className="text-4xl md:text-5xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-green-400">
-                    {heroTitle || "Your Title Here"}
+                    {content.hero.title || "Your Title Here"}
                   </h2>
                   <p className="text-xl text-gray-300">
-                    {heroSubtitle || "Your subtitle here"}
+                    {content.hero.subtitle || "Your subtitle here"}
                   </p>
                 </div>
               </div>
@@ -209,9 +308,9 @@ export default function ContactPageEditor() {
                   </label>
                   <input
                     type="text"
-                    value={contactHeading}
-                    onChange={(e) => setContactHeading(e.target.value)}
-                    className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    value={content.contactInfo.heading}
+                    onChange={(e) => updateContent("contactInfo", { heading: e.target.value })}
+                    className={inputClass}
                   />
                 </div>
 
@@ -223,9 +322,9 @@ export default function ContactPageEditor() {
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                     <input
                       type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      value={content.contactInfo.email}
+                      onChange={(e) => updateContent("contactInfo", { email: e.target.value })}
+                      className={inputClass.replace("w-full ", "w-full pl-10 ")}
                     />
                   </div>
                 </div>
@@ -236,10 +335,10 @@ export default function ContactPageEditor() {
                   Description
                 </label>
                 <textarea
-                  value={contactDescription}
-                  onChange={(e) => setContactDescription(e.target.value)}
+                  value={content.contactInfo.description}
+                  onChange={(e) => updateContent("contactInfo", { description: e.target.value })}
                   rows={3}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  className={inputClass + " resize-none"}
                 />
               </div>
 
@@ -257,7 +356,7 @@ export default function ContactPageEditor() {
                   </button>
                 </div>
                 <div className="space-y-3">
-                  {phoneNumbers.map((phone, index) => (
+                  {content.contactInfo.phoneNumbers.map((phone, index) => (
                     <div key={index} className="flex gap-2">
                       <div className="relative flex-1">
                         <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
@@ -265,11 +364,11 @@ export default function ContactPageEditor() {
                           type="tel"
                           value={phone}
                           onChange={(e) => updatePhoneNumber(index, e.target.value)}
-                          className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          className={inputClass.replace("w-full ", "w-full pl-10 ")}
                           placeholder="+91 XXX XXX XXXX"
                         />
                       </div>
-                      {phoneNumbers.length > 1 && (
+                      {content.contactInfo.phoneNumbers.length > 1 && (
                         <button
                           onClick={() => removePhoneNumber(index)}
                           className="p-3 text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
@@ -290,9 +389,9 @@ export default function ContactPageEditor() {
                   <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                   <input
                     type="text"
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    value={content.contactInfo.location}
+                    onChange={(e) => updateContent("contactInfo", { location: e.target.value })}
+                    className={inputClass.replace("w-full ", "w-full pl-10 ")}
                     placeholder="Mumbai, India"
                   />
                 </div>
@@ -313,9 +412,9 @@ export default function ContactPageEditor() {
                 </label>
                 <input
                   type="text"
-                  value={formHeading}
-                  onChange={(e) => setFormHeading(e.target.value)}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  value={content.form.heading}
+                  onChange={(e) => updateContent("form", { heading: e.target.value })}
+                  className={inputClass}
                 />
               </div>
 
@@ -324,7 +423,7 @@ export default function ContactPageEditor() {
                   Form Fields
                 </label>
                 <div className="space-y-4">
-                  {formFields.map((field, index) => (
+                  {content.form.fields.map((field, index) => (
                     <div
                       key={field.id}
                       className="p-4 bg-slate-50 rounded-xl border border-slate-200"
@@ -344,11 +443,11 @@ export default function ContactPageEditor() {
                             type="text"
                             value={field.label}
                             onChange={(e) => {
-                              const newFields = [...formFields];
+                              const newFields = [...content.form.fields];
                               newFields[index].label = e.target.value;
-                              setFormFields(newFields);
+                              updateContent("form", { fields: newFields });
                             }}
-                            className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className={inputClassSm}
                           />
                         </div>
                         <div>
@@ -359,11 +458,11 @@ export default function ContactPageEditor() {
                             type="text"
                             value={field.placeholder}
                             onChange={(e) => {
-                              const newFields = [...formFields];
+                              const newFields = [...content.form.fields];
                               newFields[index].placeholder = e.target.value;
-                              setFormFields(newFields);
+                              updateContent("form", { fields: newFields });
                             }}
-                            className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className={inputClassSm}
                           />
                         </div>
                       </div>
@@ -379,26 +478,26 @@ export default function ContactPageEditor() {
                   <input
                     type="text"
                     disabled
-                    placeholder={formFields[0]?.placeholder}
-                    className="w-full px-4 py-2.5 text-sm border border-slate-200 rounded-lg bg-white"
+                    placeholder={content.form.fields[0]?.placeholder}
+                    className="w-full px-4 py-2.5 text-sm border border-slate-200 rounded-lg bg-white placeholder:text-black"
                   />
                   <input
                     type="email"
                     disabled
-                    placeholder={formFields[1]?.placeholder}
-                    className="w-full px-4 py-2.5 text-sm border border-slate-200 rounded-lg bg-white"
+                    placeholder={content.form.fields[1]?.placeholder}
+                    className="w-full px-4 py-2.5 text-sm border border-slate-200 rounded-lg bg-white placeholder:text-black"
                   />
                   <input
                     type="text"
                     disabled
-                    placeholder={formFields[2]?.placeholder}
-                    className="w-full px-4 py-2.5 text-sm border border-slate-200 rounded-lg bg-white"
+                    placeholder={content.form.fields[2]?.placeholder}
+                    className="w-full px-4 py-2.5 text-sm border border-slate-200 rounded-lg bg-white placeholder:text-black"
                   />
                   <textarea
                     disabled
-                    placeholder={formFields[3]?.placeholder}
+                    placeholder={content.form.fields[3]?.placeholder}
                     rows={3}
-                    className="w-full px-4 py-2.5 text-sm border border-slate-200 rounded-lg bg-white resize-none"
+                    className="w-full px-4 py-2.5 text-sm border border-slate-200 rounded-lg bg-white resize-none placeholder:text-black"
                   />
                 </div>
               </div>
@@ -411,9 +510,10 @@ export default function ContactPageEditor() {
       <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
         <h3 className="text-sm font-semibold text-blue-900 mb-2">💡 Tips</h3>
         <ul className="text-sm text-blue-800 space-y-1">
-          <li>• Changes are auto-saved locally. Click "Save Changes" to persist them.</li>
+          <li>• Click &quot;Save Changes&quot; to persist your changes to the database.</li>
           <li>• Use the "Preview Page" button to see how your changes look on the live site.</li>
           <li>• Phone numbers support multiple contacts for different departments.</li>
+          <li>• All changes are immediately reflected on the frontend after saving.</li>
         </ul>
       </div>
     </div>

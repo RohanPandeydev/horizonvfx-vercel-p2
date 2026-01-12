@@ -14,7 +14,12 @@
       "Bash(tasklist:*)",
       "Bash(npx tsc:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(pnpm install:*)",
+      "Bash(pnpm run build:*)",
+      "Bash(ls:*)",
+      "Bash(npx prisma db push:*)",
+      "Bash(npx prisma generate)"
     ]
   }
 }

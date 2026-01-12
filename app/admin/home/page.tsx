@@ -196,7 +196,7 @@ export default function HomePageEditor() {
                     type="text"
                     value={heroVideo}
                     onChange={(e) => setHeroVideo(e.target.value)}
-                    className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 text-black border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-black"
                     placeholder="https://www.horizonvfx.in/images/Video1.mp4"
                   />
                 </div>
@@ -210,7 +210,7 @@ export default function HomePageEditor() {
                   type="text"
                   value={heroTagline}
                   onChange={(e) => setHeroTagline(e.target.value)}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 text-black border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-black"
                   placeholder="Visual Effects • Animation • Post Production"
                 />
               </div>
@@ -411,7 +411,7 @@ export default function HomePageEditor() {
                         type="text"
                         value={client}
                         onChange={(e) => updateClient(index, e.target.value)}
-                        className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 text-sm text-black border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-black"
                         placeholder="https://horizonvfx.in/images/c-logo1.jpg"
                       />
                     </div>

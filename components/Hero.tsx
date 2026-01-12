@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import ParticleGalaxy from "./ParticleGalaxy";
 import AnimatedHeroText from "./AnimatedHeroText";
@@ -11,15 +11,25 @@ interface HeroProps {
 }
 
 export default function Hero({ loading, scrollY }: HeroProps) {
-  const [heroParticles] = useState(() =>
-    [...Array(15)].map(() => ({
-      x: Math.random(),
-      y: Math.random(),
-      targetX: Math.random(),
-      targetY: Math.random(),
-      duration: 5 + Math.random() * 5,
-    }))
-  );
+  const [heroParticles, setHeroParticles] = useState<Array<{
+    x: number;
+    y: number;
+    targetX: number;
+    targetY: number;
+    duration: number;
+  }>>([]);
+
+  useEffect(() => {
+    setHeroParticles(
+      [...Array(15)].map(() => ({
+        x: Math.random(),
+        y: Math.random(),
+        targetX: Math.random(),
+        targetY: Math.random(),
+        duration: 5 + Math.random() * 5,
+      }))
+    );
+  }, []);
 
   return (
     <section id="home" className="relative w-full h-screen overflow-hidden">

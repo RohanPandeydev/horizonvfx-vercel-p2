@@ -189,7 +189,7 @@ export default function ServicesPageEditor() {
                   type="text"
                   value={heroTitle}
                   onChange={(e) => setHeroTitle(e.target.value)}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-black placeholder:text-black"
                   placeholder="Our Services"
                 />
               </div>
@@ -202,7 +202,7 @@ export default function ServicesPageEditor() {
                   value={heroSubtitle}
                   onChange={(e) => setHeroSubtitle(e.target.value)}
                   rows={3}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none text-black placeholder:text-black"
                   placeholder="From concept to final delivery..."
                 />
               </div>
@@ -257,7 +257,7 @@ export default function ServicesPageEditor() {
                         type="text"
                         value={service.title}
                         onChange={(e) => updateService(index, "title", e.target.value)}
-                        className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-black placeholder:text-black"
                         placeholder="Visual Effects"
                       />
                     </div>
@@ -270,7 +270,7 @@ export default function ServicesPageEditor() {
                         value={service.description}
                         onChange={(e) => updateService(index, "description", e.target.value)}
                         rows={2}
-                        className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+                        className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none text-black placeholder:text-black"
                         placeholder="CGI, compositing, and green screen integration..."
                       />
                     </div>
@@ -282,7 +282,7 @@ export default function ServicesPageEditor() {
                       <select
                         value={service.gradient}
                         onChange={(e) => updateService(index, "gradient", e.target.value)}
-                        className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-black placeholder:text-black"
                       >
                         <option value="from-cyan-500 to-blue-500">Cyan to Blue</option>
                         <option value="from-blue-500 to-purple-500">Blue to Purple</option>
@@ -313,7 +313,7 @@ export default function ServicesPageEditor() {
                               type="text"
                               value={feature}
                               onChange={(e) => updateServiceFeature(index, featureIndex, e.target.value)}
-                              className="px-2 py-1 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                              className="px-2 py-1 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-black placeholder:text-black"
                               placeholder="Green Screen"
                             />
                             {service.features.length > 1 && (

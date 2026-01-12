@@ -214,7 +214,7 @@ export default function ShowcasePageEditor() {
                   type="text"
                   value={heroTitle}
                   onChange={(e) => setHeroTitle(e.target.value)}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-black placeholder:text-black"
                   placeholder="Our Showcase"
                 />
               </div>
@@ -227,7 +227,7 @@ export default function ShowcasePageEditor() {
                   value={heroSubtitle}
                   onChange={(e) => setHeroSubtitle(e.target.value)}
                   rows={3}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none text-black placeholder:text-black"
                   placeholder="Explore our portfolio..."
                 />
               </div>
@@ -286,7 +286,7 @@ export default function ShowcasePageEditor() {
                             type="text"
                             value={service.count}
                             onChange={(e) => updateService(index, "count", e.target.value)}
-                            className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                            className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-black placeholder:text-black"
                             placeholder="100+"
                           />
                         </div>
@@ -300,7 +300,7 @@ export default function ShowcasePageEditor() {
                           type="text"
                           value={service.name}
                           onChange={(e) => updateService(index, "name", e.target.value)}
-                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent placeholder:text-black"
                           placeholder="Film & OTT"
                         />
                       </div>
@@ -350,7 +350,7 @@ export default function ShowcasePageEditor() {
                           type="text"
                           value={industry.title}
                           onChange={(e) => updateIndustry(index, "title", e.target.value)}
-                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent placeholder:text-black"
                           placeholder="Film and OTT"
                         />
                       </div>
@@ -363,7 +363,7 @@ export default function ShowcasePageEditor() {
                           type="text"
                           value={industry.image}
                           onChange={(e) => updateIndustry(index, "image", e.target.value)}
-                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent placeholder:text-black"
                           placeholder="https://horizonvfx.in/images/flm.png"
                         />
                       </div>
@@ -442,7 +442,7 @@ export default function ShowcasePageEditor() {
                         type="text"
                         value={tech.name}
                         onChange={(e) => updateTechnology(index, "name", e.target.value)}
-                        className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent placeholder:text-black"
                         placeholder="After Effects"
                       />
                     </div>

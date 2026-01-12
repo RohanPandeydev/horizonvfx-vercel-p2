@@ -251,7 +251,7 @@ export default function TeamPageEditor() {
                   type="text"
                   value={heroTitle}
                   onChange={(e) => setHeroTitle(e.target.value)}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-black placeholder:text-black"
                   placeholder="The Creative Minds"
                 />
               </div>
@@ -264,7 +264,7 @@ export default function TeamPageEditor() {
                   value={heroSubtitle}
                   onChange={(e) => setHeroSubtitle(e.target.value)}
                   rows={3}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none placeholder:text-black"
                   placeholder="Meet the talented artists who bring extraordinary visions to life"
                 />
               </div>
@@ -298,7 +298,7 @@ export default function TeamPageEditor() {
                   type="text"
                   value={leadershipHeading}
                   onChange={(e) => setLeadershipHeading(e.target.value)}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-black placeholder:text-black"
                 />
               </div>
 
@@ -345,7 +345,7 @@ export default function TeamPageEditor() {
                             type="text"
                             value={member.name}
                             onChange={(e) => updateLeadershipMember(member.id, "name", e.target.value)}
-                            className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-black placeholder:text-black"
                           />
                         </div>
                         <div>
@@ -356,7 +356,7 @@ export default function TeamPageEditor() {
                             type="text"
                             value={member.role}
                             onChange={(e) => updateLeadershipMember(member.id, "role", e.target.value)}
-                            className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-black placeholder:text-black"
                           />
                         </div>
                       </div>
@@ -369,7 +369,7 @@ export default function TeamPageEditor() {
                           type="url"
                           value={member.image}
                           onChange={(e) => updateLeadershipMember(member.id, "image", e.target.value)}
-                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-black placeholder:text-black"
                           placeholder="https://example.com/image.jpg"
                         />
                       </div>
@@ -382,7 +382,7 @@ export default function TeamPageEditor() {
                           value={member.bio}
                           onChange={(e) => updateLeadershipMember(member.id, "bio", e.target.value)}
                           rows={2}
-                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
+                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none text-black placeholder:text-black"
                         />
                       </div>
 
@@ -393,7 +393,7 @@ export default function TeamPageEditor() {
                         <select
                           value={member.gradient}
                           onChange={(e) => updateLeadershipMember(member.id, "gradient", e.target.value)}
-                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-black placeholder:text-black"
                         >
                           <option value="from-blue-500 to-cyan-500">Blue to Cyan</option>
                           <option value="from-purple-500 to-pink-500">Purple to Pink</option>
@@ -446,7 +446,7 @@ export default function TeamPageEditor() {
                   type="text"
                   value={teamHeading}
                   onChange={(e) => setTeamHeading(e.target.value)}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-black placeholder:text-black"
                 />
               </div>
 
@@ -492,7 +492,7 @@ export default function TeamPageEditor() {
                           type="text"
                           value={member.name}
                           onChange={(e) => updateTeamMember(member.id, "name", e.target.value)}
-                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-black placeholder:text-black"
                         />
                       </div>
 
@@ -504,7 +504,7 @@ export default function TeamPageEditor() {
                           type="text"
                           value={member.role}
                           onChange={(e) => updateTeamMember(member.id, "role", e.target.value)}
-                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-black placeholder:text-black"
                         />
                       </div>
 
@@ -516,7 +516,7 @@ export default function TeamPageEditor() {
                           type="url"
                           value={member.image}
                           onChange={(e) => updateTeamMember(member.id, "image", e.target.value)}
-                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-black placeholder:text-black"
                         />
                       </div>
 
@@ -528,7 +528,7 @@ export default function TeamPageEditor() {
                           value={member.bio}
                           onChange={(e) => updateTeamMember(member.id, "bio", e.target.value)}
                           rows={2}
-                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
+                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none text-black placeholder:text-black"
                         />
                       </div>
 
@@ -539,7 +539,7 @@ export default function TeamPageEditor() {
                         <select
                           value={member.gradient}
                           onChange={(e) => updateTeamMember(member.id, "gradient", e.target.value)}
-                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-black placeholder:text-black"
                         >
                           <option value="from-blue-500 to-cyan-500">Blue to Cyan</option>
                           <option value="from-purple-500 to-pink-500">Purple to Pink</option>
@@ -592,7 +592,7 @@ export default function TeamPageEditor() {
                   type="text"
                   value={ctaHeading}
                   onChange={(e) => setCtaHeading(e.target.value)}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-black placeholder:text-black"
                 />
               </div>
 
@@ -604,7 +604,7 @@ export default function TeamPageEditor() {
                   value={ctaDescription}
                   onChange={(e) => setCtaDescription(e.target.value)}
                   rows={3}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none placeholder:text-black"
                 />
               </div>
 
@@ -616,7 +616,7 @@ export default function TeamPageEditor() {
                   type="text"
                   value={ctaButtonText}
                   onChange={(e) => setCtaButtonText(e.target.value)}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-black placeholder:text-black"
                 />
               </div>
 

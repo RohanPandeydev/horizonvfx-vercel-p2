@@ -1,6 +1,6 @@
 "use client";
-import React, { useState } from "react";
-import { usePathname } from "next/navigation";
+import React, { useState, useEffect } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   LayoutDashboard,
@@ -18,14 +18,28 @@ import {
   Wrench,
   Home as HomeIcon,
 } from "lucide-react";
+import { useAuth } from "@/lib/auth-context";
+import AdminAuthWrapper from "@/components/AdminAuthWrapper";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
 }
 
-export default function AdminLayout({ children }: AdminLayoutProps) {
+function AdminLayoutContent({ children }: AdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, logout, isLoading } = useAuth();
+
+  // Skip auth checks for login page
+  const isLoginPage = pathname === '/admin/login';
+
+  // Redirect if not authenticated (skip for login page)
+  useEffect(() => {
+    if (!isLoginPage && !isLoading && !user) {
+      router.push('/admin/login');
+    }
+  }, [user, isLoading, router, isLoginPage]);
 
   const menuItems = [
     {
@@ -80,6 +94,30 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     },
   ];
 
+  const handleLogout = async () => {
+    await logout();
+    router.push('/admin/login');
+  };
+
+  // For login page, just render children without the admin UI
+  if (isLoginPage) {
+    return <>{children}</>;
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center">
+        <div className="text-white text-xl">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
+
+  const userInitial = user.firstName?.[0] || user.email[0] || 'A';
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       {/* Header */}
@@ -112,11 +150,17 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               href="/"
               className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all"
             >
-              <LogOut size={18} />
-              <span className="hidden sm:inline">View Site</span>
+              View Site
             </Link>
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all"
+            >
+              <LogOut size={18} />
+              <span className="hidden sm:inline">Logout</span>
+            </button>
             <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-full flex items-center justify-center text-white font-semibold">
-              A
+              {userInitial}
             </div>
           </div>
         </div>
@@ -169,11 +213,15 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-200">
           <div className="flex items-center gap-3 px-4 py-3 bg-slate-50 rounded-lg">
             <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-full flex items-center justify-center text-white font-semibold">
-              A
+              {userInitial}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-slate-900 truncate">Admin User</p>
-              <p className="text-xs text-slate-500 truncate">admin@horizonvfx.com</p>
+              <p className="text-sm font-semibold text-slate-900 truncate">
+                {user.firstName && user.lastName
+                  ? `${user.firstName} ${user.lastName}`
+                  : 'Admin User'}
+              </p>
+              <p className="text-xs text-slate-500 truncate">{user.email}</p>
             </div>
           </div>
         </div>
@@ -186,5 +234,13 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function AdminLayout({ children }: AdminLayoutProps) {
+  return (
+    <AdminAuthWrapper>
+      <AdminLayoutContent>{children}</AdminLayoutContent>
+    </AdminAuthWrapper>
   );
 }

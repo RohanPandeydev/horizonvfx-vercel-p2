@@ -289,7 +289,7 @@ export default function MediaLibraryEditor() {
                 setCurrentPage(1); // Reset to first page on search
               }}
               placeholder="Search by title, category, description, or technology..."
-              className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-black placeholder:text-black"
             />
           </div>
 
@@ -302,7 +302,7 @@ export default function MediaLibraryEditor() {
                 setFilterType(e.target.value as any);
                 setCurrentPage(1); // Reset to first page on filter change
               }}
-              className="px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-black"
             >
               <option value="all">All Types</option>
               <option value="featured">Featured Only</option>
@@ -530,7 +530,7 @@ function MediaCard({
               type="text"
               value={item.title}
               onChange={(e) => onUpdate("title", e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-semibold"
+              className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-semibold text-black placeholder:text-black"
               placeholder="Project title"
             />
 
@@ -566,7 +566,7 @@ function MediaCard({
               value={item.description || ""}
               onChange={(e) => onUpdate("description", e.target.value)}
               rows={2}
-              className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+              className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none text-black placeholder:text-black"
               placeholder="Description"
             />
 
@@ -574,7 +574,7 @@ function MediaCard({
               type="text"
               value={item.stats || ""}
               onChange={(e) => onUpdate("stats", e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder:text-black"
               placeholder="Stats (e.g., 200+ VFX Shots)"
             />
 
@@ -607,7 +607,7 @@ function MediaCard({
                     <select
                       value={tech}
                       onChange={(e) => onTechnologyUpdate(idx, e.target.value)}
-                      className="flex-1 px-2 py-1 text-xs border border-slate-200 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                      className="flex-1 px-2 py-1 text-xs border border-slate-200 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500 text-black"
                     >
                       {techOptions.map((opt) => (
                         <option key={opt} value={opt}>
@@ -796,7 +796,7 @@ function MediaListItem({
                 type="text"
                 value={item.title}
                 onChange={(e) => onUpdate("title", e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-black placeholder:text-black"
                 placeholder="Project title"
               />
 
@@ -809,7 +809,7 @@ function MediaListItem({
                     // Sync isReel flag with type
                     onUpdate("isReel", newType === "reel");
                   }}
-                  className="px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-black"
                 >
                   <option value="project">Project</option>
                   <option value="reel">Reel</option>
@@ -818,7 +818,7 @@ function MediaListItem({
                 <select
                   value={item.category}
                   onChange={(e) => onUpdate("category", e.target.value)}
-                  className="px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-black"
                 >
                   {categories.map((cat) => (
                     <option key={cat} value={cat}>

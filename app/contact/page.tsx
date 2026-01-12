@@ -2,8 +2,133 @@
 import { motion } from "framer-motion";
 import { Mail, Phone, MapPin, Send } from "lucide-react";
 import MagneticButton from "@/components/MagneticButton";
+import { useState, useEffect } from "react";
+import { useToast } from "@/lib/toast-context";
+
+interface FormField {
+  id: string;
+  label: string;
+  placeholder: string;
+  type: "text" | "email" | "textarea";
+}
+
+interface ContactContent {
+  hero: {
+    title: string;
+    subtitle: string;
+  };
+  contactInfo: {
+    heading: string;
+    description: string;
+    email: string;
+    phoneNumbers: string[];
+    location: string;
+  };
+  form: {
+    heading: string;
+    fields: FormField[];
+  };
+}
+
+const DEFAULT_CONTENT: ContactContent = {
+  hero: {
+    title: "Get In Touch",
+    subtitle: "Let's create something amazing together",
+  },
+  contactInfo: {
+    heading: "Contact Information",
+    description:
+      "We'd love to hear from you. Fill out the form or reach out directly through any of these channels.",
+    email: "info@horizonvfx.in",
+    phoneNumbers: ["+91 974 871 2372", "+91 876 702 5601"],
+    location: "Mumbai, India",
+  },
+  form: {
+    heading: "Send us a message",
+    fields: [
+      { id: "name", label: "Your Name", placeholder: "John Doe", type: "text" },
+      { id: "email", label: "Email Address", placeholder: "john@example.com", type: "email" },
+      { id: "subject", label: "Subject", placeholder: "Project Inquiry", type: "text" },
+      { id: "message", label: "Message", placeholder: "Tell us about your project...", type: "textarea" },
+    ],
+  },
+};
 
 export default function ContactPage() {
+  const { showSuccess, showError } = useToast();
+  const [content, setContent] = useState<ContactContent>(DEFAULT_CONTENT);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    subject: "",
+    message: "",
+  });
+
+  // Load content from CMS
+  useEffect(() => {
+    const loadContent = async () => {
+      try {
+        const response = await fetch("/api/pages/contact");
+        const result = await response.json();
+
+        if (result.success && result.data?.content) {
+          setContent(result.data.content);
+        }
+      } catch (error) {
+        console.error("Error loading content:", error);
+        // Keep default content on error
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadContent();
+  }, []);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setFormData((prev) => ({
+      ...prev,
+      [e.target.id]: e.target.value,
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        showSuccess(result.message || "Thank you for your message! We will get back to you soon.");
+        setFormData({ name: "", email: "", subject: "", message: "" });
+      } else {
+        throw new Error(result.error || "Failed to send message");
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to send message";
+      showError(message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-black via-zinc-950 to-black flex items-center justify-center">
+        <div className="text-white text-xl">Loading...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-black via-zinc-950 to-black">
       {/* Page Header */}
@@ -26,7 +151,7 @@ export default function ContactPage() {
               backgroundClip: "text",
             }}
           >
-            Get In Touch
+            {content.hero.title}
           </motion.h1>
           <motion.p
             className="text-xl text-gray-300 max-w-3xl mx-auto"
@@ -34,7 +159,7 @@ export default function ContactPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
           >
-            Let's create something amazing together
+            {content.hero.subtitle}
           </motion.p>
         </div>
       </motion.section>
@@ -52,12 +177,9 @@ export default function ContactPage() {
             >
               <div>
                 <h2 className="text-3xl font-bold mb-4 text-white">
-                  Contact Information
+                  {content.contactInfo.heading}
                 </h2>
-                <p className="text-gray-400">
-                  We'd love to hear from you. Fill out the form or reach out
-                  directly through any of these channels.
-                </p>
+                <p className="text-gray-400">{content.contactInfo.description}</p>
               </div>
 
               <div className="space-y-6">
@@ -73,10 +195,10 @@ export default function ContactPage() {
                       Email
                     </h3>
                     <a
-                      href="mailto:info@horizonvfx.in"
+                      href={`mailto:${content.contactInfo.email}`}
                       className="text-gray-400 hover:text-blue-400 transition-colors"
                     >
-                      info@horizonvfx.in
+                      {content.contactInfo.email}
                     </a>
                   </div>
                 </motion.div>
@@ -93,18 +215,15 @@ export default function ContactPage() {
                       Phone
                     </h3>
                     <div className="space-y-1">
-                      <a
-                        href="tel:+919748712372"
-                        className="block text-gray-400 hover:text-green-400 transition-colors"
-                      >
-                        +91 974 871 2372
-                      </a>
-                      <a
-                        href="tel:+918767025601"
-                        className="block text-gray-400 hover:text-green-400 transition-colors"
-                      >
-                        +91 876 702 5601
-                      </a>
+                      {content.contactInfo.phoneNumbers.map((phone, index) => (
+                        <a
+                          key={index}
+                          href={`tel:${phone.replace(/\s/g, "")}`}
+                          className="block text-gray-400 hover:text-green-400 transition-colors"
+                        >
+                          {phone}
+                        </a>
+                      ))}
                     </div>
                   </div>
                 </motion.div>
@@ -120,7 +239,7 @@ export default function ContactPage() {
                     <h3 className="text-lg font-semibold text-white mb-1">
                       Location
                     </h3>
-                    <p className="text-gray-400">Mumbai, India</p>
+                    <p className="text-gray-400">{content.contactInfo.location}</p>
                   </div>
                 </motion.div>
               </div>
@@ -134,77 +253,50 @@ export default function ContactPage() {
               className="p-10 md:p-12 rounded-2xl bg-gradient-to-br from-zinc-800/50 to-zinc-900/50 backdrop-blur-sm border border-white/10"
             >
               <h2 className="text-2xl font-bold mb-6 text-white">
-                Send us a message
+                {content.form.heading}
               </h2>
-              <form className="space-y-6">
-                <div>
-                  <label
-                    htmlFor="name"
-                    className="block text-sm font-medium text-gray-300 mb-2"
-                  >
-                    Your Name
-                  </label>
-                  <input
-                    type="text"
-                    id="name"
-                    className="w-full px-4 py-3 bg-zinc-900/50 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
-                    placeholder="John Doe"
-                  />
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="email"
-                    className="block text-sm font-medium text-gray-300 mb-2"
-                  >
-                    Email Address
-                  </label>
-                  <input
-                    type="email"
-                    id="email"
-                    className="w-full px-4 py-3 bg-zinc-900/50 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
-                    placeholder="john@example.com"
-                  />
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="subject"
-                    className="block text-sm font-medium text-gray-300 mb-2"
-                  >
-                    Subject
-                  </label>
-                  <input
-                    type="text"
-                    id="subject"
-                    className="w-full px-4 py-3 bg-zinc-900/50 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
-                    placeholder="Project Inquiry"
-                  />
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="message"
-                    className="block text-sm font-medium text-gray-300 mb-2"
-                  >
-                    Message
-                  </label>
-                  <textarea
-                    id="message"
-                    rows={6}
-                    className="w-full px-4 py-3 bg-zinc-900/50 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors resize-none"
-                    placeholder="Tell us about your project..."
-                  />
-                </div>
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {content.form.fields.map((field) => (
+                  <div key={field.id}>
+                    <label
+                      htmlFor={field.id}
+                      className="block text-sm font-medium text-gray-300 mb-2"
+                    >
+                      {field.label}
+                    </label>
+                    {field.type === "textarea" ? (
+                      <textarea
+                        id={field.id}
+                        rows={6}
+                        value={formData[field.id as keyof typeof formData]}
+                        onChange={handleInputChange}
+                        required
+                        className="w-full px-4 py-3 bg-zinc-900/50 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors resize-none"
+                        placeholder={field.placeholder}
+                      />
+                    ) : (
+                      <input
+                        type={field.type}
+                        id={field.id}
+                        value={formData[field.id as keyof typeof formData]}
+                        onChange={handleInputChange}
+                        required
+                        className="w-full px-4 py-3 bg-zinc-900/50 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
+                        placeholder={field.placeholder}
+                      />
+                    )}
+                  </div>
+                ))}
 
                 <MagneticButton>
                   <motion.button
                     type="submit"
-                    className="w-full inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-500 to-green-500 rounded-lg font-semibold text-white"
+                    disabled={isSubmitting}
+                    className="w-full inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-500 to-green-500 rounded-lg font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
-                    <span>Send Message</span>
+                    <span>{isSubmitting ? "Sending..." : "Send Message"}</span>
                     <Send size={20} />
                   </motion.button>
                 </MagneticButton>

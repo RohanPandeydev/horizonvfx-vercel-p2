@@ -1,13 +1,7 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
 import MainLayout from "@/components/MainLayout";
-
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-  display: "swap",
-});
+import { ToastProvider } from "@/lib/toast-context";
 
 export const metadata: Metadata = {
   title: "HorizonVFX - Where Creativity Meets Horizon",
@@ -23,8 +17,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="scroll-smooth">
-      <body className={`${inter.variable} font-sans antialiased`}>
-        <MainLayout>{children}</MainLayout>
+      <body className="font-sans antialiased">
+        <ToastProvider>
+          <MainLayout>{children}</MainLayout>
+        </ToastProvider>
       </body>
     </html>
   );
