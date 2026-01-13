@@ -5,7 +5,7 @@ import { Save, Eye, Type, BookOpen, Star, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/lib/toast-context";
 import FileUpload from "@/components/admin/FileUpload";
-import EmojiPicker from "@/components/admin/EmojiPicker";
+import IconPicker from "@/components/admin/IconPicker";
 
 interface FeatureCard {
   id: number;
@@ -617,7 +617,7 @@ export default function AboutPageEditor() {
                     >
                       <div className="grid md:grid-cols-2 gap-3">
                         <div>
-                          <EmojiPicker
+                          <IconPicker
                             label="Icon"
                             value={card.icon}
                             onChange={(value) => {
@@ -834,7 +834,7 @@ export default function AboutPageEditor() {
                       className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2"
                     >
                       <div>
-                        <EmojiPicker
+                        <IconPicker
                           label="Icon"
                           value={card.icon}
                           onChange={(value) =>
@@ -916,7 +916,7 @@ export default function AboutPageEditor() {
                       className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3"
                     >
                       <div>
-                        <EmojiPicker
+                        <IconPicker
                           label="Icon"
                           value={card.icon}
                           onChange={(value) => {
