@@ -1,4 +1,4 @@
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions } from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { env } from './env';
 
@@ -25,16 +25,16 @@ export async function verifyPassword(password: string, hashedPassword: string): 
 
 // Generate access token
 export function generateAccessToken(payload: TokenPayload): string {
-  return jwt.sign(payload, env.jwtAccessSecret, {
-    expiresIn: env.accessTokenExpiresIn,
-  });
+  return jwt.sign(payload, env.JWT_ACCESS_SECRET, {
+    expiresIn: env.ACCESS_TOKEN_EXPIRES_IN,
+  } as any);
 }
 
 // Generate refresh token
 export function generateRefreshToken(payload: TokenPayload): string {
-  return jwt.sign(payload, env.jwtRefreshSecret, {
-    expiresIn: env.refreshTokenExpiresIn,
-  });
+  return jwt.sign(payload, env.JWT_REFRESH_SECRET, {
+    expiresIn: env.REFRESH_TOKEN_EXPIRES_IN,
+  } as any);
 }
 
 // Generate both tokens
@@ -47,12 +47,12 @@ export function generateTokens(payload: TokenPayload): Tokens {
 
 // Verify access token
 export function verifyAccessToken(token: string): TokenPayload {
-  return jwt.verify(token, env.jwtAccessSecret) as TokenPayload;
+  return jwt.verify(token, env.JWT_ACCESS_SECRET) as TokenPayload;
 }
 
 // Verify refresh token
 export function verifyRefreshToken(token: string): TokenPayload {
-  return jwt.verify(token, env.jwtRefreshSecret) as TokenPayload;
+  return jwt.verify(token, env.JWT_REFRESH_SECRET) as TokenPayload;
 }
 
 // Generate verification token for email

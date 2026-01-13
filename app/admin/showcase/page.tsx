@@ -12,7 +12,7 @@ import {
   Monitor,
 } from "lucide-react";
 import Link from "next/link";
-import EmojiPicker from "@/components/admin/EmojiPicker";
+import IconPicker from "@/components/admin/IconPicker";
 
 interface Service {
   icon: string;
@@ -272,7 +272,7 @@ export default function ShowcasePageEditor() {
 
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <EmojiPicker
+                          <IconPicker
                             label="Icon"
                             value={service.icon}
                             onChange={(value) => updateService(index, "icon", value)}
@@ -427,7 +427,7 @@ export default function ShowcasePageEditor() {
                     </div>
 
                     <div>
-                      <EmojiPicker
+                      <IconPicker
                         label="Icon"
                         value={tech.icon}
                         onChange={(value) => updateTechnology(index, "icon", value)}

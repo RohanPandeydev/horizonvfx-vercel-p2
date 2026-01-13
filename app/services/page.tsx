@@ -1,14 +1,210 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { Play, ArrowRight, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import React from "react";
+import DynamicIcon from "@/components/DynamicIcon";
+
+interface Service {
+  title: string;
+  description: string;
+  icon: string;
+  gradient: string;
+  features: string[];
+}
+
+interface FlowchartNode {
+  id: number;
+  title: string;
+  description: string;
+  icon: string;
+  gradient: string;
+  details: string[];
+}
+
+interface ServicesContent {
+  hero: {
+    title: string;
+    subtitle: string;
+  };
+  services?: Service[];
+  process?: FlowchartNode[];
+}
+
+const DEFAULT_CONTENT: ServicesContent = {
+  hero: {
+    title: "Our Services",
+    subtitle: "From concept to final delivery, we provide comprehensive visual effects and animation services that bring your vision to life",
+  },
+  process: [
+    {
+      id: 0,
+      title: "Concept & Pre-Production",
+      description: "Where ideas take shape",
+      icon: "💡",
+      gradient: "from-cyan-500 to-blue-500",
+      details: [
+        "Creative consultation and concept development",
+        "Storyboarding and previs",
+        "Budget estimation and project planning",
+        "Team allocation and resource management",
+      ],
+    },
+    {
+      id: 1,
+      title: "Asset Creation",
+      description: "Building the foundation",
+      icon: "🎨",
+      gradient: "from-blue-500 to-purple-500",
+      details: [
+        "3D modeling and texturing",
+        "Character design and rigging",
+        "Environment creation",
+        "Asset library management",
+      ],
+    },
+    {
+      id: 2,
+      title: "Animation & Simulation",
+      description: "Bringing it to life",
+      icon: "🎬",
+      gradient: "from-purple-500 to-pink-500",
+      details: [
+        "Character animation",
+        "Particle simulations",
+        "Physics and dynamics",
+        "Motion capture integration",
+      ],
+    },
+    {
+      id: 3,
+      title: "Lighting & Rendering",
+      description: "Setting the mood",
+      icon: "✨",
+      gradient: "from-pink-500 to-rose-500",
+      details: [
+        "Scene lighting setup",
+        "Shader development",
+        "Render farm optimization",
+        "Multi-pass rendering",
+      ],
+    },
+    {
+      id: 4,
+      title: "Compositing & VFX",
+      description: "The magic happens",
+      icon: "🔮",
+      gradient: "from-rose-500 to-orange-500",
+      details: [
+        "Green screen keying",
+        "Rotoscope and paint",
+        "Color grading",
+        "Final integration",
+      ],
+    },
+    {
+      id: 5,
+      title: "Delivery & Support",
+      description: "Ready for the world",
+      icon: "🚀",
+      gradient: "from-orange-500 to-yellow-500",
+      details: [
+        "Final quality checks",
+        "Format conversion and delivery",
+        "Client revisions",
+        "Post-project support",
+      ],
+    },
+  ],
+  services: [
+    {
+      title: "Visual Effects",
+      description: "CGI, compositing, and green screen integration for films and commercials",
+      icon: "🎥",
+      gradient: "from-cyan-500 to-blue-500",
+      features: ["Green Screen", "CGI", "Rotoscope", "Match Move"],
+    },
+    {
+      title: "3D Animation",
+      description: "Character animation, rigging, and motion graphics for any medium",
+      icon: "🎬",
+      gradient: "from-blue-500 to-purple-500",
+      features: ["Character Rigging", "Motion Graphics", "Mocap", "Keyframe Animation"],
+    },
+    {
+      title: "Game Cinematics",
+      description: "High-impact cinematic sequences and trailers for gaming projects",
+      icon: "🎮",
+      gradient: "from-purple-500 to-pink-500",
+      features: ["Real-time Renders", "Game Trailers", "Cutscenes", "Asset Creation"],
+    },
+    {
+      title: "Pre-visualization",
+      description: "Storyboard animation and previs to plan your shots effectively",
+      icon: "📋",
+      gradient: "from-pink-500 to-rose-500",
+      features: ["Storyboarding", "3D Previs", "Techvis", "Postvis"],
+    },
+    {
+      title: "Color Grading",
+      description: "Professional color correction and grading for cinematic looks",
+      icon: "🎨",
+      gradient: "from-rose-500 to-orange-500",
+      features: ["Color Correction", "Look Development", "HDR Grading", "Film Emulation"],
+    },
+    {
+      title: "Virtual Production",
+      description: "LED wall volumes and real-time rendering for on-set VFX",
+      icon: "🖥️",
+      gradient: "from-orange-500 to-yellow-500",
+      features: ["LED Volumes", "Real-time Rendering", "Camera Tracking", "Virtual Sets"],
+    },
+  ],
+};
 
 export default function ServicesPage() {
   const { scrollY } = useScroll();
   const [activeNode, setActiveNode] = useState(0);
   const [isFlowchartVisible, setIsFlowchartVisible] = useState(false);
+  const [content, setContent] = useState<ServicesContent>(DEFAULT_CONTENT);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    loadContent();
+  }, []);
+
+  const loadContent = async () => {
+    try {
+      const response = await fetch("/api/pages/services");
+      const result = await response.json();
+
+      console.log("API Response:", result);
+      console.log("Content received:", result.data?.content);
+      console.log("Services array:", result.data?.content?.services);
+      console.log("Services length:", result.data?.content?.services?.length);
+
+      if (result.success && result.data) {
+        setContent(result.data.content);
+        console.log("State set with:", result.data.content);
+        console.log("Services in state:", result.data.content.services);
+        console.log("Services count in state:", result.data.content.services?.length);
+      }
+    } catch (error) {
+      console.error("Error loading content:", error);
+      // Keep default content on error
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-white">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-black">
@@ -61,7 +257,7 @@ export default function ServicesPage() {
             className="text-5xl md:text-7xl lg:text-8xl font-bold mb-6"
           >
             <span className="bg-gradient-to-r from-white via-cyan-200 to-purple-200 bg-clip-text text-transparent">
-              Our Services
+              {content.hero.title}
             </span>
           </motion.h1>
 
@@ -71,8 +267,7 @@ export default function ServicesPage() {
             transition={{ duration: 0.8, delay: 0.4 }}
             className="text-xl md:text-2xl text-gray-400 max-w-3xl mx-auto mb-12 leading-relaxed"
           >
-            From concept to final delivery, we provide comprehensive visual
-            effects and animation services that bring your vision to life
+            {content.hero.subtitle}
           </motion.p>
 
           <motion.div
@@ -143,6 +338,7 @@ export default function ServicesPage() {
           </motion.div>
 
           <InteractiveFlowchart
+            nodes={content.process || DEFAULT_CONTENT.process!}
             activeNode={activeNode}
             setActiveNode={setActiveNode}
           />
@@ -169,7 +365,7 @@ export default function ServicesPage() {
             </p>
           </motion.div>
 
-          <ServicesGrid />
+          <ServicesGrid services={content.services || DEFAULT_CONTENT.services!} />
         </div>
       </section>
     </div>
@@ -186,107 +382,29 @@ interface FlowchartNode {
   details: string[];
 }
 
-const flowchartNodes: FlowchartNode[] = [
-  {
-    id: 0,
-    title: "Concept & Pre-Production",
-    description: "Where ideas take shape",
-    icon: "💡",
-    gradient: "from-cyan-500 to-blue-500",
-    details: [
-      "Creative consultation and concept development",
-      "Storyboarding and previs",
-      "Budget estimation and project planning",
-      "Team allocation and resource management",
-    ],
-  },
-  {
-    id: 1,
-    title: "Asset Creation",
-    description: "Building the foundation",
-    icon: "🎨",
-    gradient: "from-blue-500 to-purple-500",
-    details: [
-      "3D modeling and texturing",
-      "Character design and rigging",
-      "Environment creation",
-      "Asset library management",
-    ],
-  },
-  {
-    id: 2,
-    title: "Animation & Simulation",
-    description: "Bringing it to life",
-    icon: "🎬",
-    gradient: "from-purple-500 to-pink-500",
-    details: [
-      "Character animation",
-      "Particle simulations",
-      "Physics and dynamics",
-      "Motion capture integration",
-    ],
-  },
-  {
-    id: 3,
-    title: "Lighting & Rendering",
-    description: "Setting the mood",
-    icon: "✨",
-    gradient: "from-pink-500 to-rose-500",
-    details: [
-      "Scene lighting setup",
-      "Shader development",
-      "Render farm optimization",
-      "Multi-pass rendering",
-    ],
-  },
-  {
-    id: 4,
-    title: "Compositing & VFX",
-    description: "The magic happens",
-    icon: "🔮",
-    gradient: "from-rose-500 to-orange-500",
-    details: [
-      "Green screen keying",
-      "Rotoscope and paint",
-      "Color grading",
-      "Final integration",
-    ],
-  },
-  {
-    id: 5,
-    title: "Delivery & Support",
-    description: "Ready for the world",
-    icon: "🚀",
-    gradient: "from-orange-500 to-yellow-500",
-    details: [
-      "Final quality checks",
-      "Format conversion and delivery",
-      "Client revisions",
-      "Post-project support",
-    ],
-  },
-];
-
 function InteractiveFlowchart({
+  nodes,
   activeNode,
   setActiveNode,
 }: {
+  nodes: FlowchartNode[];
   activeNode: number;
   setActiveNode: (node: number) => void;
 }) {
   const [hoveredNode, setHoveredNode] = useState<number | null>(null);
 
-  const activeNodeData = flowchartNodes[activeNode];
+  const activeNodeData = nodes[activeNode];
+  const flowchartNodes = nodes;
 
   return (
     <>
       {/* Main Flowchart Structure */}
-      <div className="relative max-w-6xl mx-auto">
-        <div className="relative">
+      <div className="relative max-w-6xl mx-auto pb-32">
+        <div className="relative" style={{ minHeight: `${flowchartNodes.length * 400}px` }}>
         {/* Connection SVG Lines */}
         <svg
           className="absolute inset-0 w-full h-full pointer-events-none"
-          style={{ zIndex: 0, minHeight: "800px" }}
+          style={{ zIndex: 0 }}
         >
           {flowchartNodes.map((_, index) => {
             if (index === flowchartNodes.length - 1) return null;
@@ -461,7 +579,7 @@ function InteractiveFlowchart({
                                 repeat: activeNode === node.id ? Infinity : 0,
                               }}
                             >
-                              {node.icon}
+                              <DynamicIcon name={node.icon} size={32} />
                             </motion.div>
                             {/* Glow effect behind icon */}
                             {activeNode === node.id && (
@@ -568,7 +686,7 @@ function InteractiveFlowchart({
                   animate={{ rotate: [0, 15, -15, 0] }}
                   transition={{ duration: 0.6, repeat: Infinity }}
                 >
-                  {activeNodeData.icon}
+                  <DynamicIcon name={activeNodeData.icon} size={80} />
                 </motion.div>
                 <div className="flex-1">
                   <motion.div
@@ -727,89 +845,23 @@ function InteractiveFlowchart({
 }
 
 // Services Grid Component
-function ServicesGrid() {
-  const services = [
-    {
-      title: "Visual Effects",
-      description:
-        "CGI, compositing, and green screen integration for films and commercials",
-      icon: "🎥",
-      gradient: "from-cyan-500 to-blue-500",
-      features: ["Green Screen", "CGI", "Rotoscope", "Match Move"],
-    },
-    {
-      title: "3D Animation",
-      description:
-        "Character animation, rigging, and motion graphics for any medium",
-      icon: "🎬",
-      gradient: "from-blue-500 to-purple-500",
-      features: [
-        "Character Rigging",
-        "Motion Graphics",
-        "Mocap",
-        "Keyframe Animation",
-      ],
-    },
-    {
-      title: "Game Cinematics",
-      description:
-        "High-impact cinematic sequences and trailers for gaming projects",
-      icon: "🎮",
-      gradient: "from-purple-500 to-pink-500",
-      features: [
-        "Real-time Renders",
-        "Game Trailers",
-        "Cutscenes",
-        "Asset Creation",
-      ],
-    },
-    {
-      title: "Pre-visualization",
-      description:
-        "Storyboard animation and previs to plan your shots effectively",
-      icon: "📋",
-      gradient: "from-pink-500 to-rose-500",
-      features: ["Storyboarding", "3D Previs", "Techvis", "Postvis"],
-    },
-    {
-      title: "Color Grading",
-      description:
-        "Professional color correction and grading for cinematic looks",
-      icon: "🎨",
-      gradient: "from-rose-500 to-orange-500",
-      features: [
-        "Color Correction",
-        "Look Development",
-        "HDR Grading",
-        "Film Emulation",
-      ],
-    },
-    {
-      title: "Virtual Production",
-      description: "LED wall volumes and real-time rendering for on-set VFX",
-      icon: "🖥️",
-      gradient: "from-orange-500 to-yellow-500",
-      features: [
-        "LED Volumes",
-        "Real-time Rendering",
-        "Camera Tracking",
-        "Virtual Sets",
-      ],
-    },
-  ];
+function ServicesGrid({ services }: { services: Service[] }) {
+  console.log("ServicesGrid received:", services.length, "services");
 
   return (
     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-      {services.map((service, index) => (
-        <motion.div
-          key={service.title}
-          initial={{ opacity: 0, y: 50 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: index * 0.1 }}
-          whileHover={{ y: -10 }}
-          className="group"
-        >
+      {services.map((service, index) => {
+        console.log(`Rendering service ${index + 1}:`, service.title);
+        return (
+          <motion.div
+            key={`service-${index}-${service.title}`}
+            initial={{ opacity: 0, y: 50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: index * 0.1 }}
+            whileHover={{ y: -10 }}
+            className="group"
+          >
           <div className="p-8 rounded-3xl bg-gradient-to-br from-zinc-800/50 to-zinc-900/50 backdrop-blur-sm border border-white/10 h-full relative overflow-hidden">
             {/* Hover glow */}
             <motion.div
@@ -826,7 +878,7 @@ function ServicesGrid() {
                   delay: index * 0.2,
                 }}
               >
-                {service.icon}
+                <DynamicIcon name={service.icon} size={64} />
               </motion.div>
 
               <h3
@@ -852,7 +904,8 @@ function ServicesGrid() {
             </div>
           </div>
         </motion.div>
-      ))}
+        );
+      })}
     </div>
   );
 }

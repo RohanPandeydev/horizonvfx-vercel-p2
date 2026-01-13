@@ -5,43 +5,96 @@ import * as THREE from "three";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Team from "@/components/Team";
 
-const teamMembers = [
-  {
-    name: "Bhuvnesh Kumar Varshney",
-    role: "Creative Animation Supervisor",
-    image: "https://horizonvfx.in/images/tm1.jpg",
-    gradient: "from-blue-500 to-cyan-500",
-    bio: "15+ years of experience in animation and creative direction",
+interface TeamMember {
+  id: number;
+  name: string;
+  role: string;
+  image: string;
+  gradient: string;
+  bio: string;
+}
+
+interface TeamContent {
+  hero: {
+    title: string;
+    subtitle: string;
+  };
+  leadership: {
+    heading: string;
+    members: TeamMember[];
+  };
+  teamMembers: {
+    heading: string;
+    members: TeamMember[];
+  };
+  cta: {
+    heading: string;
+    description: string;
+    buttonText: string;
+  };
+}
+
+const DEFAULT_CONTENT: TeamContent = {
+  hero: {
+    title: "The Creative Minds",
+    subtitle: "Meet the talented artists who bring extraordinary visions to life",
   },
-  {
-    name: "Dibakar Chakraborty",
-    role: "Founder & VFX Supervisor",
-    image: "https://horizonvfx.in/images/tm2.jpg",
-    gradient: "from-purple-500 to-pink-500",
-    bio: "Visionary leader with 20+ years in VFX industry",
+  leadership: {
+    heading: "Leadership",
+    members: [
+      {
+        id: 1,
+        name: "Bhuvnesh Kumar Varshney",
+        role: "Creative Animation Supervisor",
+        image: "https://horizonvfx.in/images/tm1.jpg",
+        gradient: "from-blue-500 to-cyan-500",
+        bio: "15+ years of experience in animation and creative direction",
+      },
+      {
+        id: 2,
+        name: "Dibakar Chakraborty",
+        role: "Founder & VFX Supervisor",
+        image: "https://horizonvfx.in/images/tm2.jpg",
+        gradient: "from-purple-500 to-pink-500",
+        bio: "Visionary leader with 20+ years in VFX industry",
+      },
+    ],
   },
-  {
-    name: "Rahul Sharma",
-    role: "3D Artist",
-    image: "https://horizonvfx.in/images/tm3.jpg",
-    gradient: "from-green-500 to-emerald-500",
-    bio: "Specialized in 3D modeling and realistic texturing",
+  teamMembers: {
+    heading: "Our Team",
+    members: [
+      {
+        id: 3,
+        name: "Rahul Sharma",
+        role: "3D Artist",
+        image: "https://horizonvfx.in/images/tm3.jpg",
+        gradient: "from-green-500 to-emerald-500",
+        bio: "Specialized in 3D modeling and realistic texturing",
+      },
+      {
+        id: 4,
+        name: "Priya Singh",
+        role: "Compositor",
+        image: "https://horizonvfx.in/images/tm4.jpg",
+        gradient: "from-orange-500 to-red-500",
+        bio: "Expert in compositing and color grading",
+      },
+      {
+        id: 5,
+        name: "Amit Patel",
+        role: "Motion Graphics Artist",
+        image: "https://horizonvfx.in/images/tm5.jpg",
+        gradient: "from-cyan-500 to-blue-500",
+        bio: "Creative motion designer with passion for typography",
+      },
+    ],
   },
-  {
-    name: "Priya Singh",
-    role: "Compositor",
-    image: "https://horizonvfx.in/images/tm4.jpg",
-    gradient: "from-orange-500 to-red-500",
-    bio: "Expert in compositing and color grading",
+  cta: {
+    heading: "Join Our Creative Team",
+    description: "Be part of our journey to create extraordinary visual experiences",
+    buttonText: "View Open Positions",
   },
-  {
-    name: "Amit Patel",
-    role: "Motion Graphics Artist",
-    image: "https://horizonvfx.in/images/tm5.jpg",
-    gradient: "from-cyan-500 to-blue-500",
-    bio: "Creative motion designer with passion for typography",
-  },
-];
+};
 
 // Three.js Background Component
 function ThreeBackground() {
@@ -214,13 +267,44 @@ function ThreeBackground() {
 }
 
 export default function TeamPage() {
+  const [content, setContent] = useState<TeamContent>(DEFAULT_CONTENT);
+  const [isLoading, setIsLoading] = useState(true);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [direction, setDirection] = useState(0);
 
-  const teamMembersForSlider = teamMembers.slice(2);
+  // Load content from CMS
+  useEffect(() => {
+    const loadContent = async () => {
+      try {
+        const response = await fetch("/api/pages/team");
+        const result = await response.json();
+
+        if (result.success && result.data) {
+          setContent(result.data.content);
+        }
+      } catch (error) {
+        console.error("Error loading team content:", error);
+        // Keep default content on error
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadContent();
+  }, []);
+
+  const teamMembersForSlider = content.teamMembers.members.slice(2);
   const itemsPerSlide = 3;
   const totalSlides = Math.ceil(teamMembersForSlider.length / itemsPerSlide);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-white">Loading...</div>
+      </div>
+    );
+  }
 
   const slideVariants = {
     enter: (direction: number) => ({
@@ -275,7 +359,7 @@ export default function TeamPage() {
             transition={{ delay: 0.2 }}
           >
             <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-              The Creative Minds
+              {content.hero.title}
             </span>
           </motion.h1>
           <motion.p
@@ -283,13 +367,8 @@ export default function TeamPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-          >
-            Meet the talented artists who bring{" "}
-            <span className="text-white font-semibold">
-              extraordinary visions
-            </span>{" "}
-            to life
-          </motion.p>
+            dangerouslySetInnerHTML={{ __html: content.hero.subtitle }}
+          />
         </div>
       </motion.section>
 
@@ -308,7 +387,7 @@ export default function TeamPage() {
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
             >
-              Leadership
+              {content.leadership.heading}
             </motion.h2>
             <motion.div
               className="w-32 h-1 bg-gradient-to-r from-purple-500 to-pink-500 mx-auto rounded-full"
@@ -320,7 +399,7 @@ export default function TeamPage() {
           </motion.div>
 
           <div className="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto">
-            {teamMembers.slice(0, 2).map((member, index) => (
+            {content.leadership.members.map((member, index) => (
               <motion.div
                 key={index}
                 initial={{ opacity: 0, y: 100, rotateX: -15 }}
@@ -423,7 +502,7 @@ export default function TeamPage() {
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
             >
-              Our Team
+              {content.teamMembers.heading}
             </motion.h2>
             <motion.div
               className="w-32 h-1 bg-gradient-to-r from-cyan-500 to-blue-500 mx-auto rounded-full"
@@ -612,11 +691,10 @@ export default function TeamPage() {
                   textShadow: hoveredIndex !== null ? "0 0 20px rgba(168, 85, 247, 0.5)" : "none",
                 }}
               >
-                Join Our Creative Team
+                {content.cta.heading}
               </motion.h3>
               <p className="text-gray-400 mb-8 max-w-2xl mx-auto text-lg">
-                Be part of our journey to create extraordinary visual
-                experiences
+                {content.cta.description}
               </p>
               <motion.button
                 className="px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl font-semibold text-white shadow-lg shadow-purple-500/25"
@@ -626,7 +704,7 @@ export default function TeamPage() {
                 }}
                 whileTap={{ scale: 0.95 }}
               >
-                View Open Positions
+                {content.cta.buttonText}
               </motion.button>
             </div>
           </motion.div>

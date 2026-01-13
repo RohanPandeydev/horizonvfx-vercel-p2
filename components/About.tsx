@@ -3,6 +3,35 @@ import React, { useState, useEffect } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { TW, COLORS } from "@/lib/colors";
 import About3DScene from "./About3DScene";
+import DynamicIcon from "./DynamicIcon";
+import { getIconColor } from "@/lib/icon-utils";
+
+interface StatsItem {
+  value: string;
+  label: string;
+  icon: string;
+}
+
+interface FeatureItem {
+  icon: string;
+  title: string;
+  description: string;
+  gradient: string;
+}
+
+interface JourneyCard {
+  title: string;
+  description: string;
+  icon: string;
+}
+
+interface AboutProps {
+  stats?: StatsItem[];
+  features?: FeatureItem[];
+  missionCard?: JourneyCard;
+  visionCard?: JourneyCard;
+  valuesCard?: JourneyCard;
+}
 
 type ColorTheme = "green" | "blue" | "purple" | "cyan" | "emerald";
 
@@ -14,14 +43,14 @@ const colorThemes: Record<ColorTheme, { primary: string; secondary: string; acce
   emerald: { primary: "#10b981", secondary: "#06b6d4", accent: "#34d399" },
 };
 
-const stats = [
+const defaultStats: StatsItem[] = [
   { value: "500+", label: "Projects Delivered", icon: "🎬" },
   { value: "50+", label: "Happy Clients", icon: "🏆" },
   { value: "100+", label: "Team Members", icon: "👥" },
   { value: "10+", label: "Years Experience", icon: "⭐" },
 ];
 
-const features = [
+const defaultFeatures: FeatureItem[] = [
   {
     icon: "🚀",
     title: "Cutting-Edge Technology",
@@ -60,7 +89,31 @@ const features = [
   },
 ];
 
-export default function About() {
+const defaultJourneyCards = {
+  mission: {
+    title: "Our Mission",
+    description: "Redefining visual storytelling",
+    icon: "🎯",
+  },
+  vision: {
+    title: "Our Vision",
+    description: "To be the global leader in VFX innovation",
+    icon: "👁️",
+  },
+  values: {
+    title: "Our Values",
+    description: "Excellence, Innovation, Collaboration",
+    icon: "💎",
+  },
+};
+
+export default function About({
+  stats = defaultStats,
+  features = defaultFeatures,
+  missionCard = defaultJourneyCards.mission,
+  visionCard = defaultJourneyCards.vision,
+  valuesCard = defaultJourneyCards.values,
+}: AboutProps = {}) {
   const [currentTheme, setCurrentTheme] = useState<ColorTheme>("green");
   const { scrollYProgress } = useScroll();
   const y = useTransform(scrollYProgress, [0, 1], [0, -50]);
@@ -183,7 +236,9 @@ export default function About() {
                   }}
                 />
                 <div className="relative z-10">
-                  <div className="text-4xl mb-2">{stat.icon}</div>
+                  <div className="mb-2">
+                    <DynamicIcon name={stat.icon} size={32} className={getIconColor(stat.icon)} />
+                  </div>
                   <div
                     className="text-3xl md:text-4xl font-bold mb-2"
                     style={{
@@ -257,35 +312,35 @@ export default function About() {
                 />
                 <div className="relative z-10 space-y-4">
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center text-2xl">
-                      🎯
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center">
+                      <DynamicIcon name={missionCard.icon} size={24} className="text-white" />
                     </div>
                     <div>
-                      <h4 className="font-bold text-white">Our Mission</h4>
+                      <h4 className="font-bold text-white">{missionCard.title}</h4>
                       <p className="text-sm text-gray-400">
-                        Redefining visual storytelling
+                        {missionCard.description}
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-2xl">
-                      👁️
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                      <DynamicIcon name={visionCard.icon} size={24} className="text-white" />
                     </div>
                     <div>
-                      <h4 className="font-bold text-white">Our Vision</h4>
+                      <h4 className="font-bold text-white">{visionCard.title}</h4>
                       <p className="text-sm text-gray-400">
-                        To be the global leader in VFX innovation
+                        {visionCard.description}
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center text-2xl">
-                      💎
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center">
+                      <DynamicIcon name={valuesCard.icon} size={24} className="text-white" />
                     </div>
                     <div>
-                      <h4 className="font-bold text-white">Our Values</h4>
+                      <h4 className="font-bold text-white">{valuesCard.title}</h4>
                       <p className="text-sm text-gray-400">
-                        Excellence, Innovation, Collaboration
+                        {valuesCard.description}
                       </p>
                     </div>
                   </div>
@@ -331,7 +386,9 @@ export default function About() {
                     }}
                   />
                   <div className="relative z-10">
-                    <div className="text-5xl mb-4">{feature.icon}</div>
+                    <div className="mb-4">
+                      <DynamicIcon name={feature.icon} size={40} className={getIconColor(feature.icon)} />
+                    </div>
                     <h4
                       className={`text-xl font-bold mb-3 bg-gradient-to-r ${feature.gradient} bg-clip-text text-transparent`}
                     >

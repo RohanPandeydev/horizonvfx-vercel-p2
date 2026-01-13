@@ -3,6 +3,7 @@ import { motion, useScroll, useTransform, useInView } from "framer-motion";
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Play, ArrowRight, Zap, Film } from "lucide-react";
 import React from "react";
+import DynamicIcon from "@/components/DynamicIcon";
 
 const showcaseProjects = [
   {
@@ -253,7 +254,7 @@ export default function ShowcasePage() {
                     delay: i * 0.2,
                   }}
                 >
-                  {service.icon}
+                  <DynamicIcon name={service.icon} size={40} />
                 </motion.div>
                 <div className="text-4xl font-bold text-white mb-1 relative z-10">
                   {service.count}
@@ -455,7 +456,7 @@ export default function ShowcasePage() {
                       delay: i * 0.1,
                     }}
                   >
-                    {tech.icon}
+                    <DynamicIcon name={tech.icon} size={32} />
                   </motion.div>
                   <div
                     className={`text-sm font-semibold bg-gradient-to-r ${tech.color} bg-clip-text text-transparent`}

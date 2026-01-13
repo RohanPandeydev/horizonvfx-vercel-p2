@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Save,
@@ -12,6 +12,8 @@ import {
   GripVertical,
 } from "lucide-react";
 import Link from "next/link";
+import FileUpload from "@/components/admin/FileUpload";
+import { useToast } from "@/lib/toast-context";
 
 interface TeamMember {
   id: number;
@@ -22,132 +24,216 @@ interface TeamMember {
   bio: string;
 }
 
+interface TeamContent {
+  hero: {
+    title: string;
+    subtitle: string;
+  };
+  leadership: {
+    heading: string;
+    members: TeamMember[];
+  };
+  teamMembers: {
+    heading: string;
+    members: TeamMember[];
+  };
+  cta: {
+    heading: string;
+    description: string;
+    buttonText: string;
+  };
+}
+
+const DEFAULT_CONTENT: TeamContent = {
+  hero: {
+    title: "The Creative Minds",
+    subtitle: "Meet the talented artists who bring extraordinary visions to life",
+  },
+  leadership: {
+    heading: "Leadership",
+    members: [
+      {
+        id: 1,
+        name: "Bhuvnesh Kumar Varshney",
+        role: "Creative Animation Supervisor",
+        image: "https://horizonvfx.in/images/tm1.jpg",
+        gradient: "from-blue-500 to-cyan-500",
+        bio: "15+ years of experience in animation and creative direction",
+      },
+      {
+        id: 2,
+        name: "Dibakar Chakraborty",
+        role: "Founder & VFX Supervisor",
+        image: "https://horizonvfx.in/images/tm2.jpg",
+        gradient: "from-purple-500 to-pink-500",
+        bio: "Visionary leader with 20+ years in VFX industry",
+      },
+    ],
+  },
+  teamMembers: {
+    heading: "Our Team",
+    members: [
+      {
+        id: 3,
+        name: "Rahul Sharma",
+        role: "3D Artist",
+        image: "https://horizonvfx.in/images/tm3.jpg",
+        gradient: "from-green-500 to-emerald-500",
+        bio: "Specialized in 3D modeling and realistic texturing",
+      },
+      {
+        id: 4,
+        name: "Priya Singh",
+        role: "Compositor",
+        image: "https://horizonvfx.in/images/tm4.jpg",
+        gradient: "from-orange-500 to-red-500",
+        bio: "Expert in compositing and color grading",
+      },
+      {
+        id: 5,
+        name: "Amit Patel",
+        role: "Motion Graphics Artist",
+        image: "https://horizonvfx.in/images/tm5.jpg",
+        gradient: "from-cyan-500 to-blue-500",
+        bio: "Creative motion designer with passion for typography",
+      },
+    ],
+  },
+  cta: {
+    heading: "Join Our Creative Team",
+    description: "Be part of our journey to create extraordinary visual experiences",
+    buttonText: "View Open Positions",
+  },
+};
+
 export default function TeamPageEditor() {
+  const { showSuccess, showError } = useToast();
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
   const [activeTab, setActiveTab] = useState<"hero" | "leadership" | "team" | "cta">("hero");
+  const [content, setContent] = useState<TeamContent>(DEFAULT_CONTENT);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Hero Section State
-  const [heroTitle, setHeroTitle] = useState("The Creative Minds");
-  const [heroSubtitle, setHeroSubtitle] = useState(
-    "Meet the talented artists who bring extraordinary visions to life"
-  );
+  // Load content on mount
+  useEffect(() => {
+    loadContent();
+  }, []);
 
-  // Leadership Section State
-  const [leadershipHeading, setLeadershipHeading] = useState("Leadership");
-  const [leadershipMembers, setLeadershipMembers] = useState<TeamMember[]>([
-    {
-      id: 1,
-      name: "Bhuvnesh Kumar Varshney",
-      role: "Creative Animation Supervisor",
-      image: "https://horizonvfx.in/images/tm1.jpg",
-      gradient: "from-blue-500 to-cyan-500",
-      bio: "15+ years of experience in animation and creative direction",
-    },
-    {
-      id: 2,
-      name: "Dibakar Chakraborty",
-      role: "Founder & VFX Supervisor",
-      image: "https://horizonvfx.in/images/tm2.jpg",
-      gradient: "from-purple-500 to-pink-500",
-      bio: "Visionary leader with 20+ years in VFX industry",
-    },
-  ]);
+  const loadContent = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch("/api/admin/pages/team");
+      const result = await response.json();
 
-  // Team Members State
-  const [teamHeading, setTeamHeading] = useState("Our Team");
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([
-    {
-      id: 3,
-      name: "Rahul Sharma",
-      role: "3D Artist",
-      image: "https://horizonvfx.in/images/tm3.jpg",
-      gradient: "from-green-500 to-emerald-500",
-      bio: "Specialized in 3D modeling and realistic texturing",
-    },
-    {
-      id: 4,
-      name: "Priya Singh",
-      role: "Compositor",
-      image: "https://horizonvfx.in/images/tm4.jpg",
-      gradient: "from-orange-500 to-red-500",
-      bio: "Expert in compositing and color grading",
-    },
-    {
-      id: 5,
-      name: "Amit Patel",
-      role: "Motion Graphics Artist",
-      image: "https://horizonvfx.in/images/tm5.jpg",
-      gradient: "from-cyan-500 to-blue-500",
-      bio: "Creative motion designer with passion for typography",
-    },
-  ]);
-
-  // CTA Section State
-  const [ctaHeading, setCtaHeading] = useState("Join Our Creative Team");
-  const [ctaDescription, setCtaDescription] = useState(
-    "Be part of our journey to create extraordinary visual experiences"
-  );
-  const [ctaButtonText, setCtaButtonText] = useState("View Open Positions");
-
-  const handleSave = () => {
-    setSaveStatus("saving");
-    setTimeout(() => {
-      setSaveStatus("saved");
-      setTimeout(() => setSaveStatus("idle"), 2000);
-    }, 1000);
+      if (result.success && result.data) {
+        setContent(result.data.content);
+      }
+    } catch (error) {
+      console.error("Error loading content:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
+  const handleSave = async () => {
+    try {
+      setSaveStatus("saving");
+
+      const response = await fetch("/api/admin/pages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          slug: "team",
+          title: "Team Page",
+          content,
+          published: true,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setSaveStatus("saved");
+        showSuccess("Team page saved successfully!");
+        setTimeout(() => setSaveStatus("idle"), 2000);
+      } else {
+        throw new Error(result.error || "Failed to save");
+      }
+    } catch (error) {
+      setSaveStatus("idle");
+      const message = error instanceof Error ? error.message : "Failed to save content";
+      showError(message);
+    }
+  };
+
+  const updateContent = (
+    section: keyof TeamContent,
+    data: Partial<TeamContent[keyof TeamContent]>
+  ) => {
+    setContent((prev) => ({
+      ...prev,
+      [section]: { ...prev[section], ...data },
+    }));
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-slate-600">Loading...</div>
+      </div>
+    );
+  }
+
   const updateLeadershipMember = (id: number, field: string, value: string) => {
-    setLeadershipMembers(leadershipMembers.map((member) =>
+    const updatedMembers = content.leadership.members.map((member) =>
       member.id === id ? { ...member, [field]: value } : member
-    ));
+    );
+    updateContent("leadership", { members: updatedMembers });
   };
 
   const addLeadershipMember = () => {
-    const newId = Math.max(...leadershipMembers.map((m) => m.id), 0) + 1;
-    setLeadershipMembers([
-      ...leadershipMembers,
-      {
-        id: newId,
-        name: "New Member",
-        role: "Role",
-        image: "",
-        gradient: "from-blue-500 to-cyan-500",
-        bio: "Bio description",
-      },
-    ]);
+    const newId = Math.max(...content.leadership.members.map((m) => m.id), 0) + 1;
+    const newMember: TeamMember = {
+      id: newId,
+      name: "New Member",
+      role: "Role",
+      image: "",
+      gradient: "from-blue-500 to-cyan-500",
+      bio: "Bio description",
+    };
+    updateContent("leadership", { members: [...content.leadership.members, newMember] });
   };
 
   const removeLeadershipMember = (id: number) => {
-    if (leadershipMembers.length > 1) {
-      setLeadershipMembers(leadershipMembers.filter((member) => member.id !== id));
+    if (content.leadership.members.length > 1) {
+      const filteredMembers = content.leadership.members.filter((member) => member.id !== id);
+      updateContent("leadership", { members: filteredMembers });
     }
   };
 
   const updateTeamMember = (id: number, field: string, value: string) => {
-    setTeamMembers(teamMembers.map((member) =>
+    const updatedMembers = content.teamMembers.members.map((member) =>
       member.id === id ? { ...member, [field]: value } : member
-    ));
+    );
+    updateContent("teamMembers", { members: updatedMembers });
   };
 
   const addTeamMember = () => {
-    const newId = Math.max(...teamMembers.map((m) => m.id), 0) + 1;
-    setTeamMembers([
-      ...teamMembers,
-      {
-        id: newId,
-        name: "New Member",
-        role: "Role",
-        image: "",
-        gradient: "from-blue-500 to-cyan-500",
-        bio: "Bio description",
-      },
-    ]);
+    const newId = Math.max(...content.teamMembers.members.map((m) => m.id), 0) + 1;
+    const newMember: TeamMember = {
+      id: newId,
+      name: "New Member",
+      role: "Role",
+      image: "",
+      gradient: "from-blue-500 to-cyan-500",
+      bio: "Bio description",
+    };
+    updateContent("teamMembers", { members: [...content.teamMembers.members, newMember] });
   };
 
   const removeTeamMember = (id: number) => {
-    if (teamMembers.length > 1) {
-      setTeamMembers(teamMembers.filter((member) => member.id !== id));
+    if (content.teamMembers.members.length > 1) {
+      const filteredMembers = content.teamMembers.members.filter((member) => member.id !== id);
+      updateContent("teamMembers", { members: filteredMembers });
     }
   };
 
@@ -249,8 +335,8 @@ export default function TeamPageEditor() {
                 </label>
                 <input
                   type="text"
-                  value={heroTitle}
-                  onChange={(e) => setHeroTitle(e.target.value)}
+                  value={content.hero.title}
+                  onChange={(e) => updateContent("hero", { title: e.target.value })}
                   className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-black placeholder:text-black"
                   placeholder="The Creative Minds"
                 />
@@ -261,8 +347,8 @@ export default function TeamPageEditor() {
                   Subtitle
                 </label>
                 <textarea
-                  value={heroSubtitle}
-                  onChange={(e) => setHeroSubtitle(e.target.value)}
+                  value={content.hero.subtitle}
+                  onChange={(e) => updateContent("hero", { subtitle: e.target.value })}
                   rows={3}
                   className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none placeholder:text-black"
                   placeholder="Meet the talented artists who bring extraordinary visions to life"
@@ -273,10 +359,10 @@ export default function TeamPageEditor() {
               <div className="bg-gradient-to-br from-slate-900 to-zinc-950 rounded-xl p-8 mt-6">
                 <div className="text-center">
                   <h2 className="text-4xl md:text-5xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400">
-                    {heroTitle || "Your Title Here"}
+                    {content.hero.title || "Your Title Here"}
                   </h2>
                   <p className="text-xl text-gray-300">
-                    {heroSubtitle || "Your subtitle here"}
+                    {content.hero.subtitle || "Your subtitle here"}
                   </p>
                 </div>
               </div>
@@ -296,8 +382,8 @@ export default function TeamPageEditor() {
                 </label>
                 <input
                   type="text"
-                  value={leadershipHeading}
-                  onChange={(e) => setLeadershipHeading(e.target.value)}
+                  value={content.leadership.heading}
+                  onChange={(e) => updateContent("leadership", { heading: e.target.value })}
                   className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-black placeholder:text-black"
                 />
               </div>
@@ -316,7 +402,7 @@ export default function TeamPageEditor() {
                   </button>
                 </div>
                 <div className="space-y-4">
-                  {leadershipMembers.map((member, index) => (
+                  {content.leadership.members.map((member, index) => (
                     <div
                       key={member.id}
                       className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-4"
@@ -326,7 +412,7 @@ export default function TeamPageEditor() {
                         <span className="text-sm font-semibold text-slate-700">
                           Member {index + 1}
                         </span>
-                        {leadershipMembers.length > 1 && (
+                        {content.leadership.members.length > 1 && (
                           <button
                             onClick={() => removeLeadershipMember(member.id)}
                             className="ml-auto p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
@@ -361,18 +447,14 @@ export default function TeamPageEditor() {
                         </div>
                       </div>
 
-                      <div>
-                        <label className="block text-xs font-medium text-slate-600 mb-1.5">
-                          Image URL
-                        </label>
-                        <input
-                          type="url"
-                          value={member.image}
-                          onChange={(e) => updateLeadershipMember(member.id, "image", e.target.value)}
-                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-black placeholder:text-black"
-                          placeholder="https://example.com/image.jpg"
-                        />
-                      </div>
+                      <FileUpload
+                        label="Image"
+                        value={member.image}
+                        onChange={(url) => updateLeadershipMember(member.id, "image", url)}
+                        accept="image"
+                        maxSizeMB={5}
+                        placeholder="Or enter image URL"
+                      />
 
                       <div>
                         <label className="block text-xs font-medium text-slate-600 mb-1.5">
@@ -444,8 +526,8 @@ export default function TeamPageEditor() {
                 </label>
                 <input
                   type="text"
-                  value={teamHeading}
-                  onChange={(e) => setTeamHeading(e.target.value)}
+                  value={content.teamMembers.heading}
+                  onChange={(e) => updateContent("teamMembers", { heading: e.target.value })}
                   className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-black placeholder:text-black"
                 />
               </div>
@@ -464,7 +546,7 @@ export default function TeamPageEditor() {
                   </button>
                 </div>
                 <div className="grid md:grid-cols-2 gap-4">
-                  {teamMembers.map((member, index) => (
+                  {content.teamMembers.members.map((member, index) => (
                     <div
                       key={member.id}
                       className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3"
@@ -474,7 +556,7 @@ export default function TeamPageEditor() {
                         <span className="text-sm font-semibold text-slate-700">
                           Member {index + 1}
                         </span>
-                        {teamMembers.length > 1 && (
+                        {content.teamMembers.members.length > 1 && (
                           <button
                             onClick={() => removeTeamMember(member.id)}
                             className="ml-auto p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
@@ -508,17 +590,14 @@ export default function TeamPageEditor() {
                         />
                       </div>
 
-                      <div>
-                        <label className="block text-xs font-medium text-slate-600 mb-1.5">
-                          Image URL
-                        </label>
-                        <input
-                          type="url"
-                          value={member.image}
-                          onChange={(e) => updateTeamMember(member.id, "image", e.target.value)}
-                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-black placeholder:text-black"
-                        />
-                      </div>
+                      <FileUpload
+                        label="Image"
+                        value={member.image}
+                        onChange={(url) => updateTeamMember(member.id, "image", url)}
+                        accept="image"
+                        maxSizeMB={5}
+                        placeholder="Or enter image URL"
+                      />
 
                       <div>
                         <label className="block text-xs font-medium text-slate-600 mb-1.5">
@@ -590,8 +669,8 @@ export default function TeamPageEditor() {
                 </label>
                 <input
                   type="text"
-                  value={ctaHeading}
-                  onChange={(e) => setCtaHeading(e.target.value)}
+                  value={content.cta.heading}
+                  onChange={(e) => updateContent("cta", { heading: e.target.value })}
                   className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-black placeholder:text-black"
                 />
               </div>
@@ -601,8 +680,8 @@ export default function TeamPageEditor() {
                   Description
                 </label>
                 <textarea
-                  value={ctaDescription}
-                  onChange={(e) => setCtaDescription(e.target.value)}
+                  value={content.cta.description}
+                  onChange={(e) => updateContent("cta", { description: e.target.value })}
                   rows={3}
                   className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none placeholder:text-black"
                 />
@@ -614,8 +693,8 @@ export default function TeamPageEditor() {
                 </label>
                 <input
                   type="text"
-                  value={ctaButtonText}
-                  onChange={(e) => setCtaButtonText(e.target.value)}
+                  value={content.cta.buttonText}
+                  onChange={(e) => updateContent("cta", { buttonText: e.target.value })}
                   className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-black placeholder:text-black"
                 />
               </div>
@@ -623,10 +702,10 @@ export default function TeamPageEditor() {
               {/* Preview */}
               <div className="bg-gradient-to-br from-slate-900 to-zinc-950 rounded-xl p-8 mt-6">
                 <div className="text-center">
-                  <h3 className="text-3xl font-bold text-white mb-4">{ctaHeading}</h3>
-                  <p className="text-gray-400 mb-6 max-w-2xl mx-auto">{ctaDescription}</p>
+                  <h3 className="text-3xl font-bold text-white mb-4">{content.cta.heading}</h3>
+                  <p className="text-gray-400 mb-6 max-w-2xl mx-auto">{content.cta.description}</p>
                   <button className="px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl font-semibold text-white">
-                    {ctaButtonText}
+                    {content.cta.buttonText}
                   </button>
                 </div>
               </div>
