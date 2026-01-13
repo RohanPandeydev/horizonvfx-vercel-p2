@@ -32,6 +32,9 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+.env.local
+.env.development
+.env.production
 
 # vercel
 .vercel
@@ -39,3 +42,17 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# database
+prisma/dev.db
+prisma/dev.db-journal
+*.db
+*.db-journal
+
+# temporary files
+tmpclaude-*
+*.tmp
+*.log
+
+# prisma
+# prisma/migrations/* # Uncomment if you want to ignore migrations

@@ -1,36 +1,194 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# HorizonVFX
 
-## Getting Started
+A modern VFX company website built with Next.js 15, featuring a dynamic admin panel, authentication system, and media management.
 
-First, run the development server:
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Node.js 18+ installed
+- pnpm installed (recommended) or npm/yarn
+- Database (SQLite for local, PostgreSQL for production)
+
+### Installation
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+# Install dependencies
+pnpm install
+
+# Copy environment file
+cp .env.example .env
+
+# Generate secrets for local development
+pnpm generate-secrets
+
+# Set up database
+pnpm db:push
+
+# Seed database (creates admin user)
+pnpm db:seed
+
+# Run development server
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🔐 Default Admin Credentials
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+**Email:** `admin@horizonvfx.com`
+**Password:** `Admin@123`
 
-## Learn More
+⚠️ **Important:** Change these credentials immediately after first login!
 
-To learn more about Next.js, take a look at the following resources:
+## 📦 Available Scripts
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+pnpm dev          # Start development server
+pnpm build        # Build for production
+pnpm start        # Start production server
+pnpm lint         # Run ESLint
+pnpm db:push      # Push database schema
+pnpm db:seed      # Seed database with initial data
+pnpm db:studio    # Open Prisma Studio
+pnpm generate-secrets  # Generate secure secrets for env vars
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🌐 Deployment
 
-## Deploy on Vercel
+### Vercel Deployment (Recommended)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+See [DEPLOY.md](./DEPLOY.md) for quick deployment guide or [VERCEL_DEPLOYMENT_GUIDE.md](./VERCEL_DEPLOYMENT_GUIDE.md) for detailed instructions.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**Quick Steps:**
+
+1. Push code to GitHub
+2. Import project in [Vercel](https://vercel.com/new)
+3. Add Vercel Postgres database
+4. Add environment variables (run `pnpm generate-secrets`)
+5. Deploy!
+
+### Environment Variables
+
+Required for production:
+
+```bash
+# Database (auto-added by Vercel Postgres)
+DATABASE_URL
+DIRECT_URL
+
+# Authentication
+JWT_ACCESS_SECRET
+JWT_REFRESH_SECRET
+ENCRYPTION_SECRET
+
+# Frontend URL
+FRONTEND_URL
+
+# S3 Storage (optional - for file uploads)
+AWS_ACCESS_KEY_ID
+AWS_SECRET_ACCESS_KEY
+AWS_REGION
+AWS_S3_BUCKET
+```
+
+See [.env.example](./.env.example) for all available variables.
+
+## 🏗️ Project Structure
+
+```
+├── app/                  # Next.js app directory
+│   ├── admin/           # Admin panel pages
+│   ├── api/             # API routes
+│   └── (public pages)   # Public-facing pages
+├── components/          # React components
+│   ├── admin/          # Admin-specific components
+│   └── (public)        # Public components
+├── lib/                # Utility functions
+├── prisma/             # Database schema and migrations
+└── public/             # Static assets
+```
+
+## 🗄️ Database
+
+### Local Development
+
+Uses SQLite by default. Database file: `prisma/dev.db`
+
+### Production
+
+Uses Vercel Postgres (PostgreSQL). Schema in `prisma/schema.production.prisma`
+
+## 📝 Features
+
+- ✅ Modern Next.js 15 with App Router
+- ✅ Admin panel with authentication
+- ✅ Dynamic page content management
+- ✅ Media upload and management
+- ✅ Contact form submissions
+- ✅ JWT-based authentication
+- ✅ Responsive design
+- ✅ 3D animations with Three.js
+- ✅ File upload with S3 integration
+
+## 🔧 Tech Stack
+
+- **Framework:** Next.js 15
+- **UI:** React 19, Tailwind CSS
+- **Database:** Prisma ORM
+- **Authentication:** JWT
+- **Storage:** AWS S3 / Cloudflare R2
+- **3D Graphics:** Three.js, React Three Fiber
+- **Animations:** GSAP, Framer Motion
+
+## 📚 Documentation
+
+- [VERCEL_DEPLOYMENT_GUIDE.md](./VERCEL_DEPLOYMENT_GUIDE.md) - Complete Vercel deployment guide
+- [DEPLOY.md](./DEPLOY.md) - Quick deployment reference
+- [DATABASE_SETUP_GUIDE.md](./DATABASE_SETUP_GUIDE.md) - Database setup instructions
+- [FILE_UPLOAD_GUIDE.md](./FILE_UPLOAD_GUIDE.md) - File upload configuration
+- [S3_SETUP_GUIDE.md](./S3_SETUP_GUIDE.md) - S3 storage setup
+- [ENCRYPTION_GUIDE.md](./ENCRYPTION_GUIDE.md) - Security and encryption
+
+## 🐛 Troubleshooting
+
+### Database Issues
+
+```bash
+# Reset database
+rm prisma/dev.db
+pnpm db:push
+pnpm db:seed
+```
+
+### Build Issues
+
+```bash
+# Clean build
+rm -rf .next node_modules
+pnpm install
+pnpm build
+```
+
+### Environment Variables
+
+Ensure all required variables are set. Check `.env.example` for reference.
+
+## 🤝 Contributing
+
+1. Create a feature branch
+2. Make your changes
+3. Test thoroughly
+4. Submit a pull request
+
+## 📄 License
+
+This project is private and proprietary.
+
+## 🆘 Support
+
+For issues and questions, please refer to the documentation files or create an issue in the repository.
+
+---
+
+Built with ❤️ using Next.js and Vercel

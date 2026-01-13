@@ -15,8 +15,24 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'horizonvfx.in',
       },
+      // Add your S3 bucket hostname here
+      // {
+      //   protocol: 'https',
+      //   hostname: '*.amazonaws.com',
+      // },
+      // {
+      //   protocol: 'https',
+      //   hostname: '*.r2.cloudflarestorage.com',
+      // },
     ],
   },
+  // Enable experimental features for better performance
+  experimental: {
+    serverComponentsExternalPackages: ['@prisma/client', 'prisma'],
+  },
+  // Optimize for Vercel
+  poweredByHeader: false,
+  compress: true,
 };
 
 export default nextConfig;
