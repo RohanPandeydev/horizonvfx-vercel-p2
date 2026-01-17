@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useScroll, useInView, useTransform } from "framer-motion";
 import { motion } from "framer-motion";
 import { Play, ArrowRight, ChevronUp } from "lucide-react";
@@ -8,10 +8,86 @@ import Hero from "@/components/Hero";
 import ServicesMarquee from "@/components/ServicesMarquee";
 import React from "react";
 
+interface HomePageSections {
+  showExcellence: boolean;
+  showLeadership: boolean;
+  showTechStack: boolean;
+  showStats: boolean;
+  showProjects: boolean;
+  showShowreel: boolean;
+  showClients: boolean;
+}
+
+interface AboutData {
+  excellence: {
+    heading: string;
+    description: string;
+    featureCards?: Array<{
+      title: string;
+      description: string;
+      icon: string;
+      gradient: string;
+    }>;
+    cards?: Array<{
+      title: string;
+      description: string;
+      icon: string;
+      gradient: string;
+    }>;
+  } | null;
+}
+
+interface TeamData {
+  leadership: {
+    heading: string;
+    members: Array<{
+      name: string;
+      role: string;
+      image: string;
+      gradient: string;
+      bio: string;
+    }>;
+  } | null;
+}
+
+interface ShowcaseData {
+  techStack: Array<{
+    name: string;
+    icon: string;
+    color: string;
+  }> | null;
+  stats: Array<{
+    icon: string;
+    name: string;
+    count: string;
+  }> | null;
+  services: Array<{
+    icon: string;
+    name: string;
+    count: string;
+  }> | null;
+}
+
 export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [activeSection, setActiveSection] = useState(0);
   const [showBackToTop, setShowBackToTop] = useState(false);
+  const [sectionsConfig, setSectionsConfig] = useState<HomePageSections>({
+    showExcellence: true,
+    showLeadership: true,
+    showTechStack: true,
+    showStats: true,
+    showProjects: true,
+    showShowreel: true,
+    showClients: true,
+  });
+  const [aboutData, setAboutData] = useState<AboutData>({ excellence: null });
+  const [teamData, setTeamData] = useState<TeamData>({ leadership: null });
+  const [showcaseData, setShowcaseData] = useState<ShowcaseData>({
+    techStack: null,
+    stats: null,
+    services: null,
+  });
   const { scrollY, scrollYProgress } = useScroll();
   const scaleX = useTransform(scrollYProgress, [0, 1], [0, 1]);
 
@@ -20,6 +96,45 @@ export default function HomePage() {
       setLoading(false);
     }, 2500);
     return () => clearTimeout(timer);
+  }, []);
+
+  // Fetch sections configuration and page data
+  useEffect(() => {
+    const fetchHomeData = async () => {
+      try {
+        // Fetch sections config
+        const configResponse = await fetch("/api/home/config");
+        const configResult = await configResponse.json();
+        if (configResult.success) {
+          setSectionsConfig(configResult.data);
+        }
+
+        // Fetch about page data (excellence section)
+        const aboutResponse = await fetch("/api/pages/about");
+        const aboutResult = await aboutResponse.json();
+        if (aboutResult.success) {
+          setAboutData(aboutResult.data);
+        }
+
+        // Fetch team page data (leadership section)
+        const teamResponse = await fetch("/api/pages/team");
+        const teamResult = await teamResponse.json();
+        if (teamResult.success) {
+          setTeamData(teamResult.data);
+        }
+
+        // Fetch showcase page data (tech stack and stats)
+        const showcaseResponse = await fetch("/api/pages/showcase");
+        const showcaseResult = await showcaseResponse.json();
+        if (showcaseResult.success) {
+          setShowcaseData(showcaseResult.data);
+        }
+      } catch (error) {
+        console.error("Error fetching home page data:", error);
+      }
+    };
+
+    fetchHomeData();
   }, []);
 
   // Track active section and show/hide back-to-top button
@@ -134,71 +249,17 @@ export default function HomePage() {
     },
   ];
 
-  // Excellence features from About
-  const excellenceFeatures = [
-    {
-      title: "Comprehensive Services",
-      description:
-        "We seamlessly navigate the entire spectrum of visual effects, offering comprehensive pre to post-production services.",
-      icon: "🎬",
-      gradient: "from-blue-500 to-cyan-500",
-    },
-    {
-      title: "Vast Talent Pool",
-      description:
-        "With over 500 artists in our bank, each a virtuoso in their own right, we possess the capacity to undertake any project with unparalleled finesse.",
-      icon: "👨‍🎨",
-      gradient: "from-green-500 to-emerald-500",
-    },
-    {
-      title: "Innovation First",
-      description:
-        "Our diverse pool of creative minds, coupled with a commitment to staying at the forefront of industry trends, ensures innovation in every frame.",
-      icon: "💡",
-      gradient: "from-purple-500 to-pink-500",
-    },
-    {
-      title: "Collaborative Excellence",
-      description:
-        "We extend our expertise by offering clients access to our curated roster of artists, adding an extra layer of precision and creative flair.",
-      icon: "🤝",
-      gradient: "from-orange-500 to-red-500",
-    },
-  ];
+  // Excellence features from About page data
+  const excellenceFeatures = aboutData.excellence?.featureCards || aboutData.excellence?.cards || [];
 
-  // Tech stack from showcase
-  const techStack = [
-    { name: "After Effects", icon: "🎨", color: "from-purple-500 to-blue-500" },
-    { name: "Nuke", icon: "💣", color: "from-blue-500 to-cyan-500" },
-    { name: "Maya", icon: "🔷", color: "from-cyan-500 to-teal-500" },
-    { name: "Unreal Engine", icon: "🎮", color: "from-red-500 to-orange-500" },
-    { name: "Houdini", icon: "🌀", color: "from-orange-500 to-yellow-500" },
-    { name: "Blender", icon: "🔶", color: "from-yellow-500 to-green-500" },
-    { name: "Cinema 4D", icon: "📦", color: "from-green-500 to-emerald-500" },
-    { name: "Substance", icon: "🎭", color: "from-pink-500 to-rose-500" },
-  ];
+  // Tech stack from showcase page data
+  const techStack = showcaseData.techStack || [];
 
-  // Stats from showcase
-  const stats = [
-    { icon: "🎬", name: "Film & OTT", count: "100+" },
-    { icon: "🎮", name: "Gaming", count: "50+" },
-    { icon: "📺", name: "Commercial", count: "200+" },
-    { icon: "🖥️", name: "Unreal Engine", count: "30+" },
-  ];
+  // Stats from showcase page data
+  const stats = showcaseData.stats || [];
 
-  // Team leadership
-  const team = [
-    {
-      name: "Dibakar Chakraborty",
-      role: "Founder",
-      image: "https://horizonvfx.in/images/tm1.jpg",
-    },
-    {
-      name: "Mitun Dasgupta",
-      role: "Founder",
-      image: "https://horizonvfx.in/images/tm2.jpg",
-    },
-  ];
+  // Team leadership from team page data
+  const team = teamData.leadership?.members || [];
 
   // Clients logos
   const clients = [
@@ -269,7 +330,8 @@ export default function HomePage() {
       <ServicesMarquee />
 
       {/* Hero Projects - 3D Parallax Cards from Showcase */}
-      <section id="projects" className="py-20 md:py-32 px-4 md:px-6 bg-gradient-to-b from-black via-zinc-950 to-black relative">
+      {sectionsConfig.showProjects && (
+        <section id="projects" className="py-20 md:py-32 px-4 md:px-6 bg-gradient-to-b from-black via-zinc-950 to-black relative">
         {/* Background effects */}
         <div className="absolute inset-0 overflow-hidden">
           <motion.div
@@ -343,9 +405,11 @@ export default function HomePage() {
           </motion.div>
         </div>
       </section>
+      )}
 
       {/* Showreel - 2 rows only */}
-      <section id="showreel" className="py-20 px-4 md:px-6 bg-black relative">
+      {sectionsConfig.showShowreel && (
+        <section id="showreel" className="py-20 px-4 md:px-6 bg-black relative">
         <div className="max-w-[1400px] mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -386,9 +450,11 @@ export default function HomePage() {
           </motion.div>
         </div>
       </section>
+      )}
 
       {/* Clients - Auto Running Slider */}
-      <section id="clients" className="py-20 md:py-32 px-4 md:px-6 bg-gradient-to-b from-black via-zinc-950 to-black relative overflow-hidden">
+      {sectionsConfig.showClients && (
+        <section id="clients" className="py-20 md:py-32 px-4 md:px-6 bg-gradient-to-b from-black via-zinc-950 to-black relative overflow-hidden">
         <div className="max-w-[1600px] mx-auto">
           <motion.h2
             initial={{ opacity: 0, y: 30 }}
@@ -401,9 +467,11 @@ export default function HomePage() {
           <ClientsSlider clients={clients} />
         </div>
       </section>
+      )}
 
       {/* Excellence in Every Frame - From About */}
-      <section id="excellence" className="py-20 md:py-32 px-4 md:px-6 bg-gradient-to-b from-black via-zinc-950 to-black relative overflow-hidden">
+      {sectionsConfig.showExcellence && (
+        <section id="excellence" className="py-20 md:py-32 px-4 md:px-6 bg-gradient-to-b from-black via-zinc-950 to-black relative overflow-hidden">
         <motion.div
           className="absolute top-1/4 left-0 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl"
           animate={{
@@ -435,11 +503,10 @@ export default function HomePage() {
             className="text-center mb-16"
           >
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
-              Excellence in Every Frame
+              {aboutData.excellence?.heading || "Excellence in Every Frame"}
             </h2>
             <p className="text-xl text-gray-400 max-w-3xl mx-auto">
-              At the heart of our success lies a commitment to excellence that
-              extends from the inception to the completion of each project
+              {aboutData.excellence?.description || "At the heart of our success lies a commitment to excellence that extends from the inception to the completion of each project"}
             </p>
           </motion.div>
 
@@ -467,9 +534,11 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+      )}
 
       {/* Our Tech Stack - From Showcase */}
-      <section id="techstack" className="py-20 md:py-32 px-4 md:px-6 bg-black">
+      {sectionsConfig.showTechStack && (
+        <section id="techstack" className="py-20 md:py-32 px-4 md:px-6 bg-black">
         <div className="max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -526,9 +595,11 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+      )}
 
       {/* Stats Section - From Showcase */}
-      <section id="stats" className="py-20 md:py-32 px-4 md:px-6 bg-gradient-to-b from-black via-zinc-950 to-black relative overflow-hidden">
+      {sectionsConfig.showStats && (
+        <section id="stats" className="py-20 md:py-32 px-4 md:px-6 bg-gradient-to-b from-black via-zinc-950 to-black relative overflow-hidden">
         <div className="max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -564,12 +635,14 @@ export default function HomePage() {
           </motion.div>
         </div>
       </section>
+      )}
 
       {/* Leadership - From Team */}
-      <section
-        id="team"
-        className="py-20 md:py-32 px-4 md:px-6 bg-gradient-to-b from-black via-zinc-900 to-black relative overflow-hidden"
-      >
+      {sectionsConfig.showLeadership && (
+        <section
+          id="team"
+          className="py-20 md:py-32 px-4 md:px-6 bg-gradient-to-b from-black via-zinc-900 to-black relative overflow-hidden"
+        >
         <motion.div
           className="absolute top-1/4 right-0 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl"
           animate={{
@@ -588,7 +661,7 @@ export default function HomePage() {
             viewport={{ once: true }}
             className="text-4xl md:text-5xl lg:text-7xl font-bold mb-6 md:mb-8 text-center bg-gradient-to-r from-white via-purple-200 to-white bg-clip-text text-transparent"
           >
-            Leadership
+            {teamData.leadership?.heading || "Leadership"}
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -608,6 +681,7 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+      )}
     </>
   );
 }

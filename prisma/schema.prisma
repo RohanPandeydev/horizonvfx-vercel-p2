@@ -101,3 +101,18 @@ model Media {
   @@index([mimeType])
   @@index([createdAt])
 }
+
+// Home Page Configuration Model - Controls which sections are displayed
+model HomePageConfig {
+  id                String   @id @default(cuid())
+  showExcellence    Boolean  @default(true)
+  showLeadership    Boolean  @default(true)
+  showTechStack     Boolean  @default(true)
+  showStats         Boolean  @default(true)
+  showProjects      Boolean  @default(true)
+  showShowreel      Boolean  @default(true)
+  showClients       Boolean  @default(true)
+  updatedBy         String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}

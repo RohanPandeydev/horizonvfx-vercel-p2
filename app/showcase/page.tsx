@@ -5,6 +5,57 @@ import { Play, ArrowRight, Zap, Film } from "lucide-react";
 import React from "react";
 import DynamicIcon from "@/components/DynamicIcon";
 
+interface ShowcaseContent {
+  hero: {
+    title: string;
+    subtitle: string;
+  };
+  services: Array<{
+    icon: string;
+    name: string;
+    count: string;
+  }>;
+  techStack: Array<{
+    name: string;
+    icon: string;
+    color: string;
+  }>;
+  industries: Array<{
+    title: string;
+    image: string;
+  }>;
+}
+
+const DEFAULT_CONTENT: ShowcaseContent = {
+  hero: {
+    title: "Our Showcase",
+    subtitle: "Explore our portfolio of visual effects and animation projects that push the boundaries of creativity",
+  },
+  services: [
+    { icon: "🎬", name: "Film & OTT", count: "100+" },
+    { icon: "🎮", name: "Gaming", count: "50+" },
+    { icon: "📺", name: "Commercial", count: "200+" },
+    { icon: "🖥️", name: "Unreal Engine", count: "30+" },
+  ],
+  techStack: [
+    { name: "After Effects", icon: "🎨", color: "from-purple-500 to-blue-500" },
+    { name: "Nuke", icon: "💣", color: "from-blue-500 to-cyan-500" },
+    { name: "Maya", icon: "🔷", color: "from-cyan-500 to-teal-500" },
+    { name: "Unreal Engine", icon: "🎮", color: "from-red-500 to-orange-500" },
+    { name: "Houdini", icon: "🌀", color: "from-orange-500 to-yellow-500" },
+    { name: "Blender", icon: "🔶", color: "from-yellow-500 to-green-500" },
+    { name: "Cinema 4D", icon: "📦", color: "from-green-500 to-emerald-500" },
+    { name: "Substance", icon: "🎭", color: "from-pink-500 to-rose-500" },
+  ],
+  industries: [
+    { title: "Film and OTT", image: "https://horizonvfx.in/images/flm.png" },
+    { title: "Game", image: "https://horizonvfx.in/images/game.jpg" },
+    { title: "Commercial", image: "https://horizonvfx.in/images/Commercial.jpg" },
+    { title: "Unreal", image: "https://horizonvfx.in/images/unreal.jpg" },
+  ],
+};
+
+// Static project data (will be managed through Media section in the future)
 const showcaseProjects = [
   {
     id: 1,
@@ -48,14 +99,7 @@ const showcaseProjects = [
   },
 ];
 
-const services = [
-  { icon: "🎬", name: "Film & OTT", count: "100+" },
-  { icon: "🎮", name: "Gaming", count: "50+" },
-  { icon: "📺", name: "Commercial", count: "200+" },
-  { icon: "🖥️", name: "Unreal Engine", count: "30+" },
-];
-
-// Extended projects for infinite scroll
+// Extended projects for infinite scroll (static for now)
 const allProjects = [
   {
     id: 1,
@@ -108,11 +152,31 @@ const allProjects = [
 ];
 
 export default function ShowcasePage() {
+  const [content, setContent] = useState<ShowcaseContent>(DEFAULT_CONTENT);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [displayedProjects, setDisplayedProjects] = useState(allProjects);
   const [isLoading, setIsLoading] = useState(false);
   const { scrollYProgress } = useScroll();
   const y = useTransform(scrollYProgress, [0, 1], [0, -50]);
+
+  // Load content from CMS
+  useEffect(() => {
+    const loadContent = async () => {
+      try {
+        const response = await fetch("/api/pages/showcase");
+        const result = await response.json();
+
+        if (result.success && result.data) {
+          setContent(result.data);
+        }
+      } catch (error) {
+        console.error("Error loading showcase content:", error);
+        // Keep default content on error
+      }
+    };
+
+    loadContent();
+  }, []);
 
   // Infinite scroll logic
   const loadMoreProjects = useCallback(() => {
@@ -214,7 +278,7 @@ export default function ShowcasePage() {
                 backgroundClip: "text",
               }}
             >
-              Our Showcase
+              {content.hero.title}
             </motion.h1>
             <motion.p
               className="text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto leading-relaxed mb-12"
@@ -222,8 +286,7 @@ export default function ShowcasePage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
             >
-              Explore our portfolio of visual effects and animation projects
-              that push the boundaries of creativity
+              {content.hero.subtitle}
             </motion.p>
           </motion.div>
 
@@ -234,7 +297,7 @@ export default function ShowcasePage() {
             transition={{ delay: 0.6 }}
             className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto"
           >
-            {services.map((service, i) => (
+            {content.services.map((service, i) => (
               <motion.div
                 key={i}
                 whileHover={{ y: -10, scale: 1.05 }}
@@ -393,12 +456,7 @@ export default function ShowcasePage() {
           </motion.div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-              { title: "Film and OTT", image: "https://horizonvfx.in/images/flm.png" },
-              { title: "Game", image: "https://horizonvfx.in/images/game.jpg" },
-              { title: "Commercial", image: "https://horizonvfx.in/images/Commercial.jpg" },
-              { title: "Unreal", image: "https://horizonvfx.in/images/unreal.jpg" },
-            ].map((item, index) => (
+            {content.industries.map((item, index) => (
               <IndustryCard key={item.title} service={item} index={index} />
             ))}
           </div>
@@ -425,16 +483,7 @@ export default function ShowcasePage() {
           </motion.div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {[
-              { name: "After Effects", icon: "🎨", color: "from-purple-500 to-blue-500" },
-              { name: "Nuke", icon: "💣", color: "from-blue-500 to-cyan-500" },
-              { name: "Maya", icon: "🔷", color: "from-cyan-500 to-teal-500" },
-              { name: "Unreal Engine", icon: "🎮", color: "from-red-500 to-orange-500" },
-              { name: "Houdini", icon: "🌀", color: "from-orange-500 to-yellow-500" },
-              { name: "Blender", icon: "🔶", color: "from-yellow-500 to-green-500" },
-              { name: "Cinema 4D", icon: "📦", color: "from-green-500 to-emerald-500" },
-              { name: "Substance", icon: "🎭", color: "from-pink-500 to-rose-500" },
-            ].map((tech, i) => (
+            {content.techStack.map((tech, i) => (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, scale: 0.8 }}

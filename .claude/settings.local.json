@@ -20,7 +20,11 @@
       "Bash(ls:*)",
       "Bash(npx prisma db push:*)",
       "Bash(npx prisma generate)",
-      "Bash(pnpm list:*)"
+      "Bash(pnpm list:*)",
+      "Bash(npx next:*)",
+      "Bash(git pull:*)",
+      "Bash(git checkout:*)",
+      "Bash(git merge:*)"
     ]
   }
 }

@@ -1,12 +1,11 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Save,
   Eye,
   Home,
   Upload,
-  X,
   Plus,
   Trash2,
   GripVertical,
@@ -14,73 +13,188 @@ import {
   Image as ImageIcon,
 } from "lucide-react";
 import Link from "next/link";
+import { useToast } from "@/lib/toast-context";
+
+interface ClientLogo {
+  url: string;
+}
+
+interface HomePageContent {
+  hero: {
+    videoUrl: string;
+    tagline: string;
+  };
+  clients: ClientLogo[];
+}
+
+interface HomePageSections {
+  showExcellence: boolean;
+  showLeadership: boolean;
+  showTechStack: boolean;
+  showStats: boolean;
+  showProjects: boolean;
+  showShowreel: boolean;
+  showClients: boolean;
+}
+
+const DEFAULT_CONTENT: HomePageContent = {
+  hero: {
+    videoUrl: "https://www.horizonvfx.in/images/Video1.mp4",
+    tagline: "Visual Effects • Animation • Post Production",
+  },
+  clients: [
+    { url: "https://horizonvfx.in/images/c-logo1.jpg" },
+    { url: "https://horizonvfx.in/images/c-logo2.jpg" },
+    { url: "https://horizonvfx.in/images/c-logo3.jpg" },
+    { url: "https://horizonvfx.in/images/c-logo4.jpg" },
+  ],
+};
+
+const DEFAULT_SECTIONS: HomePageSections = {
+  showExcellence: true,
+  showLeadership: true,
+  showTechStack: true,
+  showStats: true,
+  showProjects: true,
+  showShowreel: true,
+  showClients: true,
+};
 
 export default function HomePageEditor() {
+  const { showSuccess, showError } = useToast();
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
-  const [activeTab, setActiveTab] = useState<"hero" | "marquee" | "clients">("hero");
+  const [activeTab, setActiveTab] = useState<"hero" | "marquee" | "clients" | "sections">("hero");
+  const [content, setContent] = useState<HomePageContent>(DEFAULT_CONTENT);
+  const [sections, setSections] = useState<HomePageSections>(DEFAULT_SECTIONS);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Hero Section State
-  const [heroVideo, setHeroVideo] = useState("https://www.horizonvfx.in/images/Video1.mp4");
-  const [heroTagline, setHeroTagline] = useState("Visual Effects • Animation • Post Production");
+  // Load content on mount
+  useEffect(() => {
+    loadContent();
+    loadSections();
+  }, []);
 
-  // Marquee State
-  const [topServices] = useState([
-    "POST - PRODUCTION",
-    "VFX",
-    "3D",
-    "COMPOSITING",
-    "GRADING",
-  ]);
+  const loadContent = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch("/api/admin/pages/home");
+      const result = await response.json();
 
-  const [bottomServices] = useState([
-    "GRADING",
-    "VFX",
-    "3D",
-    "COMPOSITING",
-    "POST - PRODUCTION",
-  ]);
-
-  // Clients State
-  const [clients, setClients] = useState([
-    "https://horizonvfx.in/images/c-logo1.jpg",
-    "https://horizonvfx.in/images/c-logo2.jpg",
-    "https://horizonvfx.in/images/c-logo3.jpg",
-    "https://horizonvfx.in/images/c-logo4.jpg",
-  ]);
-
-  const handleSave = () => {
-    setSaveStatus("saving");
-    setTimeout(() => {
-      setSaveStatus("saved");
-      setTimeout(() => setSaveStatus("idle"), 2000);
-    }, 1000);
+      if (result.success && result.data && result.data.content) {
+        setContent(result.data.content);
+      }
+    } catch (error) {
+      console.error("Error loading content:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
+  const loadSections = async () => {
+    try {
+      const response = await fetch("/api/home/config");
+      const result = await response.json();
+
+      if (result.success && result.data) {
+        setSections(result.data);
+      }
+    } catch (error) {
+      console.error("Error loading sections:", error);
+    }
+  };
+
+  const handleSave = async () => {
+    try {
+      setSaveStatus("saving");
+
+      // Save both content and sections
+      await Promise.all([
+        fetch("/api/admin/pages", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            slug: "home",
+            title: "Home Page",
+            content,
+            published: true,
+          }),
+        }),
+        fetch("/api/home/config", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(sections),
+        }),
+      ]);
+
+      setSaveStatus("saved");
+      showSuccess("Home page saved successfully!");
+      setTimeout(() => setSaveStatus("idle"), 2000);
+    } catch (error) {
+      setSaveStatus("idle");
+      const message =
+        error instanceof Error ? error.message : "Failed to save content";
+      showError(message);
+    }
+  };
+
+  const updateContent = (
+    section: keyof HomePageContent,
+    data: ClientLogo[] | Partial<HomePageContent['hero']>
+  ) => {
+    setContent((prev) => {
+      if (section === 'clients') {
+        return {
+          ...prev,
+          clients: data as ClientLogo[],
+        };
+      }
+      return {
+        ...prev,
+        [section]: { ...prev[section], ...data },
+      };
+    });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-slate-600">Loading...</div>
+      </div>
+    );
+  }
+
   const updateClient = (index: number, value: string) => {
-    const newClients = [...clients];
-    newClients[index] = value;
-    setClients(newClients);
+    const newClients = [...content.clients];
+    newClients[index] = { url: value };
+    updateContent("clients", newClients);
   };
 
   const addClient = () => {
-    setClients([...clients, ""]);
+    const newClients = [...content.clients, { url: "" }];
+    updateContent("clients", newClients);
   };
 
   const removeClient = (index: number) => {
-    if (clients.length > 1) {
-      setClients(clients.filter((_, i) => i !== index));
+    if (content.clients.length > 1) {
+      const newClients = content.clients.filter((_, i) => i !== index);
+      updateContent("clients", newClients);
     }
   };
 
   const handleFileUpload = (
     e: React.ChangeEvent<HTMLInputElement>,
-    setter: (value: string) => void
+    field: 'videoUrl' | 'clientLogo',
+    index?: number
   ) => {
     const file = e.target.files?.[0];
     if (file) {
       // Create a temporary URL for preview
       const url = URL.createObjectURL(file);
-      setter(url);
+      if (field === 'videoUrl') {
+        updateContent('hero', { videoUrl: url });
+      } else if (field === 'clientLogo' && typeof index === 'number') {
+        updateClient(index, url);
+      }
     }
   };
 
@@ -154,6 +268,17 @@ export default function HomePageEditor() {
               <ImageIcon size={18} />
               Our Clients
             </button>
+            <button
+              onClick={() => setActiveTab("sections")}
+              className={`flex items-center gap-2 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                activeTab === "sections"
+                  ? "border-blue-600 text-blue-600"
+                  : "border-transparent text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              <Home size={18} />
+              Sections
+            </button>
           </nav>
         </div>
 
@@ -188,14 +313,14 @@ export default function HomePageEditor() {
                         type="file"
                         accept="video/mp4,video/webm"
                         className="hidden"
-                        onChange={(e) => handleFileUpload(e, setHeroVideo)}
+                        onChange={(e) => handleFileUpload(e, 'videoUrl')}
                       />
                     </label>
                   </div>
                   <input
                     type="text"
-                    value={heroVideo}
-                    onChange={(e) => setHeroVideo(e.target.value)}
+                    value={content.hero.videoUrl}
+                    onChange={(e) => updateContent('hero', { videoUrl: e.target.value })}
                     className="w-full px-4 py-3 text-black border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-black"
                     placeholder="https://www.horizonvfx.in/images/Video1.mp4"
                   />
@@ -208,8 +333,8 @@ export default function HomePageEditor() {
                 </label>
                 <input
                   type="text"
-                  value={heroTagline}
-                  onChange={(e) => setHeroTagline(e.target.value)}
+                  value={content.hero.tagline}
+                  onChange={(e) => updateContent('hero', { tagline: e.target.value })}
                   className="w-full px-4 py-3 text-black border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-black"
                   placeholder="Visual Effects • Animation • Post Production"
                 />
@@ -229,13 +354,13 @@ export default function HomePageEditor() {
                     </span>
                   </div>
                   <p className="text-gray-300 text-lg">
-                    {heroTagline || "Your tagline here"}
+                    {content.hero.tagline || "Your tagline here"}
                   </p>
                 </div>
               </div>
 
               {/* Video Preview */}
-              {heroVideo && (
+              {content.hero.videoUrl && (
                 <div className="bg-zinc-900 rounded-xl overflow-hidden">
                   <video
                     autoPlay
@@ -243,7 +368,7 @@ export default function HomePageEditor() {
                     muted
                     playsInline
                     className="w-full h-64 object-cover"
-                    src={heroVideo}
+                    src={content.hero.videoUrl}
                   />
                 </div>
               )}
@@ -357,7 +482,7 @@ export default function HomePageEditor() {
               </div>
 
               <div className="grid md:grid-cols-2 gap-4">
-                {clients.map((client, index) => (
+                {content.clients.map((client, index) => (
                   <div
                     key={index}
                     className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3"
@@ -367,7 +492,7 @@ export default function HomePageEditor() {
                       <span className="text-sm font-semibold text-slate-700">
                         Client {index + 1}
                       </span>
-                      {clients.length > 1 && (
+                      {content.clients.length > 1 && (
                         <button
                           onClick={() => removeClient(index)}
                           className="ml-auto p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
@@ -392,13 +517,7 @@ export default function HomePageEditor() {
                           type="file"
                           accept="image/*"
                           className="hidden"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                              const url = URL.createObjectURL(file);
-                              updateClient(index, url);
-                            }
-                          }}
+                          onChange={(e) => handleFileUpload(e, 'clientLogo', index)}
                         />
                       </label>
                     </div>
@@ -409,7 +528,7 @@ export default function HomePageEditor() {
                       </label>
                       <input
                         type="text"
-                        value={client}
+                        value={client.url}
                         onChange={(e) => updateClient(index, e.target.value)}
                         className="w-full px-3 py-2 text-sm text-black border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-black"
                         placeholder="https://horizonvfx.in/images/c-logo1.jpg"
@@ -418,9 +537,9 @@ export default function HomePageEditor() {
 
                     {/* Preview */}
                     <div className="bg-zinc-900 rounded-lg p-4">
-                      {client ? (
+                      {client.url ? (
                         <img
-                          src={client}
+                          src={client.url}
                           alt={`Client ${index + 1}`}
                           className="w-full h-24 object-contain rounded"
                         />
@@ -430,6 +549,58 @@ export default function HomePageEditor() {
                         </div>
                       )}
                     </div>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
+          {/* Sections Selection */}
+          {activeTab === "sections" && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-6"
+            >
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <p className="text-sm text-blue-800">
+                  <strong>Note:</strong> Toggle which sections should be displayed on the home page. Changes are reflected immediately after saving.
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-slate-900 mb-4">Home Page Sections</h3>
+
+                {/* Section Toggles */}
+                {[
+                  { key: 'showProjects', label: 'Projects Section', description: 'Featured projects from showcase (3D Parallax Cards)' },
+                  { key: 'showShowreel', label: 'Showreel Section', description: 'Showreel grid display' },
+                  { key: 'showClients', label: 'Clients Section', description: 'Client logos marquee slider' },
+                  { key: 'showExcellence', label: 'Excellence Section', description: 'From About page - Excellence in Every Frame' },
+                  { key: 'showTechStack', label: 'Tech Stack Section', description: 'From Showcase page - Our Tech Stack & Stats' },
+                  { key: 'showStats', label: 'Stats Section', description: 'Industry statistics from Showcase' },
+                  { key: 'showLeadership', label: 'Leadership Section', description: 'From Team page - Leadership members' },
+                ].map((section) => (
+                  <div
+                    key={section.key}
+                    className="flex items-center justify-between p-4 bg-white rounded-lg border border-slate-200 hover:border-blue-300 transition-colors"
+                  >
+                    <div className="flex-1">
+                      <div className="font-medium text-slate-900">{section.label}</div>
+                      <div className="text-sm text-slate-600">{section.description}</div>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={sections[section.key as keyof HomePageSections]}
+                        onChange={(e) => setSections({
+                          ...sections,
+                          [section.key]: e.target.checked
+                        })}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
                   </div>
                 ))}
               </div>
