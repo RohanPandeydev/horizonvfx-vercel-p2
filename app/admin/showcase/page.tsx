@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Save,
@@ -10,9 +10,11 @@ import {
   Trash2,
   GripVertical,
   Monitor,
+  Upload,
 } from "lucide-react";
 import Link from "next/link";
 import IconPicker from "@/components/admin/IconPicker";
+import { useToast } from "@/lib/toast-context";
 
 interface Service {
   icon: string;
@@ -31,36 +33,28 @@ interface Industry {
   image: string;
 }
 
-export default function ShowcasePageEditor() {
-  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
-  const [activeTab, setActiveTab] = useState<
-    "hero" | "services" | "industries" | "technologies"
-  >("hero");
+interface ShowcaseContent {
+  hero: {
+    title: string;
+    subtitle: string;
+  };
+  services: Service[];
+  techStack: Tech[];
+  industries: Industry[];
+}
 
-  // Hero Section State
-  const [heroTitle, setHeroTitle] = useState("Our Showcase");
-  const [heroSubtitle, setHeroSubtitle] = useState(
-    "Explore our portfolio of visual effects and animation projects that push the boundaries of creativity"
-  );
-
-  // Services Stats State
-  const [services, setServices] = useState<Service[]>([
+const DEFAULT_CONTENT: ShowcaseContent = {
+  hero: {
+    title: "Our Showcase",
+    subtitle: "Explore our portfolio of visual effects and animation projects that push the boundaries of creativity",
+  },
+  services: [
     { icon: "🎬", name: "Film & OTT", count: "100+" },
     { icon: "🎮", name: "Gaming", count: "50+" },
     { icon: "📺", name: "Commercial", count: "200+" },
     { icon: "🖥️", name: "Unreal Engine", count: "30+" },
-  ]);
-
-  // Industries State
-  const [industries, setIndustries] = useState<Industry[]>([
-    { title: "Film and OTT", image: "https://horizonvfx.in/images/flm.png" },
-    { title: "Game", image: "https://horizonvfx.in/images/game.jpg" },
-    { title: "Commercial", image: "https://horizonvfx.in/images/Commercial.jpg" },
-    { title: "Unreal", image: "https://horizonvfx.in/images/unreal.jpg" },
-  ]);
-
-  // Technologies State
-  const [technologies, setTechnologies] = useState<Tech[]>([
+  ],
+  techStack: [
     { name: "After Effects", icon: "🎨", color: "from-purple-500 to-blue-500" },
     { name: "Nuke", icon: "💣", color: "from-blue-500 to-cyan-500" },
     { name: "Maya", icon: "🔷", color: "from-cyan-500 to-teal-500" },
@@ -69,50 +63,154 @@ export default function ShowcasePageEditor() {
     { name: "Blender", icon: "🔶", color: "from-yellow-500 to-green-500" },
     { name: "Cinema 4D", icon: "📦", color: "from-green-500 to-emerald-500" },
     { name: "Substance", icon: "🎭", color: "from-pink-500 to-rose-500" },
-  ]);
+  ],
+  industries: [
+    { title: "Film and OTT", image: "https://horizonvfx.in/images/flm.png" },
+    { title: "Game", image: "https://horizonvfx.in/images/game.jpg" },
+    { title: "Commercial", image: "https://horizonvfx.in/images/Commercial.jpg" },
+    { title: "Unreal", image: "https://horizonvfx.in/images/unreal.jpg" },
+  ],
+};
 
-  const handleSave = () => {
-    setSaveStatus("saving");
-    setTimeout(() => {
-      setSaveStatus("saved");
-      setTimeout(() => setSaveStatus("idle"), 2000);
-    }, 1000);
+export default function ShowcasePageEditor() {
+  const { showSuccess, showError } = useToast();
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
+  const [activeTab, setActiveTab] = useState<
+    "hero" | "services" | "industries" | "technologies"
+  >("hero");
+  const [content, setContent] = useState<ShowcaseContent>(DEFAULT_CONTENT);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Load content on mount
+  useEffect(() => {
+    loadContent();
+  }, []);
+
+  const loadContent = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch("/api/admin/pages/showcase");
+      const result = await response.json();
+
+      if (result.success && result.data && result.data.content) {
+        setContent(result.data.content);
+      }
+    } catch (error) {
+      console.error("Error loading content:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    try {
+      setSaveStatus("saving");
+
+      const response = await fetch("/api/admin/pages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          slug: "showcase",
+          title: "Showcase Page",
+          content,
+          published: true,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setSaveStatus("saved");
+        showSuccess("Showcase page saved successfully!");
+        setTimeout(() => setSaveStatus("idle"), 2000);
+      } else {
+        throw new Error(result.error || "Failed to save");
+      }
+    } catch (error) {
+      setSaveStatus("idle");
+      const message =
+        error instanceof Error ? error.message : "Failed to save content";
+      showError(message);
+    }
   };
 
   const updateService = (index: number, field: string, value: string) => {
-    const newServices = [...services];
-    newServices[index] = { ...newServices[index], [field]: value };
-    setServices(newServices);
+    setContent((prev) => ({
+      ...prev,
+      services: prev.services.map((service, i) =>
+        i === index ? { ...service, [field]: value } : service
+      ),
+    }));
   };
 
   const updateIndustry = (index: number, field: string, value: string) => {
-    const newIndustries = [...industries];
-    newIndustries[index] = { ...newIndustries[index], [field]: value };
-    setIndustries(newIndustries);
+    setContent((prev) => ({
+      ...prev,
+      industries: prev.industries.map((industry, i) =>
+        i === index ? { ...industry, [field]: value } : industry
+      ),
+    }));
   };
 
   const updateTechnology = (index: number, field: string, value: string) => {
-    const newTechs = [...technologies];
-    newTechs[index] = { ...newTechs[index], [field]: value };
-    setTechnologies(newTechs);
+    setContent((prev) => ({
+      ...prev,
+      techStack: prev.techStack.map((tech, i) =>
+        i === index ? { ...tech, [field]: value } : tech
+      ),
+    }));
   };
 
   const addTechnology = () => {
-    setTechnologies([
-      ...technologies,
-      {
-        name: "New Technology",
-        icon: "⚡",
-        color: "from-blue-500 to-purple-500",
-      },
-    ]);
+    setContent((prev) => ({
+      ...prev,
+      techStack: [
+        ...prev.techStack,
+        {
+          name: "New Technology",
+          icon: "⚡",
+          color: "from-blue-500 to-purple-500",
+        },
+      ],
+    }));
   };
 
   const removeTechnology = (index: number) => {
-    if (technologies.length > 1) {
-      setTechnologies(technologies.filter((_, i) => i !== index));
+    if (content.techStack.length > 1) {
+      setContent((prev) => ({
+        ...prev,
+        techStack: prev.techStack.filter((_, i) => i !== index),
+      }));
     }
   };
+
+  const handleIndustryFileUpload = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    index: number
+  ) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file size (max 2MB)
+      const maxSize = 2 * 1024 * 1024; // 2MB
+      if (file.size > maxSize) {
+        showError("Image size must be less than 2MB");
+        return;
+      }
+
+      // For now, create a temporary URL for preview
+      // In production, this would upload to S3
+      const url = URL.createObjectURL(file);
+      updateIndustry(index, "image", url);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-slate-600">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -212,8 +310,11 @@ export default function ShowcasePageEditor() {
                 </label>
                 <input
                   type="text"
-                  value={heroTitle}
-                  onChange={(e) => setHeroTitle(e.target.value)}
+                  value={content.hero.title}
+                  onChange={(e) => setContent((prev) => ({
+                    ...prev,
+                    hero: { ...prev.hero, title: e.target.value }
+                  }))}
                   className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-black placeholder:text-black"
                   placeholder="Our Showcase"
                 />
@@ -224,8 +325,11 @@ export default function ShowcasePageEditor() {
                   Subtitle / Description
                 </label>
                 <textarea
-                  value={heroSubtitle}
-                  onChange={(e) => setHeroSubtitle(e.target.value)}
+                  value={content.hero.subtitle}
+                  onChange={(e) => setContent((prev) => ({
+                    ...prev,
+                    hero: { ...prev.hero, subtitle: e.target.value }
+                  }))}
                   rows={3}
                   className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none text-black placeholder:text-black"
                   placeholder="Explore our portfolio..."
@@ -236,10 +340,10 @@ export default function ShowcasePageEditor() {
               <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-xl p-8 mt-6">
                 <div className="text-center">
                   <h2 className="text-4xl md:text-5xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-500">
-                    {heroTitle || "Your Title Here"}
+                    {content.hero.title || "Your Title Here"}
                   </h2>
                   <p className="text-xl text-gray-300">
-                    {heroSubtitle || "Your subtitle here"}
+                    {content.hero.subtitle || "Your subtitle here"}
                   </p>
                 </div>
               </div>
@@ -258,7 +362,7 @@ export default function ShowcasePageEditor() {
                   Service Statistics Cards
                 </label>
                 <div className="grid md:grid-cols-2 gap-4">
-                  {services.map((service, index) => (
+                  {content.services.map((service, index) => (
                     <div
                       key={index}
                       className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3"
@@ -300,7 +404,7 @@ export default function ShowcasePageEditor() {
                           type="text"
                           value={service.name}
                           onChange={(e) => updateService(index, "name", e.target.value)}
-                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent placeholder:text-black"
+                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-black placeholder:text-black"
                           placeholder="Film & OTT"
                         />
                       </div>
@@ -330,7 +434,7 @@ export default function ShowcasePageEditor() {
                   Industries We Serve
                 </label>
                 <div className="grid md:grid-cols-2 gap-4">
-                  {industries.map((industry, index) => (
+                  {content.industries.map((industry, index) => (
                     <div
                       key={index}
                       className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3"
@@ -350,20 +454,40 @@ export default function ShowcasePageEditor() {
                           type="text"
                           value={industry.title}
                           onChange={(e) => updateIndustry(index, "title", e.target.value)}
-                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent placeholder:text-black"
+                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-black placeholder:text-black"
                           placeholder="Film and OTT"
                         />
                       </div>
 
                       <div>
                         <label className="block text-xs font-medium text-slate-600 mb-1.5">
-                          Image URL
+                          Upload Image
+                        </label>
+                        <label className="block">
+                          <div className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-slate-300 rounded-lg cursor-pointer hover:border-orange-500 hover:bg-orange-50 transition-colors">
+                            <Upload size={16} className="text-slate-400" />
+                            <span className="text-xs text-slate-600">
+                              Choose image (JPG, PNG, WebP)
+                            </span>
+                          </div>
+                          <input
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp"
+                            className="hidden"
+                            onChange={(e) => handleIndustryFileUpload(e, index)}
+                          />
+                        </label>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-medium text-slate-600 mb-1.5">
+                          Or enter image URL
                         </label>
                         <input
                           type="text"
                           value={industry.image}
                           onChange={(e) => updateIndustry(index, "image", e.target.value)}
-                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent placeholder:text-black"
+                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-black placeholder:text-black"
                           placeholder="https://horizonvfx.in/images/flm.png"
                         />
                       </div>
@@ -406,7 +530,7 @@ export default function ShowcasePageEditor() {
               </div>
 
               <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {technologies.map((tech, index) => (
+                {content.techStack.map((tech, index) => (
                   <div
                     key={index}
                     className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3"
@@ -416,7 +540,7 @@ export default function ShowcasePageEditor() {
                       <span className="text-xs font-semibold text-slate-700">
                         Tech {index + 1}
                       </span>
-                      {technologies.length > 1 && (
+                      {content.techStack.length > 1 && (
                         <button
                           onClick={() => removeTechnology(index)}
                           className="ml-auto p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
@@ -442,7 +566,7 @@ export default function ShowcasePageEditor() {
                         type="text"
                         value={tech.name}
                         onChange={(e) => updateTechnology(index, "name", e.target.value)}
-                        className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent placeholder:text-black"
+                        className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-black placeholder:text-black"
                         placeholder="After Effects"
                       />
                     </div>
