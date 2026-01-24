@@ -1,6 +1,8 @@
 import jwt, { SignOptions } from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { env } from './env';
+import { cookies } from 'next/headers';
+import { prisma } from './prisma';
 
 export interface TokenPayload {
   userId: string;
@@ -63,4 +65,21 @@ export function generateVerificationToken(): string {
 // Generate password reset token
 export function generateResetToken(): string {
   return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+}
+
+// Get authenticated user from request
+export async function getAuthUser(request: Request): Promise<TokenPayload | null> {
+  try {
+    const cookieStore = await cookies();
+    const accessToken = cookieStore.get('access_token')?.value;
+
+    if (!accessToken) {
+      return null;
+    }
+
+    const payload = verifyAccessToken(accessToken);
+    return payload;
+  } catch (error) {
+    return null;
+  }
 }

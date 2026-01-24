@@ -1,13 +1,10 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 import {
-  Save,
-  Image,
   Plus,
   Trash2,
-  Upload,
-  Film,
   Grid,
   List,
   Search,
@@ -15,23 +12,32 @@ import {
   Star,
   Lock,
   Unlock,
+  AlertCircle,
+  CheckCircle,
+  Eye,
+  Loader2,
 } from "lucide-react";
+import VideoCardPlayer from "@/components/admin/VideoCardPlayer";
+import VideoModal from "@/components/VideoModal";
+import { useToast } from "@/lib/toast-context";
+import { authFetch } from "@/lib/auth-helper";
 
 interface MediaItem {
-  id: number;
+  id: string;
   title: string;
   type: "project" | "reel";
   isReel: boolean;
-  thumbnail: string;
-  video?: string;
+  thumbnailUrl: string;
+  videoUrl: string;
+  thumbnailFile?: File; // Store file for upload on save
+  videoFile?: File; // Store file for upload on save
   category: string;
   isFeatured: boolean;
   isPublic: boolean;
-  description?: string;
+  description: string;
   gradient: string;
-  stats?: string;
-  technologies?: string[];
-  createdAt: number;
+  technologies: string[];
+  createdAt: string;
 }
 
 const categories = [
@@ -45,14 +51,6 @@ const categories = [
   "Other",
 ];
 
-const gradients = [
-  "from-orange-500 via-red-500 to-pink-500",
-  "from-cyan-500 via-blue-500 to-purple-500",
-  "from-purple-500 via-pink-500 to-rose-500",
-  "from-green-500 via-emerald-500 to-teal-500",
-  "from-blue-500 to-cyan-500",
-];
-
 const techOptions = [
   "After Effects",
   "Nuke",
@@ -64,158 +62,267 @@ const techOptions = [
   "Substance",
 ];
 
+const gradients = [
+  "from-orange-500 via-red-500 to-pink-500",
+  "from-cyan-500 via-blue-500 to-purple-500",
+  "from-purple-500 via-pink-500 to-rose-500",
+  "from-green-500 via-emerald-500 to-teal-500",
+  "from-blue-500 to-cyan-500",
+];
+
+// API Functions
+async function fetchVideos(): Promise<MediaItem[]> {
+  const response = await authFetch('/api/videos');
+
+  if (!response.ok) throw new Error('Failed to fetch videos');
+
+  const data = await response.json();
+  // Handle both old array format and new paginated format
+  return Array.isArray(data) ? data : data.videos || [];
+}
+
+async function createVideo(formData: FormData): Promise<MediaItem> {
+  const response = await authFetch('/api/videos', {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to create video');
+  }
+  return response.json();
+}
+
+async function updateVideo(id: string, data: Partial<MediaItem>): Promise<MediaItem> {
+  const response = await authFetch(`/api/videos/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to update video');
+  }
+  return response.json();
+}
+
+async function deleteVideo(id: string): Promise<void> {
+  const response = await authFetch(`/api/videos/${id}`, {
+    method: 'DELETE',
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to delete video');
+  }
+}
+
 export default function MediaLibraryEditor() {
-  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
+  const router = useRouter();
+  const { showSuccess, showError } = useToast();
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState<"all" | "project" | "reel" | "featured">("all");
-  const [filterCategory, setFilterCategory] = useState<string>("all");
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(12);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
+  const [selectedVideo, setSelectedVideo] = useState<MediaItem | null>(null);
+  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
 
-  const [mediaItems, setMediaItems] = useState<MediaItem[]>([
-    {
-      id: 1,
-      title: "Pushpa 2: The Rule",
-      type: "project",
-      isReel: false,
-      thumbnail: "https://horizonvfx.in/images/Pushpa_2.png",
-      video: "https://www.horizonvfx.in/images/reel1.mp4",
-      category: "Film & OTT",
-      isFeatured: true,
-      isPublic: true,
-      description: "Mind-bending visual effects for the blockbuster sequel",
-      gradient: "from-orange-500 via-red-500 to-pink-500",
-      stats: "200+ VFX Shots",
-      technologies: ["Nuke", "Maya", "After Effects"],
-      createdAt: Date.now() - 100000,
-    },
-    {
-      id: 2,
-      title: "Commercial Campaign",
-      type: "project",
-      isReel: false,
-      thumbnail: "https://horizonvfx.in/images/Commercial.jpg",
-      category: "Advertisement",
-      isFeatured: true,
-      isPublic: true,
-      description: "Stunning commercial visuals with photorealistic CG",
-      gradient: "from-cyan-500 via-blue-500 to-purple-500",
-      stats: "50+ Shots",
-      technologies: ["After Effects", "Cinema 4D"],
-      createdAt: Date.now() - 200000,
-    },
-    {
-      id: 3,
-      title: "Game Cinematics Reel",
-      type: "reel",
-      isReel: true,
-      thumbnail: "https://horizonvfx.in/images/game.jpg",
-      category: "Gaming",
-      isFeatured: true,
-      isPublic: true,
-      description: "Immersive game trailers and cinematic sequences",
-      gradient: "from-purple-500 via-pink-500 to-rose-500",
-      technologies: ["Unreal Engine", "Maya"],
-      createdAt: Date.now() - 300000,
-    },
-  ]);
+  // Load videos on mount
+  useEffect(() => {
+    loadVideos();
+  }, []);
 
-  const handleSave = () => {
-    setSaveStatus("saving");
-    setTimeout(() => {
-      setSaveStatus("saved");
-      setTimeout(() => setSaveStatus("idle"), 2000);
-    }, 1000);
+  const loadVideos = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const videos = await fetchVideos();
+      setMediaItems(videos);
+    } catch (err) {
+      if (err instanceof Error && err.message === 'UNAUTHORIZED') {
+        router.push('/admin/login');
+        return;
+      }
+      setError(err instanceof Error ? err.message : 'Failed to load videos');
+      console.error('Error loading videos:', err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const updateMediaItem = (id: number, field: string, value: any) => {
+  const updateMediaItem = (id: string, field: string, value: any) => {
     setMediaItems(
-      mediaItems.map((item) => (item.id === id ? { ...item, [field]: value } : item))
+      mediaItems.map((item) => {
+        if (item.id === id) {
+          // Handle multiple field updates at once
+          if (field === "__multiple__" && typeof value === "object") {
+            return { ...item, ...value };
+          }
+          // Handle single field update
+          return { ...item, [field]: value };
+        }
+        return item;
+      })
     );
+  };
+
+  // Quick update for isFeatured and isPublic toggles
+  const quickUpdateField = async (id: string, field: 'isFeatured' | 'isPublic', value: boolean) => {
+    // Don't update if it's a temp item
+    if (id.startsWith('temp-')) {
+      updateMediaItem(id, field, value);
+      return;
+    }
+
+    try {
+      // Update local state immediately for responsive UI
+      updateMediaItem(id, field, value);
+
+      // Call API to persist the change
+      await authFetch(`/api/videos/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ [field]: value }),
+      });
+
+      showSuccess(`${field === 'isFeatured' ? 'Featured' : 'Public'} status updated!`);
+    } catch (err) {
+      console.error('Error updating field:', err);
+      // Revert the change on error
+      updateMediaItem(id, field, !value);
+      showError('Failed to update status');
+    }
+  };
+
+  const handleOpenVideoModal = (item: MediaItem) => {
+    setSelectedVideo(item);
+    setIsVideoModalOpen(true);
   };
 
   const addMediaItem = () => {
-    const newId = Math.max(...mediaItems.map((item) => item.id), 0) + 1;
     const newItem: MediaItem = {
-      id: newId,
-      title: "New Project",
+      id: 'temp-' + Date.now(),
+      title: "",
       type: "project",
       isReel: false,
-      thumbnail: "",
+      thumbnailUrl: "",
+      videoUrl: "",
       category: "Film & OTT",
       isFeatured: false,
       isPublic: true,
-      gradient: "from-blue-500 to-purple-500",
+      description: "",
+      gradient: gradients[Math.floor(Math.random() * gradients.length)],
       technologies: [],
-      createdAt: Date.now(),
+      createdAt: new Date().toISOString(),
     };
-    // Prepend to the beginning of array
     setMediaItems([newItem, ...mediaItems]);
-    setEditingId(newId);
-    setCurrentPage(1); // Go to first page to see the new item
+    setEditingId(newItem.id);
+    setCurrentPage(1);
   };
 
-  const removeMediaItem = (id: number) => {
-    if (mediaItems.length > 1) {
+  const removeMediaItem = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this item?')) return;
+
+    try {
+      if (!id.startsWith('temp-')) {
+        await deleteVideo(id);
+      }
       setMediaItems(mediaItems.filter((item) => item.id !== id));
       if (editingId === id) setEditingId(null);
+      showSuccess("Item deleted successfully!");
+    } catch (err) {
+      console.error('Error deleting video:', err);
+      showError('Failed to delete video');
     }
   };
 
-  const updateTechnology = (id: number, techIndex: number, value: string) => {
-    setMediaItems(
-      mediaItems.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              technologies: item.technologies?.map((tech, idx) =>
-                idx === techIndex ? value : tech
-              ),
-            }
-          : item
-      )
-    );
-  };
+  const saveMediaItem = async (id: string, item: MediaItem) => {
+    try {
+      // Debug logging
+      console.log('Saving item:', {
+        id: item.id,
+        title: item.title,
+        hasThumbnailFile: !!item.thumbnailFile,
+        hasThumbnailUrl: !!item.thumbnailUrl,
+        hasVideoFile: !!item.videoFile,
+        hasVideoUrl: !!item.videoUrl,
+      });
 
-  const addTechnology = (id: number) => {
-    setMediaItems(
-      mediaItems.map((item) =>
-        item.id === id
-          ? { ...item, technologies: [...(item.technologies || []), ""] }
-          : item
-      )
-    );
-  };
+      if (id.startsWith('temp-')) {
+        // Create new item - createVideo API handles file uploads
+        const formData = new FormData();
+        formData.append('title', item.title || '');
+        formData.append('type', item.type || 'project');
+        formData.append('category', item.category || 'Film & OTT');
+        formData.append('isFeatured', item.isFeatured ? 'true' : 'false');
+        formData.append('isPublic', item.isPublic ? 'true' : 'false');
+        formData.append('description', item.description || '');
+        formData.append('gradient', item.gradient || 'from-blue-500 to-purple-500');
+        formData.append('technologies', JSON.stringify(item.technologies || []));
 
-  const removeTechnology = (id: number, techIndex: number) => {
-    setMediaItems(
-      mediaItems.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              technologies: item.technologies?.filter((_, idx) => idx !== techIndex),
-            }
-          : item
-      )
-    );
-  };
+        // Append files - the API will handle the uploads
+        if (item.thumbnailFile) {
+          formData.append('thumbnail', item.thumbnailFile);
+          console.log('Appending thumbnail file to FormData:', item.thumbnailFile.name);
+        }
+        if (item.videoFile) {
+          formData.append('video', item.videoFile);
+          console.log('Appending video file to FormData:', item.videoFile.name);
+        }
 
-  const handleFileUpload = (
-    e: React.ChangeEvent<HTMLInputElement>,
-    id: number,
-    field: "thumbnail" | "video"
-  ) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const url = URL.createObjectURL(file);
-      updateMediaItem(id, field, url);
+        const createdItem = await createVideo(formData);
+
+        // Update local state with the created item (with real ID)
+        setMediaItems(mediaItems.map(i =>
+          i.id === id ? { ...createdItem, technologies: createdItem.technologies || [] } : i
+        ));
+
+        showSuccess('Video created successfully!');
+      } else {
+        // Update existing item - no file uploads for updates
+        const updateData = {
+          title: item.title,
+          type: item.type,
+          isReel: item.isReel,
+          category: item.category,
+          isFeatured: item.isFeatured,
+          isPublic: item.isPublic,
+          description: item.description,
+          gradient: item.gradient,
+          technologies: item.technologies,
+          thumbnailUrl: item.thumbnailUrl,
+          videoUrl: item.videoUrl,
+        };
+
+        await updateVideo(id, updateData);
+        showSuccess('Video updated successfully!');
+      }
+    } catch (err) {
+      console.error('Error saving video:', err);
+      if (err instanceof Error && err.message === 'UNAUTHORIZED') {
+        router.push('/admin/login');
+        return;
+      }
+      showError('Failed to save video');
+      throw err; // Re-throw to prevent closing edit mode
     }
   };
 
-  // Sort items by createdAt (newest first)
-  const sortedItems = [...mediaItems].sort((a, b) => b.createdAt - a.createdAt);
+  // Sort items
+  const sortedItems = [...mediaItems].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
 
   // Filter items
   const filteredItems = sortedItems.filter((item) => {
@@ -233,519 +340,617 @@ export default function MediaLibraryEditor() {
       item.type === filterType ||
       (filterType === "reel" && item.isReel);
 
-    const matchesCategory = filterCategory === "all" || item.category === filterCategory;
-    return matchesSearch && matchesType && matchesCategory;
+    return matchesSearch && matchesType;
   });
 
   // Pagination
   const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedItems = filteredItems.slice(startIndex, endIndex);
+  const paginatedItems = filteredItems.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   return (
-    <div className="space-y-6">
+    <motion.div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center">
-            <Image className="text-indigo-600" size={24} />
-          </div>
+      <div className="max-w-[1800px] mx-auto mb-8">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 bg-white rounded-xl shadow-sm p-6">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">Media Library</h1>
-            <p className="text-sm text-slate-600">Manage projects and reels</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          <button
-            onClick={addMediaItem}
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors"
-          >
-            <Plus size={18} />
-            Add New
-          </button>
-          <button
-            onClick={handleSave}
-            disabled={saveStatus === "saving"}
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            <Save size={18} />
-            {saveStatus === "saving" ? "Saving..." : saveStatus === "saved" ? "Saved!" : "Save All"}
-          </button>
-        </div>
-      </div>
-
-      {/* Filters & Search */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
-        <div className="flex flex-col lg:flex-row gap-4">
-          {/* Search */}
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setCurrentPage(1); // Reset to first page on search
-              }}
-              placeholder="Search by title, category, description, or technology..."
-              className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-black placeholder:text-black"
-            />
+            <h1 className="text-3xl font-bold text-slate-800">
+              Media Library
+            </h1>
+            <p className="text-slate-600 mt-1">Manage your video projects and showreel</p>
           </div>
 
-          {/* Type Filter */}
-          <div className="flex items-center gap-2">
-            <Filter size={18} className="text-slate-400" />
-            <select
-              value={filterType}
-              onChange={(e) => {
-                setFilterType(e.target.value as any);
-                setCurrentPage(1); // Reset to first page on filter change
-              }}
-              className="px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-black"
-            >
-              <option value="all">All Types</option>
-              <option value="featured">Featured Only</option>
-              <option value="project">Projects</option>
-              <option value="reel">Reels</option>
-            </select>
-          </div>
-
-          {/* Category Filter */}
-          <select
-            value={filterCategory}
-            onChange={(e) => setFilterCategory(e.target.value)}
-            className="px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-          >
-            <option value="all">All Categories</option>
-            {categories.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat}
-              </option>
-            ))}
-          </select>
-
-          {/* View Toggle */}
-          <div className="flex items-center gap-2 border border-slate-200 rounded-lg p-1">
+          <div className="flex items-center gap-3">
             <button
-              onClick={() => setViewMode("grid")}
-              className={`p-2 rounded transition-colors ${
-                viewMode === "grid" ? "bg-indigo-100 text-indigo-600" : "text-slate-400 hover:text-slate-600"
-              }`}
+              onClick={addMediaItem}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all shadow-sm"
             >
-              <Grid size={18} />
-            </button>
-            <button
-              onClick={() => setViewMode("list")}
-              className={`p-2 rounded transition-colors ${
-                viewMode === "list" ? "bg-indigo-100 text-indigo-600" : "text-slate-400 hover:text-slate-600"
-              }`}
-            >
-              <List size={18} />
+              <Plus size={18} />
+              Add New
             </button>
           </div>
         </div>
-      </div>
 
-      {/* Media Items */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200">
-        {/* Results Info */}
-        <div className="px-6 py-3 border-b border-slate-200 flex items-center justify-between bg-slate-50">
-          <p className="text-sm text-slate-600">
-            Showing <span className="font-semibold text-slate-900">{paginatedItems.length}</span> of{" "}
-            <span className="font-semibold text-slate-900">{filteredItems.length}</span> items
-            {filteredItems.length !== mediaItems.length && (
-              <span className="text-slate-500"> (filtered from {mediaItems.length} total)</span>
-            )}
-          </p>
-        </div>
-
-        {viewMode === "grid" ? (
-          <div className="p-6 grid md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {paginatedItems.map((item) => (
-              <MediaCard
-                key={item.id}
-                item={item}
-                isEditing={editingId === item.id}
-                onToggleEdit={() => setEditingId(editingId === item.id ? null : item.id)}
-                onUpdate={(field, value) => updateMediaItem(item.id, field, value)}
-                onDelete={() => removeMediaItem(item.id)}
-                onFileUpload={(field, e) => handleFileUpload(e, item.id, field)}
-                onTechnologyUpdate={(idx, val) => updateTechnology(item.id, idx, val)}
-                onTechnologyAdd={() => addTechnology(item.id)}
-                onTechnologyRemove={(idx) => removeTechnology(item.id, idx)}
+        {/* Search and Filters */}
+        <div className="bg-white rounded-xl shadow-sm p-4">
+          <div className="flex flex-col lg:flex-row gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setCurrentPage(1);
+                }}
+                placeholder="Search by title, category, description, or technology..."
+                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-black placeholder:text-slate-400"
               />
-            ))}
-          </div>
-        ) : (
-          <div className="divide-y divide-slate-200">
-            {paginatedItems.map((item) => (
-              <MediaListItem
-                key={item.id}
-                item={item}
-                isEditing={editingId === item.id}
-                onToggleEdit={() => setEditingId(editingId === item.id ? null : item.id)}
-                onUpdate={(field, value) => updateMediaItem(item.id, field, value)}
-                onDelete={() => removeMediaItem(item.id)}
-                onFileUpload={(field, e) => handleFileUpload(e, item.id, field)}
-              />
-            ))}
-          </div>
-        )}
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="px-6 py-4 border-t border-slate-200 flex items-center justify-between bg-slate-50">
-            <button
-              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-              disabled={currentPage === 1}
-              className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              Previous
-            </button>
-
-            <div className="flex items-center gap-2">
-              {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                let pageNum;
-                if (totalPages <= 5) {
-                  pageNum = i + 1;
-                } else if (currentPage <= 3) {
-                  pageNum = i + 1;
-                } else if (currentPage >= totalPages - 2) {
-                  pageNum = totalPages - 4 + i;
-                } else {
-                  pageNum = currentPage - 2 + i;
-                }
-
-                return (
-                  <button
-                    key={pageNum}
-                    onClick={() => setCurrentPage(pageNum)}
-                    className={`w-10 h-10 rounded-lg text-sm font-medium transition-colors ${
-                      currentPage === pageNum
-                        ? "bg-indigo-600 text-white"
-                        : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50"
-                    }`}
-                  >
-                    {pageNum}
-                  </button>
-                );
-              })}
             </div>
 
-            <button
-              onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-              disabled={currentPage === totalPages}
-              className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              Next
-            </button>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3">
+                <Filter size={18} className="text-slate-400" />
+                <select
+                  value={filterType}
+                  onChange={(e) => {
+                    setFilterType(e.target.value as any);
+                    setCurrentPage(1);
+                  }}
+                  className="bg-transparent py-2.5 pr-2 text-black focus:outline-none"
+                >
+                  <option value="all">All Types</option>
+                  <option value="featured">Featured Only</option>
+                  <option value="project">Projects</option>
+                  <option value="reel">Reels</option>
+                </select>
+              </div>
+
+              <div className="flex items-center bg-slate-100 border border-slate-200 rounded-lg p-1">
+                <button
+                  onClick={() => setViewMode("grid")}
+                  className={`p-2 rounded transition-colors ${
+                    viewMode === "grid" ? "bg-purple-600 text-white" : "text-slate-400 hover:text-slate-600"
+                  }`}
+                >
+                  <Grid size={18} />
+                </button>
+                <button
+                  onClick={() => setViewMode("list")}
+                  className={`p-2 rounded transition-colors ${
+                    viewMode === "list" ? "bg-purple-600 text-white" : "text-slate-400 hover:text-slate-600"
+                  }`}
+                >
+                  <List size={18} />
+                </button>
+              </div>
+            </div>
           </div>
-        )}
+        </div>
       </div>
 
-      {/* Quick Tips */}
-      <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-6">
-        <h3 className="text-sm font-semibold text-indigo-900 mb-2">💡 Tips</h3>
-        <ul className="text-sm text-indigo-800 space-y-1">
-          <li>• Upload thumbnails and videos directly from your computer.</li>
-          <li>• Featured items appear prominently on the showcase page.</li>
-          <li>• Toggle visibility with the Public/Private setting.</li>
-          <li>• Videos play when users click on the thumbnail image.</li>
-          <li>• Use technologies to showcase the tools used in each project.</li>
-        </ul>
-      </div>
-    </div>
+      {/* Error Message */}
+      {error && (
+        <div className="max-w-[1800px] mx-auto mb-6 bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-3">
+          <AlertCircle className="text-red-600 flex-shrink-0" size={20} />
+          <p className="text-red-800 text-sm">{error}</p>
+        </div>
+      )}
+
+      {/* Loading State */}
+      {isLoading ? (
+        <div className="flex items-center justify-center py-20">
+          <div className="w-12 h-12 border-4 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      ) : (
+        <div className="max-w-[1800px] mx-auto">
+          {/* Grid View */}
+          {viewMode === "grid" ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {paginatedItems.map((item) => (
+                <MediaGridCard
+                  key={item.id}
+                  item={item}
+                  isEditing={editingId === item.id}
+                  onToggleEdit={() => setEditingId(editingId === item.id ? null : item.id)}
+                  onUpdate={(field, value) => updateMediaItem(item.id, field, value)}
+                  onQuickUpdate={(field, value) => quickUpdateField(item.id, field, value)}
+                  onDelete={() => removeMediaItem(item.id)}
+                  onExpandVideo={handleOpenVideoModal}
+                  onSave={saveMediaItem}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {paginatedItems.map((item) => (
+                <MediaListItem
+                  key={item.id}
+                  item={item}
+                  isEditing={editingId === item.id}
+                  onToggleEdit={() => setEditingId(editingId === item.id ? null : item.id)}
+                  onUpdate={(field, value) => updateMediaItem(item.id, field, value)}
+                  onQuickUpdate={(field, value) => quickUpdateField(item.id, field, value)}
+                  onDelete={() => removeMediaItem(item.id)}
+                  onExpandVideo={handleOpenVideoModal}
+                  onSave={saveMediaItem}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 mt-8 bg-white rounded-xl shadow-sm p-4">
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-200 transition-colors"
+              >
+                Previous
+              </button>
+              <span className="text-slate-600">
+                Page {currentPage} of {totalPages}
+              </span>
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-200 transition-colors"
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Video Modal */}
+      {selectedVideo && (
+        <VideoModal
+          isOpen={isVideoModalOpen}
+          onClose={() => {
+            setIsVideoModalOpen(false);
+            setSelectedVideo(null);
+          }}
+          videoUrl={selectedVideo.videoUrl}
+          title={selectedVideo.title || 'Untitled'}
+          thumbnail={selectedVideo.thumbnailUrl}
+        />
+      )}
+    </motion.div>
   );
 }
 
-// Media Grid Card Component
-function MediaCard({
-  item,
-  isEditing,
-  onToggleEdit,
-  onUpdate,
-  onDelete,
-  onFileUpload,
-  onTechnologyUpdate,
-  onTechnologyAdd,
-  onTechnologyRemove,
-}: {
+// Grid Card Component
+interface MediaGridCardProps {
   item: MediaItem;
   isEditing: boolean;
   onToggleEdit: () => void;
   onUpdate: (field: string, value: any) => void;
+  onQuickUpdate: (field: 'isFeatured' | 'isPublic', value: boolean) => void;
   onDelete: () => void;
-  onFileUpload: (field: "thumbnail" | "video", e: React.ChangeEvent<HTMLInputElement>) => void;
-  onTechnologyUpdate: (index: number, value: string) => void;
-  onTechnologyAdd: () => void;
-  onTechnologyRemove: (index: number) => void;
-}) {
+  onExpandVideo: (item: MediaItem) => void;
+  onSave: (id: string, item: MediaItem) => Promise<void>;
+}
+
+function MediaGridCard({ item, isEditing, onToggleEdit, onUpdate, onQuickUpdate, onDelete, onExpandVideo, onSave }: MediaGridCardProps) {
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSaving, setIsSaving] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadStage, setUploadStage] = useState<string>('');
+
+  const validateField = (field: string, value: any) => {
+    let error = "";
+
+    if (field === "title" && !value?.trim()) {
+      error = "Title is required";
+    }
+    if (field === "category" && !value) {
+      error = "Category is required";
+    }
+    if (field === "thumbnailUrl" && !value) {
+      error = "Thumbnail is required";
+    }
+    if (field === "videoUrl" && !value) {
+      error = "Video is required";
+    }
+
+    setErrors(prev => ({ ...prev, [field]: error }));
+    return !error;
+  };
+
+  const handleBlur = (field: string, value: any) => {
+    validateField(field, value);
+  };
+
+  const handleSaveItem = async () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!item.title?.trim()) newErrors.title = "Title is required";
+    if (!item.category) newErrors.category = "Category is required";
+    if (!item.thumbnailUrl && !item.thumbnailFile) newErrors.thumbnailUrl = "Thumbnail is required";
+    if (!item.videoUrl && !item.videoFile) newErrors.videoUrl = "Video is required";
+
+    setErrors(newErrors);
+
+    if (Object.keys(newErrors).length > 0) {
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      await onSave(item.id, item);
+      onToggleEdit();
+    } catch (err) {
+      // Error is already handled by the parent component
+      console.error('Save failed:', err);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <motion.div
       layout
-      className={`bg-slate-50 rounded-xl border ${isEditing ? "border-indigo-500" : "border-slate-200"} overflow-hidden`}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      className={`bg-white rounded-xl shadow-sm overflow-hidden transition-all ${
+        isEditing ? 'ring-2 ring-purple-500' : 'hover:shadow-md'
+      }`}
     >
-      {/* Thumbnail/Video Preview */}
-      <div className="relative aspect-video bg-zinc-900">
-        {item.thumbnail ? (
-          <>
-            <img src={item.thumbnail} alt={item.title} className="w-full h-full object-cover" />
-            {item.video && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 hover:opacity-100 transition-opacity">
-                <Film className="text-white" size={48} />
-              </div>
-            )}
+      {/* Header */}
+      <div className="p-4 bg-gradient-to-r from-purple-50 to-pink-50 border-b border-purple-100">
+        <div className="flex items-center justify-between">
+          <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+            item.type === 'reel'
+              ? 'bg-pink-600 text-white'
+              : 'bg-purple-600 text-white'
+          }`}>
+            {item.type === 'reel' ? 'Reel' : 'Project'}
+          </span>
+
+          <div className="flex items-center gap-2">
             {item.isFeatured && (
-              <div className="absolute top-2 left-2">
-                <span className="inline-flex items-center gap-1 px-2 py-1 bg-yellow-500 text-white text-xs font-bold rounded-full">
-                  <Star size={12} />
-                  Featured
-                </span>
+              <div className="p-1.5 bg-yellow-500 rounded-full">
+                <Star size={14} className="text-yellow-900 fill-yellow-900" />
               </div>
             )}
-            {!item.isPublic && (
-              <div className="absolute top-2 right-2">
-                <span className="inline-flex items-center gap-1 px-2 py-1 bg-slate-700 text-white text-xs font-bold rounded-full">
-                  <Lock size={12} />
-                  Private
-                </span>
-              </div>
-            )}
-          </>
-        ) : (
-          <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 bg-zinc-800/50">
-            <Upload size={32} className="mb-2 opacity-50" />
-            <span className="text-sm">No image</span>
-            <span className="text-xs text-gray-500 mt-1">Upload a thumbnail</span>
+            <button
+              onClick={() => onQuickUpdate("isFeatured", !item.isFeatured)}
+              className={`p-2 rounded-lg transition-colors ${
+                item.isFeatured ? 'bg-yellow-500/20 text-yellow-600' : 'bg-slate-100 text-slate-400'
+              }`}
+              title={item.isFeatured ? "Featured" : "Not Featured"}
+            >
+              <Star size={16} fill={item.isFeatured ? "currentColor" : "none"} />
+            </button>
+            <button
+              onClick={() => onQuickUpdate("isPublic", !item.isPublic)}
+              className={`p-2 rounded-lg transition-colors ${
+                item.isPublic ? 'bg-green-500/20 text-green-600' : 'bg-slate-100 text-slate-400'
+              }`}
+              title={item.isPublic ? "Public" : "Private"}
+            >
+              {item.isPublic ? <Unlock size={16} /> : <Lock size={16} />}
+            </button>
           </div>
-        )}
+        </div>
       </div>
 
       {/* Content */}
-      <div className="p-4 space-y-3">
+      <div className="p-4 space-y-4">
         {isEditing ? (
           <>
-            <input
-              type="text"
-              value={item.title}
-              onChange={(e) => onUpdate("title", e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-semibold text-black placeholder:text-black"
-              placeholder="Project title"
-            />
-
-            <div className="grid grid-cols-2 gap-2">
-              <select
-                value={item.type}
-                onChange={(e) => {
-                  const newType = e.target.value as "project" | "reel";
-                  onUpdate("type", newType);
-                  // Sync isReel flag with type
-                  onUpdate("isReel", newType === "reel");
-                }}
-                className="px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              >
-                <option value="project">Project</option>
-                <option value="reel">Reel</option>
-              </select>
-
-              <select
-                value={item.category}
-                onChange={(e) => onUpdate("category", e.target.value)}
-                className="px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              >
-                {categories.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
+            {/* Title */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Title <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={item.title}
+                onChange={(e) => onUpdate("title", e.target.value)}
+                onBlur={(e) => handleBlur("title", e.target.value)}
+                className={`w-full px-3 py-2 text-sm bg-slate-50 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-black placeholder:text-slate-400 ${
+                  errors.title ? 'border-red-300 focus:border-red-500' : 'border-slate-200'
+                }`}
+                placeholder="Project title"
+              />
+              {errors.title && <p className="text-xs text-red-600 mt-1">{errors.title}</p>}
             </div>
 
-            <textarea
-              value={item.description || ""}
-              onChange={(e) => onUpdate("description", e.target.value)}
-              rows={2}
-              className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none text-black placeholder:text-black"
-              placeholder="Description"
-            />
+            {/* Type & Category */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Type <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={item.type}
+                  onChange={(e) => {
+                    const newType = e.target.value as "project" | "reel";
+                    // Update both type and isReel in a single object
+                    const updates = {
+                      type: newType,
+                      isReel: newType === "reel"
+                    };
+                    // Apply both updates atomically
+                    onUpdate("__multiple__", updates);
+                  }}
+                  className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-black"
+                >
+                  <option value="project">Project</option>
+                  <option value="reel">Reel</option>
+                </select>
+              </div>
 
-            <input
-              type="text"
-              value={item.stats || ""}
-              onChange={(e) => onUpdate("stats", e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder:text-black"
-              placeholder="Stats (e.g., 200+ VFX Shots)"
-            />
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Category <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={item.category}
+                  onChange={(e) => onUpdate("category", e.target.value)}
+                  onBlur={(e) => handleBlur("category", e.target.value)}
+                  className={`w-full px-3 py-2 text-sm bg-slate-50 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-black ${
+                    errors.category ? 'border-red-300 focus:border-red-500' : 'border-slate-200'
+                  }`}
+                >
+                  {categories.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                </select>
+                {errors.category && <p className="text-xs text-red-600 mt-1">{errors.category}</p>}
+              </div>
+            </div>
 
-            <select
-              value={item.gradient}
-              onChange={(e) => onUpdate("gradient", e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              {gradients.map((grad) => (
-                <option key={grad} value={grad}>
-                  {grad}
-                </option>
-              ))}
-            </select>
+            {/* Description */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Description <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                value={item.description}
+                onChange={(e) => onUpdate("description", e.target.value)}
+                onBlur={(e) => handleBlur("description", e.target.value)}
+                rows={3}
+                className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-black placeholder:text-slate-400 resize-none"
+                placeholder="Project description"
+              />
+            </div>
 
             {/* Technologies */}
             <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="text-xs font-medium text-slate-600">Technologies</label>
-                <button
-                  onClick={onTechnologyAdd}
-                  className="text-xs text-indigo-600 hover:text-indigo-800"
-                >
-                  + Add
-                </button>
-              </div>
-              <div className="space-y-1">
-                {item.technologies?.map((tech, idx) => (
-                  <div key={idx} className="flex gap-1">
-                    <select
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Technologies
+              </label>
+              <div className="space-y-2">
+                {item.technologies.map((tech, idx) => (
+                  <div key={idx} className="flex gap-2">
+                    <input
+                      list="tech-options"
                       value={tech}
-                      onChange={(e) => onTechnologyUpdate(idx, e.target.value)}
-                      className="flex-1 px-2 py-1 text-xs border border-slate-200 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500 text-black"
-                    >
+                      onChange={(e) => {
+                        const newTechs = [...item.technologies];
+                        newTechs[idx] = e.target.value;
+                        onUpdate("technologies", newTechs);
+                      }}
+                      placeholder="Type or select technology"
+                      className="flex-1 px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-black"
+                    />
+                    <datalist id="tech-options">
                       {techOptions.map((opt) => (
                         <option key={opt} value={opt}>
                           {opt}
                         </option>
                       ))}
-                    </select>
-                    {item.technologies && item.technologies.length > 1 && (
-                      <button
-                        onClick={() => onTechnologyRemove(idx)}
-                        className="p-1 text-red-600 hover:bg-red-50 rounded"
-                      >
-                        <Trash2 size={12} />
-                      </button>
-                    )}
+                    </datalist>
+                    <button
+                      onClick={() => {
+                        const newTechs = item.technologies.filter((_, i) => i !== idx);
+                        onUpdate("technologies", newTechs);
+                      }}
+                      className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                    >
+                      <Trash2 size={16} />
+                    </button>
                   </div>
                 ))}
+                <button
+                  onClick={() => onUpdate("technologies", [...item.technologies, ""])}
+                  className="text-sm text-purple-600 hover:text-purple-700 font-medium"
+                >
+                  + Add Technology
+                </button>
               </div>
             </div>
 
-            {/* File Uploads */}
-            <div className="space-y-2">
-              <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">Thumbnail</label>
-                <label className="block">
-                  <div className="flex items-center gap-2 px-3 py-2 border border-dashed border-slate-300 rounded cursor-pointer hover:border-indigo-500 hover:bg-indigo-50 transition-colors">
-                    <Upload size={14} />
-                    <span className="text-xs text-slate-600">Upload image</span>
-                  </div>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) => onFileUpload("thumbnail", e)}
-                  />
-                </label>
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">Video (optional)</label>
-                <label className="block">
-                  <div className="flex items-center gap-2 px-3 py-2 border border-dashed border-slate-300 rounded cursor-pointer hover:border-indigo-500 hover:bg-indigo-50 transition-colors">
-                    <Upload size={14} />
-                    <span className="text-xs text-slate-600">Upload video</span>
-                  </div>
-                  <input
-                    type="file"
-                    accept="video/mp4,video/webm"
-                    className="hidden"
-                    onChange={(e) => onFileUpload("video", e)}
-                  />
-                </label>
-              </div>
+            {/* Thumbnail Upload */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Thumbnail <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    console.log('Thumbnail file selected:', file.name, file.size);
+                    onUpdate("thumbnailFile", file);
+                    // Clear error when file is selected
+                    setErrors(prev => ({ ...prev, thumbnailUrl: "" }));
+                  }
+                }}
+                className={`w-full px-3 py-2 text-sm bg-slate-50 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-black ${
+                  errors.thumbnailUrl ? 'border-red-300' : 'border-slate-200'
+                }`}
+              />
+              {item.thumbnailFile ? (
+                <p className="text-xs text-green-600 mt-1">
+                  Selected: {item.thumbnailFile.name} ({(item.thumbnailFile.size / 1024 / 1024).toFixed(2)} MB)
+                </p>
+              ) : item.thumbnailUrl ? (
+                <p className="text-xs text-gray-500 mt-1 truncate">Current: {item.thumbnailUrl}</p>
+              ) : null}
+              {errors.thumbnailUrl && <p className="text-xs text-red-600 mt-1">{errors.thumbnailUrl}</p>}
             </div>
 
-            {/* Toggles */}
-            <div className="flex items-center justify-between pt-2 border-t border-slate-200">
-              <button
-                onClick={() => onUpdate("isFeatured", !item.isFeatured)}
-                className={`flex items-center gap-2 text-sm ${
-                  item.isFeatured ? "text-yellow-600" : "text-slate-400"
+            {/* Video Upload */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Video <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="file"
+                accept="video/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    console.log('Video file selected:', file.name, file.size);
+                    onUpdate("videoFile", file);
+                    // Clear error when file is selected
+                    setErrors(prev => ({ ...prev, videoUrl: "" }));
+                  }
+                }}
+                className={`w-full px-3 py-2 text-sm bg-slate-50 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-black ${
+                  errors.videoUrl ? 'border-red-300' : 'border-slate-200'
                 }`}
-              >
-                <Star size={16} fill={item.isFeatured ? "currentColor" : "none"} />
-                Featured
-              </button>
-
-              <button
-                onClick={() => onUpdate("isPublic", !item.isPublic)}
-                className={`flex items-center gap-2 text-sm ${
-                  item.isPublic ? "text-green-600" : "text-slate-400"
-                }`}
-              >
-                {item.isPublic ? <Unlock size={16} /> : <Lock size={16} />}
-                {item.isPublic ? "Public" : "Private"}
-              </button>
+              />
+              {item.videoFile ? (
+                <p className="text-xs text-green-600 mt-1">
+                  Selected: {item.videoFile.name} ({(item.videoFile.size / 1024 / 1024).toFixed(2)} MB)
+                </p>
+              ) : item.videoUrl ? (
+                <p className="text-xs text-gray-500 mt-1 truncate">Current: {item.videoUrl}</p>
+              ) : null}
+              {errors.videoUrl && <p className="text-xs text-red-600 mt-1">{errors.videoUrl}</p>}
             </div>
 
             {/* Actions */}
             <div className="flex gap-2 pt-2">
               <button
-                onClick={onToggleEdit}
-                className="flex-1 px-3 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors"
+                onClick={handleSaveItem}
+                disabled={isSaving}
+                className="flex-1 px-4 py-2 text-sm font-medium bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                Done
+                {isSaving ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    {uploadStage || 'Saving...'}
+                  </>
+                ) : (
+                  'Save'
+                )}
+              </button>
+              <button
+                onClick={onToggleEdit}
+                disabled={isSaving}
+                className="flex-1 px-4 py-2 text-sm font-medium bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors disabled:opacity-50"
+              >
+                Cancel
               </button>
               <button
                 onClick={onDelete}
-                className="px-3 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
+                disabled={isSaving}
+                className="px-4 py-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
               >
                 <Trash2 size={16} />
               </button>
             </div>
+
+            {/* Upload Progress Bar */}
+            {isSaving && uploadProgress > 0 && (
+              <div className="pt-2">
+                <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
+                  <span>Uploading...</span>
+                  <span>{Math.round(uploadProgress)}%</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                  <div
+                    className="bg-gradient-to-r from-purple-600 to-pink-600 h-full transition-all duration-300 ease-out"
+                    style={{ width: `${uploadProgress}%` }}
+                  />
+                </div>
+              </div>
+            )}
           </>
         ) : (
           <>
-            <div className="flex items-start justify-between">
-              <div>
-                <span className="inline-block px-2 py-0.5 bg-indigo-100 text-indigo-700 text-xs font-semibold rounded mb-1">
-                  {item.type}
-                </span>
-                <h3 className="text-lg font-bold text-slate-900">{item.title}</h3>
-                <p className="text-sm text-slate-500">{item.category}</p>
+            {/* View Mode */}
+            <div className="space-y-3">
+              <h3 className="font-bold text-slate-800 text-lg">{item.title || 'Untitled'}</h3>
+              <p className="text-sm text-slate-600">{item.category}</p>
+              {item.description && (
+                <p className="text-sm text-slate-500 line-clamp-2">{item.description}</p>
+              )}
+
+              {/* Badges */}
+              <div className="flex flex-wrap gap-2">
+                {item.isFeatured && (
+                  <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-700 rounded-full">
+                    <Star size={10} fill="currentColor" />
+                    Featured
+                  </span>
+                )}
+                {!item.isPublic && (
+                  <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-slate-100 text-slate-600 rounded-full">
+                    <Lock size={10} />
+                    Private
+                  </span>
+                )}
+                {item.technologies.length > 0 && (
+                  item.technologies.slice(0, 3).map((tech, idx) => (
+                    <span
+                      key={idx}
+                      className="px-2 py-1 text-xs font-medium bg-purple-100 text-purple-700 rounded-full"
+                    >
+                      {tech}
+                    </span>
+                  ))
+                )}
               </div>
+
+              {/* Video Preview */}
+              {item.videoUrl && (
+                <div className="rounded-lg overflow-hidden bg-black">
+                  <VideoCardPlayer
+                    videoUrl={item.videoUrl}
+                    thumbnail={item.thumbnailUrl}
+                    className="w-full h-48"
+                    onExpand={() => onExpandVideo(item)}
+                  />
+                </div>
+              )}
+
+              {/* Thumbnail fallback if no video */}
+              {!item.videoUrl && item.thumbnailUrl && (
+                <div className="rounded-lg overflow-hidden">
+                  <img
+                    src={item.thumbnailUrl}
+                    alt={item.title || 'Untitled'}
+                    className="w-full h-48 object-cover"
+                  />
+                </div>
+              )}
             </div>
 
-            {item.description && (
-              <p className="text-sm text-slate-600 line-clamp-2">{item.description}</p>
-            )}
-
-            {item.stats && (
-              <p className="text-xs text-slate-500">{item.stats}</p>
-            )}
-
-            {item.technologies && item.technologies.length > 0 && (
-              <div className="flex flex-wrap gap-1">
-                {item.technologies.map((tech, idx) => (
-                  <span
-                    key={idx}
-                    className="px-2 py-0.5 bg-slate-200 text-slate-700 text-xs rounded-full"
-                  >
-                    {tech}
-                  </span>
-                ))}
-              </div>
-            )}
-
-            {/* Actions */}
-            <div className="flex gap-2 pt-2 border-t border-slate-200">
+            {/* Actions Footer */}
+            <div className="flex gap-2 pt-4 border-t border-slate-200">
               <button
                 onClick={onToggleEdit}
-                className="flex-1 px-3 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors"
+                className="flex-1 px-3 py-2 text-sm font-medium bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors"
               >
                 Edit
               </button>
               <button
                 onClick={onDelete}
-                className="px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                className="px-3 py-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
               >
                 <Trash2 size={16} />
               </button>
@@ -757,177 +962,416 @@ function MediaCard({
   );
 }
 
-// Media List Item Component
-function MediaListItem({
-  item,
-  isEditing,
-  onToggleEdit,
-  onUpdate,
-  onDelete,
-  onFileUpload,
-}: {
+// List Item Component
+interface MediaListItemProps {
   item: MediaItem;
   isEditing: boolean;
   onToggleEdit: () => void;
   onUpdate: (field: string, value: any) => void;
+  onQuickUpdate: (field: 'isFeatured' | 'isPublic', value: boolean) => void;
   onDelete: () => void;
-  onFileUpload: (field: "thumbnail" | "video", e: React.ChangeEvent<HTMLInputElement>) => void;
-}) {
-  return (
-    <div className={`p-4 ${isEditing ? "bg-indigo-50" : ""} hover:bg-slate-50 transition-colors`}>
-      <div className="flex items-start gap-4">
-        {/* Thumbnail */}
-        <div className="relative w-32 h-20 flex-shrink-0 bg-zinc-900 rounded-lg overflow-hidden">
-          {item.thumbnail ? (
-            <img src={item.thumbnail} alt={item.title} className="w-full h-full object-cover" />
-          ) : (
-            <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 bg-zinc-800/50">
-              <Upload size={16} className="mb-1 opacity-50" />
-              <span className="text-xs">No image</span>
-            </div>
-          )}
-        </div>
+  onExpandVideo: (item: MediaItem) => void;
+  onSave: (id: string, item: MediaItem) => Promise<void>;
+}
 
-        {/* Content */}
-        <div className="flex-1 min-w-0">
-          {isEditing ? (
-            <div className="space-y-2">
+function MediaListItem({ item, isEditing, onToggleEdit, onUpdate, onQuickUpdate, onDelete, onExpandVideo, onSave }: MediaListItemProps) {
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSaving, setIsSaving] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadStage, setUploadStage] = useState<string>('');
+
+  const validateField = (field: string, value: any) => {
+    let error = "";
+
+    if (field === "title" && !value?.trim()) {
+      error = "Title is required";
+    }
+    if (field === "category" && !value) {
+      error = "Category is required";
+    }
+    if (field === "thumbnailUrl" && !value) {
+      error = "Thumbnail is required";
+    }
+    if (field === "videoUrl" && !value) {
+      error = "Video is required";
+    }
+
+    setErrors(prev => ({ ...prev, [field]: error }));
+    return !error;
+  };
+
+  const handleBlur = (field: string, value: any) => {
+    validateField(field, value);
+  };
+
+  const handleSaveItem = async () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!item.title?.trim()) newErrors.title = "Title is required";
+    if (!item.category) newErrors.category = "Category is required";
+    if (!item.thumbnailUrl && !item.thumbnailFile) newErrors.thumbnailUrl = "Thumbnail is required";
+    if (!item.videoUrl && !item.videoFile) newErrors.videoUrl = "Video is required";
+
+    setErrors(newErrors);
+
+    if (Object.keys(newErrors).length > 0) {
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      await onSave(item.id, item);
+      onToggleEdit();
+    } catch (err) {
+      // Error is already handled by the parent component
+      console.error('Save failed:', err);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: 20 }}
+      className={`bg-white rounded-xl shadow-sm overflow-hidden transition-all ${
+        isEditing ? 'ring-2 ring-purple-500' : 'hover:shadow-md'
+      }`}
+    >
+      {isEditing ? (
+        <div className="p-6 space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* Title */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Title <span className="text-red-500">*</span>
+              </label>
               <input
                 type="text"
                 value={item.title}
                 onChange={(e) => onUpdate("title", e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-black placeholder:text-black"
+                onBlur={(e) => handleBlur("title", e.target.value)}
+                className={`w-full px-3 py-2 text-sm bg-slate-50 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-black placeholder:text-slate-400 ${
+                  errors.title ? 'border-red-300' : 'border-slate-200'
+                }`}
                 placeholder="Project title"
               />
-
-              <div className="flex gap-2">
-                <select
-                  value={item.type}
-                  onChange={(e) => {
-                    const newType = e.target.value as "project" | "reel";
-                    onUpdate("type", newType);
-                    // Sync isReel flag with type
-                    onUpdate("isReel", newType === "reel");
-                  }}
-                  className="px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-black"
-                >
-                  <option value="project">Project</option>
-                  <option value="reel">Reel</option>
-                </select>
-
-                <select
-                  value={item.category}
-                  onChange={(e) => onUpdate("category", e.target.value)}
-                  className="px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-black"
-                >
-                  {categories.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
-                    </option>
-                  ))}
-                </select>
-
-                <button
-                  onClick={() => onUpdate("isFeatured", !item.isFeatured)}
-                  className={`px-3 py-2 text-sm rounded-lg transition-colors ${
-                    item.isFeatured ? "bg-yellow-100 text-yellow-700" : "bg-slate-100 text-slate-600"
-                  }`}
-                >
-                  <Star size={16} fill={item.isFeatured ? "currentColor" : "none"} />
-                </button>
-
-                <button
-                  onClick={() => onUpdate("isPublic", !item.isPublic)}
-                  className={`px-3 py-2 text-sm rounded-lg transition-colors ${
-                    item.isPublic ? "bg-green-100 text-green-700" : "bg-slate-700 text-white"
-                  }`}
-                >
-                  {item.isPublic ? <Unlock size={16} /> : <Lock size={16} />}
-                </button>
-              </div>
-
-              <div className="flex gap-2">
-                <label className="flex-1">
-                  <div className="flex items-center gap-2 px-3 py-2 border border-dashed border-slate-300 rounded cursor-pointer hover:border-indigo-500">
-                    <Upload size={14} />
-                    <span className="text-xs">Thumbnail</span>
-                  </div>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) => onFileUpload("thumbnail", e)}
-                  />
-                </label>
-
-                <label className="flex-1">
-                  <div className="flex items-center gap-2 px-3 py-2 border border-dashed border-slate-300 rounded cursor-pointer hover:border-indigo-500">
-                    <Upload size={14} />
-                    <span className="text-xs">Video</span>
-                  </div>
-                  <input
-                    type="file"
-                    accept="video/mp4,video/webm"
-                    className="hidden"
-                    onChange={(e) => onFileUpload("video", e)}
-                  />
-                </label>
-              </div>
-
-              <div className="flex gap-2">
-                <button
-                  onClick={onToggleEdit}
-                  className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg"
-                >
-                  Done
-                </button>
-                <button
-                  onClick={onDelete}
-                  className="px-3 py-2 text-sm text-red-600 bg-red-50 rounded-lg"
-                >
-                  <Trash2 size={16} />
-                </button>
-              </div>
+              {errors.title && <p className="text-xs text-red-600 mt-1">{errors.title}</p>}
             </div>
-          ) : (
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="inline-block px-2 py-0.5 bg-indigo-100 text-indigo-700 text-xs font-semibold rounded">
-                  {item.type}
-                </span>
-                <h3 className="text-lg font-bold text-slate-900">{item.title}</h3>
-                {item.isFeatured && (
-                  <Star size={16} className="text-yellow-500" fill="currentColor" />
-                )}
-                {!item.isPublic && (
-                  <Lock size={16} className="text-slate-400" />
-                )}
-              </div>
-              <p className="text-sm text-slate-500">{item.category}</p>
-              {item.description && (
-                <p className="text-sm text-slate-600 mt-1">{item.description}</p>
+
+            {/* Type */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Type <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={item.type}
+                onChange={(e) => {
+                  const newType = e.target.value as "project" | "reel";
+                  // Update both type and isReel in a single object
+                  const updates = {
+                    type: newType,
+                    isReel: newType === "reel"
+                  };
+                  // Apply both updates atomically
+                  onUpdate("__multiple__", updates);
+                }}
+                className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-black"
+              >
+                <option value="project">Project</option>
+                <option value="reel">Reel</option>
+              </select>
+            </div>
+
+            {/* Category */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Category <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={item.category}
+                onChange={(e) => onUpdate("category", e.target.value)}
+                onBlur={(e) => handleBlur("category", e.target.value)}
+                className={`w-full px-3 py-2 text-sm bg-slate-50 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-black ${
+                  errors.category ? 'border-red-300' : 'border-slate-200'
+                }`}
+              >
+                {categories.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+              </select>
+              {errors.category && <p className="text-xs text-red-600 mt-1">{errors.category}</p>}
+            </div>
+          </div>
+
+          {/* Description */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              Description <span className="text-red-500">*</span>
+            </label>
+            <textarea
+              value={item.description}
+              onChange={(e) => onUpdate("description", e.target.value)}
+              rows={2}
+              className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-black placeholder:text-slate-400 resize-none"
+              placeholder="Project description"
+            />
+          </div>
+
+          {/* Technologies */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              Technologies
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {item.technologies.map((tech, idx) => (
+                <div key={idx} className="flex items-center gap-1">
+                  <input
+                    list="tech-options-list"
+                    value={tech}
+                    onChange={(e) => {
+                      const newTechs = [...item.technologies];
+                      newTechs[idx] = e.target.value;
+                      onUpdate("technologies", newTechs);
+                    }}
+                    placeholder="Type or select"
+                    className="w-32 px-3 py-1.5 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-black"
+                  />
+                  <datalist id="tech-options-list">
+                    {techOptions.map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
+                  </datalist>
+                  <button
+                    onClick={() => {
+                      const newTechs = item.technologies.filter((_, i) => i !== idx);
+                      onUpdate("technologies", newTechs);
+                    }}
+                    className="p-1 text-red-500 hover:bg-red-50 rounded"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              ))}
+              <button
+                onClick={() => onUpdate("technologies", [...item.technologies, ""])}
+                className="px-3 py-1.5 text-sm text-purple-600 hover:text-purple-700 font-medium bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors"
+              >
+                + Add
+              </button>
+            </div>
+          </div>
+
+          {/* Uploads */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Thumbnail <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    onUpdate("thumbnailFile", file);
+                    // Create preview URL
+                    const previewUrl = URL.createObjectURL(file);
+                    onUpdate("thumbnailUrl", previewUrl);
+                    setErrors(prev => ({ ...prev, thumbnailUrl: "" }));
+                  }
+                }}
+                className={`w-full px-3 py-2 text-sm bg-slate-50 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-black ${
+                  errors.thumbnailUrl ? 'border-red-300' : 'border-slate-200'
+                }`}
+              />
+              {item.thumbnailUrl && !item.thumbnailFile && (
+                <p className="text-xs text-gray-500 mt-1 truncate">Current: {item.thumbnailUrl}</p>
               )}
+              {errors.thumbnailUrl && <p className="text-xs text-red-600 mt-1">{errors.thumbnailUrl}</p>}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Video <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="file"
+                accept="video/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    onUpdate("videoFile", file);
+                    setErrors(prev => ({ ...prev, videoUrl: "" }));
+                  }
+                }}
+                className={`w-full px-3 py-2 text-sm bg-slate-50 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-black ${
+                  errors.videoUrl ? 'border-red-300' : 'border-slate-200'
+                }`}
+              />
+              {item.videoUrl && !item.videoFile && (
+                <p className="text-xs text-gray-500 mt-1 truncate">Current: {item.videoUrl}</p>
+              )}
+              {item.videoFile && (
+                <p className="text-xs text-green-600 mt-1">Selected: {item.videoFile.name}</p>
+              )}
+              {errors.videoUrl && <p className="text-xs text-red-600 mt-1">{errors.videoUrl}</p>}
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-2 pt-2">
+            <button
+              onClick={handleSaveItem}
+              disabled={isSaving}
+              className="px-4 py-2 text-sm font-medium bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" />
+                  {uploadStage || 'Saving...'}
+                </>
+              ) : (
+                'Save'
+              )}
+            </button>
+            <button
+              onClick={onToggleEdit}
+              disabled={isSaving}
+              className="px-4 py-2 text-sm font-medium bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={onDelete}
+              disabled={isSaving}
+              className="px-4 py-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+            >
+              <Trash2 size={16} />
+            </button>
+          </div>
+
+          {/* Upload Progress Bar */}
+          {isSaving && uploadProgress > 0 && (
+            <div className="pt-2">
+              <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
+                <span>Uploading...</span>
+                <span>{Math.round(uploadProgress)}%</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                <div
+                  className="bg-gradient-to-r from-purple-600 to-pink-600 h-full transition-all duration-300 ease-out"
+                  style={{ width: `${uploadProgress}%` }}
+                />
+              </div>
             </div>
           )}
+        </div>
+      ) : (
+        <div className="p-4">
+          <div className="flex items-start gap-4">
+            {/* Thumbnail/Video */}
+            <div className="w-32 h-20 flex-shrink-0 bg-slate-100 rounded-lg overflow-hidden">
+              {item.videoUrl ? (
+                <VideoCardPlayer
+                  videoUrl={item.videoUrl}
+                  thumbnail={item.thumbnailUrl}
+                  className="w-full h-full"
+                  onExpand={() => onExpandVideo(item)}
+                />
+              ) : item.thumbnailUrl ? (
+                <img
+                  src={item.thumbnailUrl}
+                  alt={item.title}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-slate-400">
+                  No image
+                </div>
+              )}
+            </div>
 
-          {!isEditing && (
-            <div className="flex items-center gap-2">
+            {/* Content */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-start justify-between mb-2">
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-lg font-bold text-slate-800 truncate">{item.title || 'Untitled'}</h3>
+                  <p className="text-sm text-slate-600">{item.category}</p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {item.isFeatured && (
+                    <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-700 rounded-full">
+                      <Star size={10} fill="currentColor" />
+                      Featured
+                    </span>
+                  )}
+                  {!item.isPublic && (
+                    <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-slate-100 text-slate-600 rounded-full">
+                      <Lock size={10} />
+                      Private
+                    </span>
+                  )}
+                  <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                    item.type === 'reel'
+                      ? 'bg-pink-100 text-pink-700'
+                      : 'bg-purple-100 text-purple-700'
+                  }`}>
+                    {item.type}
+                  </span>
+                </div>
+              </div>
+
+              {item.description && (
+                <p className="text-sm text-slate-500 line-clamp-2 mb-2">{item.description}</p>
+              )}
+
+              {item.technologies.length > 0 && (
+                <div className="flex flex-wrap gap-1">
+                  {item.technologies.map((tech, idx) => (
+                    <span
+                      key={idx}
+                      className="px-2 py-0.5 text-xs font-medium bg-purple-100 text-purple-700 rounded-full"
+                    >
+                      {tech}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Actions */}
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={() => window.open(item.videoUrl, '_blank')}
+                className="p-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors"
+                title="Preview video"
+              >
+                <Eye size={16} />
+              </button>
               <button
                 onClick={onToggleEdit}
-                className="px-4 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors"
+                className="px-3 py-2 text-sm font-medium bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors"
               >
                 Edit
               </button>
               <button
                 onClick={onDelete}
-                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
               >
                 <Trash2 size={16} />
               </button>
             </div>
-          )}
+          </div>
         </div>
-      </div>
-    </div>
+      )}
+    </motion.div>
   );
 }

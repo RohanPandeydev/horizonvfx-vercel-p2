@@ -104,4 +104,98 @@ export function getCategoryFromMimeType(mimeType: string): string {
   return "documents";
 }
 
+/**
+ * Upload a large file to S3 using multipart upload
+ * @param file - The file buffer to upload
+ * @param key - S3 object key (path)
+ * @param contentType - MIME type of the file
+ * @returns The S3 object key
+ */
+export async function uploadLargeFileToS3(
+  file: Buffer,
+  key: string,
+  contentType: string
+): Promise<string> {
+  const { CreateMultipartUploadCommand, UploadPartCommand, CompleteMultipartUploadCommand } = await import("@aws-sdk/client-s3");
+
+  const CHUNK_SIZE = 5 * 1024 * 1024; // 5MB chunks (minimum for S3 multipart)
+  const totalChunks = Math.ceil(file.length / CHUNK_SIZE);
+
+  // Initiate multipart upload
+  const createCommand = new CreateMultipartUploadCommand({
+    Bucket: S3_BUCKET,
+    Key: key,
+    ContentType: contentType,
+  });
+
+  const uploadId = (await s3Client.send(createCommand)).UploadId!;
+  const partUploads: any[] = [];
+
+  try {
+    // Upload chunks
+    for (let i = 0; i < totalChunks; i++) {
+      const start = i * CHUNK_SIZE;
+      const end = Math.min(start + CHUNK_SIZE, file.length);
+      const chunk = file.subarray(start, end);
+
+      const uploadPartCommand = new UploadPartCommand({
+        Bucket: S3_BUCKET,
+        Key: key,
+        UploadId: uploadId,
+        PartNumber: i + 1,
+        Body: chunk,
+      });
+
+      const partResult = await s3Client.send(uploadPartCommand);
+      partUploads.push({
+        PartNumber: i + 1,
+        ETag: partResult.ETag,
+      });
+
+      console.log(`Uploaded part ${i + 1}/${totalChunks} for ${key}`);
+    }
+
+    // Complete multipart upload
+    const completeCommand = new CompleteMultipartUploadCommand({
+      Bucket: S3_BUCKET,
+      Key: key,
+      UploadId: uploadId,
+      MultipartUpload: {
+        Parts: partUploads,
+      },
+    });
+
+    await s3Client.send(completeCommand);
+    console.log(`Multipart upload complete: ${key}`);
+
+    return key;
+  } catch (error) {
+    console.error('Multipart upload failed, aborting...', error);
+    // TODO: Abort multipart upload on error
+    throw error;
+  }
+}
+
+/**
+ * Upload file to S3 with automatic chunking for large files
+ * @param file - The file buffer to upload
+ * @param key - S3 object key (path)
+ * @param contentType - MIME type of the file
+ * @returns The S3 object key
+ */
+export async function uploadFileToS3(
+  file: Buffer,
+  key: string,
+  contentType: string
+): Promise<string> {
+  const LARGE_FILE_THRESHOLD = 5 * 1024 * 1024; // 5MB
+
+  if (file.length > LARGE_FILE_THRESHOLD) {
+    console.log(`Large file detected (${(file.length / 1024 / 1024).toFixed(2)}MB), using multipart upload`);
+    return uploadLargeFileToS3(file, key, contentType);
+  }
+
+  return uploadToS3(file, key, contentType);
+}
+
 export { s3Client, S3_BUCKET };

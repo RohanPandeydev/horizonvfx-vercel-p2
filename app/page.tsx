@@ -6,6 +6,7 @@ import { Play, ArrowRight, ChevronUp } from "lucide-react";
 import Link from "next/link";
 import Hero from "@/components/Hero";
 import ServicesMarquee from "@/components/ServicesMarquee";
+import VideoModal from "@/components/VideoModal";
 import React from "react";
 
 interface HomePageSections {
@@ -68,6 +69,22 @@ interface ShowcaseData {
   }> | null;
 }
 
+interface VideoProject {
+  id: string;
+  title: string;
+  category: string;
+  thumbnailUrl: string;
+  videoUrl: string | null;
+  gradient: string;
+  isFeatured: boolean;
+  isReel: boolean;
+  isPublic: boolean;
+  description: string | null;
+  technologies: string[];
+  type: "project" | "reel";
+  stats?: string | null;
+}
+
 export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [activeSection, setActiveSection] = useState(0);
@@ -88,6 +105,10 @@ export default function HomePage() {
     stats: null,
     services: null,
   });
+  const [featuredProjects, setFeaturedProjects] = useState<VideoProject[]>([]);
+  const [featuredReels, setFeaturedReels] = useState<VideoProject[]>([]);
+  const [selectedVideo, setSelectedVideo] = useState<VideoProject | null>(null);
+  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
   const { scrollY, scrollYProgress } = useScroll();
   const scaleX = useTransform(scrollYProgress, [0, 1], [0, 1]);
 
@@ -128,6 +149,20 @@ export default function HomePage() {
         const showcaseResult = await showcaseResponse.json();
         if (showcaseResult.success) {
           setShowcaseData(showcaseResult.data);
+        }
+
+        // Fetch featured projects (type=project, isFeatured=true)
+        const projectsResponse = await fetch("/api/videos?public=true&type=project&isFeatured=true");
+        const projectsResult = await projectsResponse.json();
+        if (projectsResult.videos) {
+          setFeaturedProjects(projectsResult.videos);
+        }
+
+        // Fetch featured reels (type=reel, isFeatured=true)
+        const reelsResponse = await fetch("/api/videos?public=true&type=reel&isFeatured=true");
+        const reelsResult = await reelsResponse.json();
+        if (reelsResult.videos) {
+          setFeaturedReels(reelsResult.videos);
         }
       } catch (error) {
         console.error("Error fetching home page data:", error);
@@ -190,64 +225,10 @@ export default function HomePage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // Hero Projects from showcase (showing only 3)
-  const heroProjects = [
-    {
-      id: 1,
-      title: "Pushpa 2: The Rule",
-      category: "Film & OTT",
-      image: "https://horizonvfx.in/images/Pushpa_2.png",
-      description: "Mind-bending visual effects for the blockbuster sequel",
-      gradient: "from-orange-500 via-red-500 to-pink-500",
-      stats: "200+ VFX Shots",
-    },
-    {
-      id: 2,
-      title: "Commercial Campaign",
-      category: "Advertisement",
-      image: "https://horizonvfx.in/images/Commercial.jpg",
-      description: "Stunning commercial visuals with photorealistic CG",
-      gradient: "from-cyan-500 via-blue-500 to-purple-500",
-      stats: "50+ Shots",
-    },
-    {
-      id: 3,
-      title: "Game Cinematics",
-      category: "Gaming",
-      image: "https://horizonvfx.in/images/game.jpg",
-      description: "Immersive game trailers and cinematic sequences",
-      gradient: "from-purple-500 via-pink-500 to-rose-500",
-      stats: "15+ Trailers",
-    },
-  ];
-
-  // Showreel projects (showing only 2 rows)
-  const showreelProjects = [
-    {
-      id: 1,
-      title: "Pushpa 2",
-      category: "Film",
-      image: "https://horizonvfx.in/images/Pushpa_2.png",
-    },
-    {
-      id: 2,
-      title: "After Effects Project",
-      category: "Post Production",
-      image: "https://horizonvfx.in/images/after-effect.jpg",
-    },
-    {
-      id: 3,
-      title: "Animation Showcase",
-      category: "Animation",
-      image: "https://horizonvfx.in/images/animation2.jpg",
-    },
-    {
-      id: 4,
-      title: "3D Character Work",
-      category: "3D Animation",
-      image: "https://horizonvfx.in/images/animation3.jpg",
-    },
-  ];
+  const handleOpenVideoModal = (project: VideoProject) => {
+    setSelectedVideo(project);
+    setIsVideoModalOpen(true);
+  };
 
   // Excellence features from About page data
   const excellenceFeatures = aboutData.excellence?.featureCards || aboutData.excellence?.cards || [];
@@ -383,7 +364,7 @@ export default function HomePage() {
             </p>
           </motion.div>
 
-          <HeroProjects projects={heroProjects} />
+          <HeroProjects projects={featuredProjects} onExpandVideo={handleOpenVideoModal} />
 
           {/* Explore More Button */}
           <motion.div
@@ -425,8 +406,8 @@ export default function HomePage() {
           </motion.div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            {showreelProjects.map((project, index) => (
-              <ShowreelCard key={project.id} project={project} index={index} />
+            {featuredReels.map((project, index) => (
+              <ShowreelCard key={project.id} project={project} index={index} onExpandVideo={handleOpenVideoModal} />
             ))}
           </div>
 
@@ -682,6 +663,20 @@ export default function HomePage() {
         </div>
       </section>
       )}
+
+      {/* Video Modal */}
+      {selectedVideo && selectedVideo.videoUrl && (
+        <VideoModal
+          isOpen={isVideoModalOpen}
+          onClose={() => {
+            setIsVideoModalOpen(false);
+            setSelectedVideo(null);
+          }}
+          videoUrl={selectedVideo.videoUrl}
+          title={selectedVideo.title || 'Video'}
+          thumbnail={selectedVideo.thumbnailUrl}
+        />
+      )}
     </>
   );
 }
@@ -689,16 +684,10 @@ export default function HomePage() {
 // Hero Projects Component with 3D Parallax
 function HeroProjects({
   projects,
+  onExpandVideo,
 }: {
-  projects: Array<{
-    id: number;
-    title: string;
-    category: string;
-    image: string;
-    description: string;
-    gradient: string;
-    stats: string;
-  }>;
+  projects: VideoProject[];
+  onExpandVideo: (project: VideoProject) => void;
 }) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
@@ -712,6 +701,7 @@ function HeroProjects({
           isHovered={hoveredIndex === index}
           onHoverStart={() => setHoveredIndex(index)}
           onHoverEnd={() => setHoveredIndex(null)}
+          onExpandVideo={onExpandVideo}
         />
       ))}
     </div>
@@ -725,20 +715,14 @@ function ParallaxProjectCard({
   isHovered,
   onHoverStart,
   onHoverEnd,
+  onExpandVideo,
 }: {
-  project: {
-    id: number;
-    title: string;
-    category: string;
-    image: string;
-    description: string;
-    gradient: string;
-    stats: string;
-  };
+  project: VideoProject;
   index: number;
   isHovered: boolean;
   onHoverStart: () => void;
   onHoverEnd: () => void;
+  onExpandVideo: (project: VideoProject) => void;
 }) {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
@@ -759,7 +743,8 @@ function ParallaxProjectCard({
       onMouseMove={handleMouseMove}
       onMouseEnter={onHoverStart}
       onMouseLeave={onHoverEnd}
-      className="group relative"
+      onClick={() => project.videoUrl && onExpandVideo(project)}
+      className="group relative cursor-pointer"
       style={{
         perspective: "1000px",
       }}
@@ -782,7 +767,7 @@ function ParallaxProjectCard({
         {/* Image with parallax effect */}
         <div className="aspect-video overflow-hidden relative">
           <motion.img
-            src={project.image}
+            src={project.thumbnailUrl}
             alt={project.title}
             className="w-full h-full object-cover"
             animate={isHovered ? { scale: 1.1 } : { scale: 1 }}
@@ -815,7 +800,7 @@ function ParallaxProjectCard({
             >
               {project.category}
             </span>
-            <span className="text-gray-400 text-sm">{project.stats}</span>
+            {project.stats && <span className="text-gray-400 text-sm">{project.stats}</span>}
           </motion.div>
 
           <h3
@@ -883,14 +868,11 @@ function ClientsSlider({ clients }: { clients: string[] }) {
 function ShowreelCard({
   project,
   index,
+  onExpandVideo,
 }: {
-  project: {
-    id: number;
-    title: string;
-    category: string;
-    image: string;
-  };
+  project: VideoProject;
   index: number;
+  onExpandVideo: (project: VideoProject) => void;
 }) {
   const [isHovered, setIsHovered] = useState(false);
   const ref = React.useRef(null);
@@ -916,6 +898,7 @@ function ShowreelCard({
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
       whileHover={{ scale: 1.02 }}
+      onClick={() => project.videoUrl && onExpandVideo(project)}
       className="relative rounded-2xl overflow-hidden group cursor-pointer bg-zinc-900 border border-white/5"
       style={{
         transformStyle: "preserve-3d",
@@ -923,7 +906,7 @@ function ShowreelCard({
     >
       <div className="relative aspect-square overflow-hidden">
         <motion.img
-          src={project.image}
+          src={project.thumbnailUrl}
           alt={project.title}
           className="w-full h-full object-cover"
           animate={{ scale: isHovered ? 1.1 : 1 }}

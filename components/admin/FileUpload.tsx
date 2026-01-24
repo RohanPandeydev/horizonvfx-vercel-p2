@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Upload, X, Loader2 } from "lucide-react";
 import { validateImageFile, validateVideoFile } from "@/lib/validation";
+import { authFetch, createBlobUrl, revokeBlobUrl } from "@/lib/auth-helper";
 
 interface FileUploadProps {
   label?: string;
@@ -38,7 +39,7 @@ export default function FileUpload({
   useEffect(() => {
     return () => {
       if (objectUrl) {
-        URL.revokeObjectURL(objectUrl);
+        revokeBlobUrl(objectUrl);
       }
     };
   }, [objectUrl]);
@@ -49,7 +50,7 @@ export default function FileUpload({
 
     // Revoke previous object URL if exists
     if (objectUrl) {
-      URL.revokeObjectURL(objectUrl);
+      revokeBlobUrl(objectUrl);
       setObjectUrl(null);
     }
 
@@ -65,20 +66,15 @@ export default function FileUpload({
       return;
     }
 
+    // Create blob URL for immediate preview
+    const blobUrl = createBlobUrl(file);
+    setObjectUrl(blobUrl);
+
     // Upload to server
     setUploading(true);
     setUploadProgress(0);
 
     try {
-      // Get access token from localStorage
-      const accessToken = typeof window !== 'undefined'
-        ? localStorage.getItem('horizon_accessToken') || localStorage.getItem('accessToken')
-        : null;
-
-      if (!accessToken) {
-        throw new Error('Not authenticated. Please login again.');
-      }
-
       // Extract old media ID from current value if it's an API URL
       const oldMediaId = value.startsWith('/api/media/')
         ? value.split('/').pop()
@@ -92,11 +88,8 @@ export default function FileUpload({
         formData.append("oldMediaId", oldMediaId);
       }
 
-      const response = await fetch("/api/upload", {
+      const response = await authFetch("/api/upload", {
         method: "POST",
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-        },
         body: formData,
       });
 
@@ -113,6 +106,7 @@ export default function FileUpload({
     } catch (error: any) {
       setPreviewError(true);
       onError?.(error.message || "Failed to upload file");
+      // Keep the blob preview even if upload fails
     } finally {
       setUploading(false);
       setUploadProgress(0);
@@ -126,14 +120,14 @@ export default function FileUpload({
 
     // Revoke object URL when user switches to manual URL entry
     if (objectUrl && !url.startsWith('blob:')) {
-      URL.revokeObjectURL(objectUrl);
+      revokeBlobUrl(objectUrl);
       setObjectUrl(null);
     }
   };
 
   const handleRemovePreview = () => {
     if (objectUrl) {
-      URL.revokeObjectURL(objectUrl);
+      revokeBlobUrl(objectUrl);
       setObjectUrl(null);
     }
     onChange("");

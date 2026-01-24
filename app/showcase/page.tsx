@@ -1,9 +1,36 @@
 "use client";
 import { motion, useScroll, useTransform, useInView } from "framer-motion";
 import { useState, useRef, useCallback, useEffect } from "react";
-import { Play, ArrowRight, Zap, Film } from "lucide-react";
+import { Play, ArrowRight, Zap, Film, Loader2, ChevronDown } from "lucide-react";
 import React from "react";
 import DynamicIcon from "@/components/DynamicIcon";
+import VideoModal from "@/components/VideoModal";
+
+interface VideoProject {
+  id: string;
+  title: string;
+  category: string;
+  thumbnailUrl: string;
+  videoUrl: string | null;
+  gradient: string;
+  isFeatured: boolean;
+  isReel: boolean;
+  isPublic: boolean;
+  description: string | null;
+  technologies: string[];
+  type: "project" | "reel";
+  stats?: string | null;
+}
+
+interface VideoResponse {
+  videos: VideoProject[];
+  pagination: {
+    page: number;
+    totalPages: number;
+    total: number;
+    hasMore: boolean;
+  };
+}
 
 interface ShowcaseContent {
   hero: {
@@ -55,107 +82,29 @@ const DEFAULT_CONTENT: ShowcaseContent = {
   ],
 };
 
-// Static project data (will be managed through Media section in the future)
-const showcaseProjects = [
-  {
-    id: 1,
-    title: "Pushpa 2: The Rule",
-    category: "Film & OTT",
-    image: "https://horizonvfx.in/images/Pushpa_2.png",
-    description: "Mind-bending visual effects for the blockbuster sequel",
-    gradient: "from-orange-500 via-red-500 to-pink-500",
-    stats: "200+ VFX Shots",
-    featured: true,
-  },
-  {
-    id: 2,
-    title: "Commercial Campaign",
-    category: "Advertisement",
-    image: "https://horizonvfx.in/images/Commercial.jpg",
-    description: "Stunning commercial visuals with photorealistic CG",
-    gradient: "from-cyan-500 via-blue-500 to-purple-500",
-    stats: "50+ Shots",
-    featured: true,
-  },
-  {
-    id: 3,
-    title: "Game Cinematics",
-    category: "Gaming",
-    image: "https://horizonvfx.in/images/game.jpg",
-    description: "Immersive game trailers and cinematic sequences",
-    gradient: "from-purple-500 via-pink-500 to-rose-500",
-    stats: "15+ Trailers",
-    featured: true,
-  },
-  {
-    id: 4,
-    title: "Unreal Engine Integration",
-    category: "Virtual Production",
-    image: "https://horizonvfx.in/images/unreal.jpg",
-    description: "Real-time rendering and virtual production",
-    gradient: "from-green-500 via-emerald-500 to-teal-500",
-    stats: "30+ Projects",
-    featured: true,
-  },
-];
-
-// Extended projects for infinite scroll (static for now)
-const allProjects = [
-  {
-    id: 1,
-    title: "Pushpa 2",
-    category: "Film",
-    image: "https://horizonvfx.in/images/Pushpa_2.png",
-  },
-  {
-    id: 2,
-    title: "After Effects Project",
-    category: "Post Production",
-    image: "https://horizonvfx.in/images/after-effect.jpg",
-  },
-  {
-    id: 3,
-    title: "Animation Showcase",
-    category: "Animation",
-    image: "https://horizonvfx.in/images/animation2.jpg",
-  },
-  {
-    id: 4,
-    title: "3D Character Work",
-    category: "3D Animation",
-    image: "https://horizonvfx.in/images/animation3.jpg",
-  },
-  {
-    id: 5,
-    title: "Character Animation",
-    category: "Animation",
-    image: "https://horizonvfx.in/images/animation4.jpg",
-  },
-  {
-    id: 6,
-    title: "Visual Effects",
-    category: "VFX",
-    image: "https://horizonvfx.in/images/animation5.jpg",
-  },
-  {
-    id: 7,
-    title: "Compositing Work",
-    category: "Compositing",
-    image: "https://horizonvfx.in/images/animation1.jpg",
-  },
-  {
-    id: 8,
-    title: "Special Effects",
-    category: "Special FX",
-    image: "https://horizonvfx.in/images/sp-effect1.jpg",
-  },
-];
-
 export default function ShowcasePage() {
   const [content, setContent] = useState<ShowcaseContent>(DEFAULT_CONTENT);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-  const [displayedProjects, setDisplayedProjects] = useState(allProjects);
-  const [isLoading, setIsLoading] = useState(false);
+
+  // Hero Projects (type=project)
+  const [projects, setProjects] = useState<VideoProject[]>([]);
+  const [projectsPage, setProjectsPage] = useState(1);
+  const [projectsHasMore, setProjectsHasMore] = useState(true);
+  const [isLoadingProjects, setIsLoadingProjects] = useState(false);
+  const [isLoadingMoreProjects, setIsLoadingMoreProjects] = useState(false);
+
+  // Showreel (type=reel)
+  const [reels, setReels] = useState<VideoProject[]>([]);
+  const [reelsPage, setReelsPage] = useState(1);
+  const [reelsHasMore, setReelsHasMore] = useState(true);
+  const [isLoadingReels, setIsLoadingReels] = useState(false);
+  const [isLoadingMoreReels, setIsLoadingMoreReels] = useState(false);
+
+  // Video modal
+  const [selectedVideo, setSelectedVideo] = useState<VideoProject | null>(null);
+  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
+
+  const observerTarget = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll();
   const y = useTransform(scrollYProgress, [0, 1], [0, -50]);
 
@@ -178,35 +127,123 @@ export default function ShowcasePage() {
     loadContent();
   }, []);
 
-  // Infinite scroll logic
-  const loadMoreProjects = useCallback(() => {
-    if (isLoading) return;
-    setIsLoading(true);
-    setTimeout(() => {
-      const timestamp = Date.now();
-      const newProjects = allProjects.map((p, index) => ({
-        ...p,
-        id: parseInt(`${p.id}${timestamp}${index}`),
-      }));
-      setDisplayedProjects((prev) => [...prev, ...newProjects]);
-      setIsLoading(false);
-    }, 1000);
-  }, [isLoading]);
-
+  // Load initial data
   useEffect(() => {
-    const handleScroll = () => {
-      const scrollTop = window.scrollY;
-      const scrollHeight = document.documentElement.scrollHeight;
-      const clientHeight = window.innerHeight;
+    fetchInitialProjects();
+    fetchInitialReels();
+  }, []);
 
-      if (scrollTop + clientHeight >= scrollHeight - 500) {
-        loadMoreProjects();
+  // Fetch initial projects
+  const fetchInitialProjects = async () => {
+    try {
+      setIsLoadingProjects(true);
+      const response = await fetch('/api/videos?public=true&type=project&page=1&limit=8');
+      if (response.ok) {
+        const data: VideoResponse = await response.json();
+        setProjects(data.videos || []);
+        setProjectsPage(1);
+        setProjectsHasMore(data.pagination?.hasMore ?? false);
+      }
+    } catch (error) {
+      console.error('Error loading projects:', error);
+    } finally {
+      setIsLoadingProjects(false);
+    }
+  };
+
+  // Fetch initial reels
+  const fetchInitialReels = async () => {
+    try {
+      setIsLoadingReels(true);
+      const response = await fetch('/api/videos?public=true&type=reel&page=1&limit=12');
+      if (response.ok) {
+        const data: VideoResponse = await response.json();
+        setReels(data.videos || []);
+        setReelsPage(1);
+        setReelsHasMore(data.pagination?.hasMore ?? false);
+      }
+    } catch (error) {
+      console.error('Error loading reels:', error);
+    } finally {
+      setIsLoadingReels(false);
+    }
+  };
+
+  // Load more projects
+  const loadMoreProjects = useCallback(async () => {
+    if (isLoadingMoreProjects || !projectsHasMore) return;
+
+    setIsLoadingMoreProjects(true);
+    try {
+      const response = await fetch(`/api/videos?public=true&type=project&page=${projectsPage + 1}&limit=8`);
+      if (response.ok) {
+        const data: VideoResponse = await response.json();
+        setProjects(prev => [...prev, ...(data.videos || [])]);
+        setProjectsPage(prev => prev + 1);
+        setProjectsHasMore(data.pagination?.hasMore ?? false);
+      }
+    } catch (error) {
+      console.error('Error loading more projects:', error);
+    } finally {
+      setIsLoadingMoreProjects(false);
+    }
+  }, [projectsPage, projectsHasMore, isLoadingMoreProjects]);
+
+  // Load more reels (infinite scroll)
+  const loadMoreReels = useCallback(async () => {
+    if (isLoadingMoreReels || !reelsHasMore) return;
+
+    setIsLoadingMoreReels(true);
+    try {
+      const response = await fetch(`/api/videos?public=true&type=reel&page=${reelsPage + 1}&limit=12`);
+      if (response.ok) {
+        const data: VideoResponse = await response.json();
+        setReels(prev => [...prev, ...(data.videos || [])]);
+        setReelsPage(prev => prev + 1);
+        setReelsHasMore(data.pagination?.hasMore ?? false);
+      }
+    } catch (error) {
+      console.error('Error loading more reels:', error);
+    } finally {
+      setIsLoadingMoreReels(false);
+    }
+  }, [reelsPage, reelsHasMore, isLoadingMoreReels]);
+
+  // Infinite scroll for reels
+  useEffect(() => {
+    const currentRef = observerTarget.current;
+    if (!currentRef) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          loadMoreReels();
+        }
+      },
+      { rootMargin: '200px', threshold: 0.1 }
+    );
+
+    observer.observe(currentRef);
+    return () => {
+      if (currentRef) {
+        observer.unobserve(currentRef);
       }
     };
+  }, [loadMoreReels]);
 
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [loadMoreProjects]);
+  // Handle video click
+  const handleVideoClick = (video: VideoProject) => {
+    if (video.videoUrl) {
+      setSelectedVideo(video);
+      setIsVideoModalOpen(true);
+    }
+  };
+
+  // Close video modal
+  const handleCloseVideoModal = () => {
+    setIsVideoModalOpen(false);
+    setSelectedVideo(null);
+  };
 
   return (
     <div className="min-h-screen bg-black overflow-hidden">
@@ -400,18 +437,54 @@ export default function ShowcasePage() {
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
-            {showcaseProjects.map((project, index) => (
-              <ParallaxCard
-                key={project.id}
-                project={project}
-                index={index}
-                isHovered={hoveredIndex === index}
-                onHoverStart={() => setHoveredIndex(index)}
-                onHoverEnd={() => setHoveredIndex(null)}
-              />
-            ))}
-          </div>
+          {isLoadingProjects ? (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="text-blue-500 animate-spin" size={48} />
+            </div>
+          ) : projects.length === 0 ? (
+            <div className="text-center py-20">
+              <p className="text-gray-500 text-lg">No projects available</p>
+            </div>
+          ) : (
+            <>
+              <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
+                {projects.map((project, index) => (
+                  <ParallaxCard
+                    key={project.id}
+                    project={project}
+                    index={index}
+                    isHovered={hoveredIndex === index}
+                    onHoverStart={() => setHoveredIndex(index)}
+                    onHoverEnd={() => setHoveredIndex(null)}
+                    onVideoClick={handleVideoClick}
+                  />
+                ))}
+              </div>
+
+              {/* Load More Button */}
+              {projectsHasMore && (
+                <div className="flex justify-center mt-12">
+                  <button
+                    onClick={loadMoreProjects}
+                    disabled={isLoadingMoreProjects}
+                    className="px-8 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-full font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {isLoadingMoreProjects ? (
+                      <>
+                        <Loader2 className="animate-spin" size={18} />
+                        Loading...
+                      </>
+                    ) : (
+                      <>
+                        <ChevronDown size={18} />
+                        Load More Projects
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
+            </>
+          )}
         </div>
       </section>
 
@@ -434,7 +507,34 @@ export default function ShowcasePage() {
             </p>
           </motion.div>
 
-          <MasonryGrid projects={displayedProjects} />
+          {isLoadingReels ? (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="text-blue-500 animate-spin" size={48} />
+            </div>
+          ) : reels.length === 0 ? (
+            <div className="text-center py-20">
+              <p className="text-gray-500 text-lg">No reels available</p>
+            </div>
+          ) : (
+            <>
+              <MasonryGrid projects={reels} onVideoClick={handleVideoClick} />
+
+              {/* Infinite scroll trigger */}
+              <div ref={observerTarget} className="flex justify-center py-8">
+                {isLoadingMoreReels && (
+                  <div className="flex items-center gap-3">
+                    <Loader2 className="text-blue-500 animate-spin" size={24} />
+                    <span className="text-gray-400">Loading more...</span>
+                  </div>
+                )}
+                {!reelsHasMore && reels.length > 0 && (
+                  <div className="text-center">
+                    <p className="text-gray-500 text-lg">No more reels</p>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
         </div>
       </section>
 
@@ -521,6 +621,17 @@ export default function ShowcasePage() {
           </div>
         </div>
       </section>
+
+      {/* Video Modal */}
+      {selectedVideo && (
+        <VideoModal
+          isOpen={isVideoModalOpen}
+          onClose={handleCloseVideoModal}
+          videoUrl={selectedVideo.videoUrl!}
+          title={selectedVideo.title}
+          thumbnail={selectedVideo.thumbnailUrl}
+        />
+      )}
     </div>
   );
 }
@@ -532,12 +643,14 @@ function ParallaxCard({
   isHovered,
   onHoverStart,
   onHoverEnd,
+  onVideoClick,
 }: {
-  project: (typeof showcaseProjects)[0];
+  project: VideoProject;
   index: number;
   isHovered: boolean;
   onHoverStart: () => void;
   onHoverEnd: () => void;
+  onVideoClick: (project: VideoProject) => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, {
@@ -586,7 +699,7 @@ function ParallaxCard({
         {/* Image with parallax effect */}
         <div className="aspect-video overflow-hidden relative">
           <motion.img
-            src={project.image}
+            src={project.thumbnailUrl}
             alt={project.title}
             className="w-full h-full object-cover"
             animate={isHovered ? { scale: 1.1 } : { scale: 1 }}
@@ -596,10 +709,11 @@ function ParallaxCard({
             className={`absolute inset-0 bg-gradient-to-t ${project.gradient} opacity-0 group-hover:opacity-60 transition-opacity duration-500`}
           />
           <motion.div
-            className="absolute inset-0 flex items-center justify-center"
+            className="absolute inset-0 flex items-center justify-center cursor-pointer"
             initial={{ scale: 0 }}
             animate={isHovered ? { scale: 1 } : { scale: 0 }}
             transition={{ duration: 0.3, delay: 0.1 }}
+            onClick={() => onVideoClick(project)}
           >
             <div className="w-20 h-20 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border-2 border-white/30">
               <Play className="text-white" size={32} fill="white" />
@@ -619,7 +733,7 @@ function ParallaxCard({
             >
               {project.category}
             </span>
-            <span className="text-gray-400 text-sm">{project.stats}</span>
+            {project.stats && <span className="text-gray-400 text-sm">{project.stats}</span>}
           </motion.div>
 
           <h3
@@ -631,6 +745,7 @@ function ParallaxCard({
           <p className="text-gray-400 mb-6">{project.description}</p>
 
           <motion.button
+            onClick={() => onVideoClick(project)}
             className={`inline-flex items-center gap-2 text-transparent bg-gradient-to-r ${project.gradient} bg-clip-text font-semibold group-hover:gap-4 transition-all`}
             whileHover={{ x: 5 }}
           >
@@ -649,11 +764,17 @@ function ParallaxCard({
 }
 
 // Masonry Grid Component
-function MasonryGrid({ projects }: { projects: typeof allProjects }) {
+function MasonryGrid({
+  projects,
+  onVideoClick,
+}: {
+  projects: VideoProject[];
+  onVideoClick: (project: VideoProject) => void;
+}) {
   return (
     <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-4 space-y-4">
       {projects.map((project, index) => (
-        <MasonryCard key={project.id} project={project} index={index} />
+        <MasonryCard key={project.id} project={project} index={index} onVideoClick={onVideoClick} />
       ))}
     </div>
   );
@@ -663,9 +784,11 @@ function MasonryGrid({ projects }: { projects: typeof allProjects }) {
 function MasonryCard({
   project,
   index,
+  onVideoClick,
 }: {
-  project: (typeof allProjects)[0];
+  project: VideoProject;
   index: number;
+  onVideoClick: (project: VideoProject) => void;
 }) {
   const [isHovered, setIsHovered] = useState(false);
   const ref = useRef(null);
@@ -691,6 +814,7 @@ function MasonryCard({
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
       whileHover={{ scale: 1.02 }}
+      onClick={() => onVideoClick(project)}
       className="relative break-inside-avoid mb-4 rounded-2xl overflow-hidden group cursor-pointer bg-zinc-900 border border-white/5"
       style={{
         transformStyle: "preserve-3d",
@@ -698,7 +822,7 @@ function MasonryCard({
     >
       <div className="relative aspect-square overflow-hidden">
         <motion.img
-          src={project.image}
+          src={project.thumbnailUrl}
           alt={project.title}
           className="w-full h-full object-cover"
           animate={{ scale: isHovered ? 1.1 : 1 }}

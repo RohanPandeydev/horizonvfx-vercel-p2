@@ -11,9 +11,12 @@ import {
   GripVertical,
   Film,
   Image as ImageIcon,
+  Play,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/lib/toast-context";
+import VideoModal from "@/components/VideoModal";
 
 interface ClientLogo {
   url: string;
@@ -60,6 +63,23 @@ const DEFAULT_SECTIONS: HomePageSections = {
   showClients: true,
 };
 
+const DEFAULT_TOP_SERVICES = [
+  "VFX & Compositing",
+  "3D Animation",
+  "Motion Graphics",
+  "Color Grading",
+  "Virtual Production",
+  "CGI & VFX",
+];
+
+const DEFAULT_BOTTOM_SERVICES = [
+  "Rotoscopy",
+  "Paint",
+  "Matchmoving",
+  "Stereo Conversion",
+  "Game Art",
+];
+
 export default function HomePageEditor() {
   const { showSuccess, showError } = useToast();
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
@@ -67,6 +87,9 @@ export default function HomePageEditor() {
   const [content, setContent] = useState<HomePageContent>(DEFAULT_CONTENT);
   const [sections, setSections] = useState<HomePageSections>(DEFAULT_SECTIONS);
   const [isLoading, setIsLoading] = useState(true);
+  const [topServices] = useState<string[]>(DEFAULT_TOP_SERVICES);
+  const [bottomServices] = useState<string[]>(DEFAULT_BOTTOM_SERVICES);
+  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
 
   // Load content on mount
   useEffect(() => {
@@ -361,7 +384,7 @@ export default function HomePageEditor() {
 
               {/* Video Preview */}
               {content.hero.videoUrl && (
-                <div className="bg-zinc-900 rounded-xl overflow-hidden">
+                <div className="bg-zinc-900 rounded-xl overflow-hidden relative group">
                   <video
                     autoPlay
                     loop
@@ -370,6 +393,14 @@ export default function HomePageEditor() {
                     className="w-full h-64 object-cover"
                     src={content.hero.videoUrl}
                   />
+                  <button
+                    onClick={() => setIsVideoModalOpen(true)}
+                    className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border-2 border-white/50 hover:bg-white/30 transition-colors">
+                      <Play className="text-white" size={32} fill="white" />
+                    </div>
+                  </button>
                 </div>
               )}
             </motion.div>
@@ -619,6 +650,17 @@ export default function HomePageEditor() {
           <li>• Hero video should be optimized for web (recommended size: under 10MB).</li>
         </ul>
       </div>
+
+      {/* Video Modal */}
+      {content.hero.videoUrl && (
+        <VideoModal
+          isOpen={isVideoModalOpen}
+          onClose={() => setIsVideoModalOpen(false)}
+          videoUrl={content.hero.videoUrl}
+          title="Hero Background Video"
+          thumbnail=""
+        />
+      )}
     </div>
   );
 }
