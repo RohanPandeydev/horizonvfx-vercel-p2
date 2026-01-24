@@ -33,7 +33,9 @@
       "Bash(lsof:*)",
       "Bash(xargs kill:*)",
       "Bash(kill:*)",
-      "Bash(pgrep:*)"
+      "Bash(pgrep:*)",
+      "Bash(git push:*)",
+      "Bash(git config:*)"
     ]
   }
 }
