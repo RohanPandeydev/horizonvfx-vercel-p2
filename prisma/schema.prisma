@@ -1,4 +1,4 @@
-// This is your Prisma schema file,
+// This is your Prisma schema file for Vercel Postgres production
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
@@ -6,8 +6,10 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
+  // Enable connection pooling for Vercel
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
@@ -24,8 +26,7 @@ model User {
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
   tokens        Token[]
-  uploadedMedia Media[]       @relation("UploadedBy")
-  videoProjects VideoProject[] @relation("UploadedProjects")
+  uploadedMedia Media[]   @relation("UploadedBy")
 }
 
 model Token {
@@ -100,52 +101,5 @@ model Media {
 
   @@index([uploadedBy])
   @@index([mimeType])
-  @@index([createdAt])
-}
-
-// Home Page Configuration Model - Controls which sections are displayed
-model HomePageConfig {
-  id                String   @id @default(cuid())
-  showExcellence    Boolean  @default(true)
-  showLeadership    Boolean  @default(true)
-  showTechStack     Boolean  @default(true)
-  showStats         Boolean  @default(true)
-  showProjects      Boolean  @default(true)
-  showShowreel      Boolean  @default(true)
-  showClients       Boolean  @default(true)
-  updatedBy         String?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-}
-
-// Video Project Model - For showcase/media library
-model VideoProject {
-  id             String    @id @default(cuid())
-  title          String
-  type           String              // 'project' or 'reel'
-  isReel         Boolean   @default(false)
-  thumbnailUrl   String              // Public URL for display
-  videoUrl       String?             // Public URL for display (optional)
-  thumbnailS3Key String              // S3 object key for deletion
-  videoS3Key     String?             // S3 object key for deletion (optional)
-  category       String
-  isFeatured     Boolean   @default(false)
-  isPublic       Boolean   @default(true)
-  description    String?
-  gradient       String    @default("from-blue-500 to-purple-500")
-  stats          String?
-  technologies   String?   // JSON string array: ["Nuke", "Maya"]
-  uploadedBy     String              // userId who uploaded
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-
-  // Relations
-  uploader       User      @relation("UploadedProjects", fields: [uploadedBy], references: [id], onDelete: Restrict)
-
-  @@index([type])
-  @@index([category])
-  @@index([isFeatured])
-  @@index([isPublic])
-  @@index([uploadedBy])
   @@index([createdAt])
 }
