@@ -25,11 +25,11 @@ const envSchema = z.object({
   SMTP_PASSWORD: z.string().optional(),
   EMAIL_FROM: z.string().optional(),
 
-  // S3 Configuration
-  AWS_ACCESS_KEY_ID: z.string().min(1),
-  AWS_SECRET_ACCESS_KEY: z.string().min(1),
-  AWS_REGION: z.string().min(1),
-  AWS_S3_BUCKET: z.string().min(1),
+  // S3 Configuration (optional - for file uploads)
+  AWS_ACCESS_KEY_ID: z.string().optional(),
+  AWS_SECRET_ACCESS_KEY: z.string().optional(),
+  AWS_REGION: z.string().optional(),
+  AWS_S3_BUCKET: z.string().optional(),
 
   // S3 URL Expiration
   S3_PRESIGNED_URL_EXPIRES_IN: z.string().default('300'),
