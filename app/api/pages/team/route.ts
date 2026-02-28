@@ -19,12 +19,19 @@ export async function GET() {
 
     const content = JSON.parse(pageContent.content);
 
+    // For home page compatibility: if leadership is an array, wrap it in {heading, members}
+    const leadershipForHome = content.leadership
+      ? Array.isArray(content.leadership)
+        ? { heading: "Leadership", members: content.leadership }
+        : content.leadership
+      : null;
+
     return NextResponse.json({
       success: true,
       data: {
         content,
-        // Also expose leadership at top level for home page backward compat
-        leadership: content.leadership || null,
+        // Also expose leadership at top level for home page (with proper structure)
+        leadership: leadershipForHome,
       },
     });
   } catch (error) {
