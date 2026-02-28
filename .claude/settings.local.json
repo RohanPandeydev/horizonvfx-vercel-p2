@@ -64,7 +64,8 @@
       "mcp__chrome-devtools__handle_dialog",
       "Bash(npx prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script 2>/dev/null)",
       "Bash(rm -f deploy.tar.gz && tar -czf deploy.tar.gz \\\\\n  .next/standalone/ \\\\\n  .next/static/ \\\\\n  public/ \\\\\n  app.js \\\\\n  prisma/schema.prisma \\\\\n  .env.production \\\\\n  2>&1 && ls -lh deploy.tar.gz)",
-      "Bash(tar -czf deploy.tar.gz .next/standalone/ .next/static/ public/ app.js prisma/schema.prisma .env.production 2>&1 && ls -lh deploy.tar.gz)"
+      "Bash(tar -czf deploy.tar.gz .next/standalone/ .next/static/ public/ app.js prisma/schema.prisma .env.production 2>&1 && ls -lh deploy.tar.gz)",
+      "Bash(which sshpass 2>/dev/null || brew list sshpass 2>/dev/null || echo \"sshpass not installed\")"
     ]
   }
 }
