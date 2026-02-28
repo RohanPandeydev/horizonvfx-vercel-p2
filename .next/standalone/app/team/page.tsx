@@ -281,7 +281,16 @@ export default function TeamPage() {
         const result = await response.json();
 
         if (result.success && result.data) {
-          setContent(result.data.content);
+          // Merge CMS data with defaults to handle missing fields
+          const cmsData = result.data.content || result.data;
+          setContent({
+            ...DEFAULT_CONTENT,
+            ...cmsData,
+            hero: { ...DEFAULT_CONTENT.hero, ...cmsData.hero },
+            leadership: { ...DEFAULT_CONTENT.leadership, ...cmsData.leadership },
+            teamMembers: { ...DEFAULT_CONTENT.teamMembers, ...cmsData.teamMembers },
+            cta: { ...DEFAULT_CONTENT.cta, ...cmsData.cta },
+          });
         }
       } catch (error) {
         console.error("Error loading team content:", error);
@@ -294,7 +303,7 @@ export default function TeamPage() {
     loadContent();
   }, []);
 
-  const teamMembersForSlider = content.teamMembers.members.slice(2);
+  const teamMembersForSlider = (content.teamMembers?.members || []).slice(2);
   const itemsPerSlide = 3;
   const totalSlides = Math.ceil(teamMembersForSlider.length / itemsPerSlide);
 
@@ -502,7 +511,7 @@ export default function TeamPage() {
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
             >
-              {content.teamMembers.heading}
+              {content.teamMembers?.heading || "Our Team"}
             </motion.h2>
             <motion.div
               className="w-32 h-1 bg-gradient-to-r from-cyan-500 to-blue-500 mx-auto rounded-full"
