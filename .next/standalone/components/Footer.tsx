@@ -38,10 +38,12 @@ export default function Footer() {
             viewport={{ once: true }}
             className="space-y-6"
           >
-            <motion.span
-              className="text-4xl md:text-5xl font-extrabold bg-gradient-to-r from-blue-400 via-green-400 to-emerald-400 bg-clip-text text-transparent tracking-tight inline-block"
+            <motion.div
+              className="inline-block"
               whileHover={{ scale: 1.05, rotate: 2 }}
-            >HFX</motion.span>
+            >
+              <img src="/logo.png" alt="HorizonVFX" className="h-10 md:h-12 w-auto" />
+            </motion.div>
             <p className="text-gray-400 text-sm leading-relaxed">
               We craft visual experiences that push the boundaries of
               imagination. From concept to final delivery, we bring your vision
