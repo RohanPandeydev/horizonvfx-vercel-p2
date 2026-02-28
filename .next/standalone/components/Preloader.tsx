@@ -59,11 +59,7 @@ export default function Preloader({ loading }: PreloaderProps) {
             transition={{ duration: 0.8, ease: "easeOut" }}
             style={{ transformStyle: "preserve-3d" }}
           >
-            <img
-              src="/logo.svg"
-              alt="HorizonVFX"
-              className="h-16 md:h-20"
-            />
+            <span className="text-5xl md:text-6xl font-extrabold bg-gradient-to-r from-blue-400 via-green-400 to-emerald-400 bg-clip-text text-transparent tracking-tight">HFX</span>
           </motion.div>
           <motion.div
             className="absolute inset-0"

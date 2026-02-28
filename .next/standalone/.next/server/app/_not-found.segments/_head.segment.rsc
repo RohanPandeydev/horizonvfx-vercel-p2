@@ -1,7 +1,7 @@
 1:"$Sreact.fragment"
-2:I[753323,["/_next/static/chunks/175b1285334e607d.js","/_next/static/chunks/9d808677a0abb8e4.js","/_next/static/chunks/a51b5f5f743f6882.js"],"ViewportBoundary"]
-4:I[753323,["/_next/static/chunks/175b1285334e607d.js","/_next/static/chunks/9d808677a0abb8e4.js","/_next/static/chunks/a51b5f5f743f6882.js"],"MetadataBoundary"]
+2:I[753323,["/_next/static/chunks/175b1285334e607d.js","/_next/static/chunks/9d808677a0abb8e4.js","/_next/static/chunks/ba63d6cd6482b18f.js"],"ViewportBoundary"]
+4:I[753323,["/_next/static/chunks/175b1285334e607d.js","/_next/static/chunks/9d808677a0abb8e4.js","/_next/static/chunks/ba63d6cd6482b18f.js"],"MetadataBoundary"]
 5:"$Sreact.suspense"
-0:{"buildId":"4qZ82kStXC0EMNvjkigLX","rsc":["$","$1","h",{"children":[["$","meta",null,{"name":"robots","content":"noindex"}],["$","$L2",null,{"children":"$@3"}],["$","div",null,{"hidden":true,"children":["$","$L4",null,{"children":["$","$5",null,{"name":"Next.Metadata","children":"$@6"}]}]}],null]}],"loading":null,"isPartial":false}
+0:{"buildId":"HrmquXUmoDOIoARhBD2mF","rsc":["$","$1","h",{"children":[["$","meta",null,{"name":"robots","content":"noindex"}],["$","$L2",null,{"children":"$@3"}],["$","div",null,{"hidden":true,"children":["$","$L4",null,{"children":["$","$5",null,{"name":"Next.Metadata","children":"$@6"}]}]}],null]}],"loading":null,"isPartial":false}
 3:[["$","meta","0",{"charSet":"utf-8"}],["$","meta","1",{"name":"viewport","content":"width=device-width, initial-scale=1"}]]
 6:[["$","title","0",{"children":"HorizonVFX - Where Creativity Meets Horizon"}],["$","meta","1",{"name":"description","content":"Pioneering visual excellence in the digital age. Specialized in VFX, 3D animation, compositing, motion graphics, and post-production services."}],["$","meta","2",{"name":"keywords","content":"VFX,Visual Effects,3D Animation,Motion Graphics,Post Production,Compositing,Color Grading"}]]
