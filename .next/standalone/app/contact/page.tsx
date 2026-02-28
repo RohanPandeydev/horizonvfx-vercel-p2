@@ -73,12 +73,18 @@ export default function ContactPage() {
         const response = await fetch("/api/pages/contact");
         const result = await response.json();
 
-        if (result.success && result.data?.content) {
-          setContent(result.data.content);
+        if (result.success && result.data) {
+          const cmsData = result.data.content || result.data;
+          setContent({
+            ...DEFAULT_CONTENT,
+            ...cmsData,
+            hero: { ...DEFAULT_CONTENT.hero, ...cmsData.hero },
+            contactInfo: { ...DEFAULT_CONTENT.contactInfo, ...cmsData.contactInfo },
+            form: { ...DEFAULT_CONTENT.form, ...cmsData.form },
+          });
         }
       } catch (error) {
         console.error("Error loading content:", error);
-        // Keep default content on error
       } finally {
         setIsLoading(false);
       }

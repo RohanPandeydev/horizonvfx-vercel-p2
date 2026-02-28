@@ -3,7 +3,7 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-// GET - Fetch team page content for home page
+// GET - Fetch team page content (full content for public team page + home page)
 export async function GET() {
   try {
     const pageContent = await prisma.pageContent.findUnique({
@@ -19,10 +19,11 @@ export async function GET() {
 
     const content = JSON.parse(pageContent.content);
 
-    // Extract only the leadership section data needed for home page
     return NextResponse.json({
       success: true,
       data: {
+        content,
+        // Also expose leadership at top level for home page backward compat
         leadership: content.leadership || null,
       },
     });

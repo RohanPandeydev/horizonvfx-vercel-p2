@@ -116,11 +116,18 @@ export default function ShowcasePage() {
         const result = await response.json();
 
         if (result.success && result.data) {
-          setContent(result.data);
+          const cmsData = result.data.content || result.data;
+          setContent({
+            ...DEFAULT_CONTENT,
+            ...cmsData,
+            hero: { ...DEFAULT_CONTENT.hero, ...cmsData.hero },
+            services: cmsData.services || DEFAULT_CONTENT.services,
+            techStack: cmsData.techStack || DEFAULT_CONTENT.techStack,
+            industries: cmsData.industries || DEFAULT_CONTENT.industries,
+          });
         }
       } catch (error) {
         console.error("Error loading showcase content:", error);
-        // Keep default content on error
       }
     };
 

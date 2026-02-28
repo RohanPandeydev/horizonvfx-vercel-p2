@@ -133,12 +133,17 @@ export default function AboutPage() {
       const result = await response.json();
 
       if (result.success && result.data) {
-        console.log("result", result);
-        setContent(result.data.content);
+        const cmsData = result.data.content || result.data;
+        setContent({
+          ...DEFAULT_CONTENT,
+          ...cmsData,
+          hero: { ...DEFAULT_CONTENT.hero, ...cmsData.hero },
+          story: { ...DEFAULT_CONTENT.story, ...cmsData.story },
+          excellence: { ...DEFAULT_CONTENT.excellence, ...cmsData.excellence },
+        });
       }
     } catch (error) {
       console.error("Error loading content:", error);
-      // Keep default content on error
     } finally {
       setIsLoading(false);
     }
@@ -151,8 +156,6 @@ export default function AboutPage() {
       </div>
     );
   }
-
-  console.log("content", content);
 
   return (
     <div className="min-h-screen">

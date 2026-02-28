@@ -179,20 +179,18 @@ export default function ServicesPage() {
       const response = await fetch("/api/pages/services");
       const result = await response.json();
 
-      console.log("API Response:", result);
-      console.log("Content received:", result.data?.content);
-      console.log("Services array:", result.data?.content?.services);
-      console.log("Services length:", result.data?.content?.services?.length);
-
       if (result.success && result.data) {
-        setContent(result.data.content);
-        console.log("State set with:", result.data.content);
-        console.log("Services in state:", result.data.content.services);
-        console.log("Services count in state:", result.data.content.services?.length);
+        const cmsData = result.data.content || result.data;
+        setContent({
+          ...DEFAULT_CONTENT,
+          ...cmsData,
+          hero: { ...DEFAULT_CONTENT.hero, ...cmsData.hero },
+          services: cmsData.services || DEFAULT_CONTENT.services,
+          process: cmsData.process || DEFAULT_CONTENT.process,
+        });
       }
     } catch (error) {
       console.error("Error loading content:", error);
-      // Keep default content on error
     } finally {
       setIsLoading(false);
     }
