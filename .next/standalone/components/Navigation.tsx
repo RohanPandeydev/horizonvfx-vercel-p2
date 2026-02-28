@@ -50,7 +50,7 @@ export default function Navigation({ loading }: NavigationProps) {
             className="cursor-pointer"
           >
             <img
-              src="https://horizonvfx.in/images/logo.png"
+              src="/logo.svg"
               alt="HorizonVFX"
               className="h-8 md:h-10 lg:h-12"
             />

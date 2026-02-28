@@ -12,7 +12,7 @@ const isS3Configured = !!(
   process.env.AWS_S3_BUCKET
 );
 
-const UPLOAD_DIR = process.env.UPLOAD_DIR || './public/uploads';
+const UPLOAD_DIR = path.resolve(process.env.UPLOAD_DIR || './public/uploads');
 
 /**
  * Ensure the upload directory exists

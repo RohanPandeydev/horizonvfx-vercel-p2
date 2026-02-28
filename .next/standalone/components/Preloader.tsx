@@ -60,7 +60,7 @@ export default function Preloader({ loading }: PreloaderProps) {
             style={{ transformStyle: "preserve-3d" }}
           >
             <img
-              src="https://horizonvfx.in/images/logo.png"
+              src="/logo.svg"
               alt="HorizonVFX"
               className="h-16 md:h-20"
             />

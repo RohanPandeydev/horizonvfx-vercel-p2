@@ -36,6 +36,17 @@ export async function GET(
 
     // Local: read and serve the file directly
     const filePath = path.join(UPLOAD_DIR, media.s3Key);
+
+    try {
+      await fs.access(filePath);
+    } catch {
+      console.error("Media file not found on disk:", filePath);
+      return NextResponse.json(
+        { success: false, error: "File not found on disk" },
+        { status: 404 }
+      );
+    }
+
     const fileBuffer = await fs.readFile(filePath);
 
     return new NextResponse(fileBuffer, {

@@ -39,7 +39,7 @@ export default function Footer() {
             className="space-y-6"
           >
             <motion.img
-              src="https://horizonvfx.in/images/logo.png"
+              src="/logo.svg"
               alt="HorizonVFX"
               className="h-12 md:h-14"
               whileHover={{ scale: 1.05, rotate: 2 }}
