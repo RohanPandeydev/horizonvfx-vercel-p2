@@ -186,7 +186,7 @@ export default function ServicesPage() {
           ...cmsData,
           hero: { ...DEFAULT_CONTENT.hero, ...cmsData.hero },
           services: cmsData.services || DEFAULT_CONTENT.services,
-          process: cmsData.process || DEFAULT_CONTENT.process,
+          process: Array.isArray(cmsData.process) ? cmsData.process : DEFAULT_CONTENT.process,
         });
       }
     } catch (error) {
