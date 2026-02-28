@@ -217,6 +217,18 @@
       "namedRegex": "^/api/pages/about(?:/)?$"
     },
     {
+      "page": "/api/pages/contact",
+      "regex": "^/api/pages/contact(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/pages/contact(?:/)?$"
+    },
+    {
+      "page": "/api/pages/services",
+      "regex": "^/api/pages/services(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/pages/services(?:/)?$"
+    },
+    {
       "page": "/api/pages/showcase",
       "regex": "^/api/pages/showcase(?:/)?$",
       "routeKeys": {},

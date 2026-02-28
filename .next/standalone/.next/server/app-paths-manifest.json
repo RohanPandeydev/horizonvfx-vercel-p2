@@ -28,6 +28,8 @@
   "/api/media/[id]/route": "app/api/media/[id]/route.js",
   "/api/pages/[slug]/route": "app/api/pages/[slug]/route.js",
   "/api/pages/about/route": "app/api/pages/about/route.js",
+  "/api/pages/contact/route": "app/api/pages/contact/route.js",
+  "/api/pages/services/route": "app/api/pages/services/route.js",
   "/api/pages/showcase/route": "app/api/pages/showcase/route.js",
   "/api/pages/team/route": "app/api/pages/team/route.js",
   "/api/test-auth/route": "app/api/test-auth/route.js",

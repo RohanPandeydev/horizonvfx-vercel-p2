@@ -28,6 +28,8 @@
   "/api/media/[id]/route": "/api/media/[id]",
   "/api/pages/[slug]/route": "/api/pages/[slug]",
   "/api/pages/about/route": "/api/pages/about",
+  "/api/pages/contact/route": "/api/pages/contact",
+  "/api/pages/services/route": "/api/pages/services",
   "/api/pages/showcase/route": "/api/pages/showcase",
   "/api/pages/team/route": "/api/pages/team",
   "/api/test-auth/route": "/api/test-auth",
