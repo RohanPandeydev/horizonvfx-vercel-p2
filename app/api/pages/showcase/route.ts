@@ -19,12 +19,27 @@ export async function GET() {
 
     const content = JSON.parse(pageContent.content);
 
+    // Transform stats object to array format for home page compatibility
+    const statsArray = content.stats && typeof content.stats === 'object' && !Array.isArray(content.stats)
+      ? [
+          { icon: "🎬", name: "Projects", count: String(content.stats.totalProjects || 0) },
+          { icon: "😊", name: "Happy Clients", count: String(content.stats.happyClients || "0+") },
+          { icon: "🏆", name: "Awards", count: String(content.stats.awardsWon || "0+") },
+          { icon: "⭐", name: "Experience", count: String(content.stats.yearsExperience || "0+") },
+        ]
+      : (content.stats || []);
+
+    // Ensure techStack is an array
+    const techStackArray = Array.isArray(content.techStack) ? content.techStack : (content.techStack || []);
+
     return NextResponse.json({
       success: true,
       data: {
         content,
         // Also expose fields at top level for home page backward compat
         ...content,
+        techStack: techStackArray,
+        stats: statsArray,
       },
     });
   } catch (error) {
