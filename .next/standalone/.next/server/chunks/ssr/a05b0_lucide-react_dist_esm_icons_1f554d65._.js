@@ -1,0 +1,3 @@
+module.exports=[330766,a=>{"use strict";let b=(0,a.i(728761).default)("chevron-right",[["path",{d:"m9 18 6-6-6-6",key:"mthhwq"}]]);a.s(["default",()=>b])},13615,a=>{"use strict";let b=(0,a.i(728761).default)("chevron-left",[["path",{d:"m15 18-6-6 6-6",key:"1wnfg3"}]]);a.s(["default",()=>b])},277649,a=>{"use strict";var b=a.i(330766);a.s(["ChevronRight",()=>b.default])}];
+
+//# sourceMappingURL=a05b0_lucide-react_dist_esm_icons_1f554d65._.js.map

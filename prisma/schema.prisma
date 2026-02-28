@@ -1,15 +1,14 @@
-// This is your Prisma schema file for Vercel Postgres production
+// This is your Prisma schema file for MySQL (cPanel deployment)
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-1.1.x"]
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
-  // Enable connection pooling for Vercel
-  directUrl = env("DIRECT_URL")
 }
 
 model User {
@@ -32,7 +31,7 @@ model User {
 
 model Token {
   id           String    @id @default(cuid())
-  token        String    @unique
+  token        String    @unique(length: 191) @db.VarChar(500)
   userId       String
   type         String    // 'access' or 'refresh'
   expiresAt    DateTime
@@ -40,7 +39,7 @@ model Token {
   user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
-  @@index([token])
+  @@index([token(length: 191)])
 }
 
 // Page Content Model - Stores JSON content for dynamic pages
@@ -48,7 +47,7 @@ model PageContent {
   id          String   @id @default(cuid())
   slug        String   @unique // 'contact', 'about', 'home', etc.
   title       String
-  content     String   // JSON string containing all page sections
+  content     String   @db.LongText // JSON string containing all page sections
   published   Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -64,7 +63,7 @@ model ContactSubmission {
   name        String
   email       String
   subject     String?
-  message     String
+  message     String   @db.Text
   status      String   @default("new") // 'new', 'read', 'replied', 'archived'
   createdAt   DateTime @default(now())
 
@@ -76,7 +75,7 @@ model ContactSubmission {
 model SiteSettings {
   id          String   @id @default(cuid())
   key         String   @unique // 'contact_email', 'social_media', etc.
-  value       String   // JSON string for complex values
+  value       String   @db.LongText // JSON string for complex values
   updatedAt   DateTime @updatedAt
 
   @@index([key])
@@ -92,7 +91,7 @@ model Media {
   s3Key        String              // S3 object key (path)
   s3Bucket     String              // S3 bucket name
   s3Region     String              // AWS region
-  url          String              // S3 object URL (for reference, not direct access)
+  url          String   @db.Text   // S3 object URL (for reference, not direct access)
   uploadedBy   String              // userId who uploaded
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
@@ -126,17 +125,17 @@ model VideoProject {
   title          String
   type           String              // 'project' or 'reel'
   isReel         Boolean   @default(false)
-  thumbnailUrl   String              // Public URL for display
-  videoUrl       String?             // Public URL for display (optional)
+  thumbnailUrl   String   @db.Text   // Public URL for display
+  videoUrl       String?  @db.Text   // Public URL for display (optional)
   thumbnailS3Key String              // S3 object key for deletion
   videoS3Key     String?             // S3 object key for deletion (optional)
   category       String
   isFeatured     Boolean   @default(false)
   isPublic       Boolean   @default(true)
-  description    String?
+  description    String?  @db.Text
   gradient       String    @default("from-blue-500 to-purple-500")
-  stats          String?
-  technologies   String?   // JSON string array: ["Nuke", "Maya"]
+  stats          String?  @db.Text
+  technologies   String?  @db.Text   // JSON string array: ["Nuke", "Maya"]
   uploadedBy     String              // userId who uploaded
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt

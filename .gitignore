@@ -1,20 +1,10 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
 # dependencies
 /node_modules
-/.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
 
-# testing
-/coverage
-
-# next.js
-/.next/
+# next.js (allow standalone build + static for deployment)
+/.next/*
+!/.next/standalone/
+!/.next/static/
 /out/
 
 # production
@@ -30,22 +20,16 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# env files (allow .env.production for deployment)
+.env
 .env.local
 .env.development
-.env.production
-
-# vercel
-.vercel
 
 # typescript
 *.tsbuildinfo
 next-env.d.ts
 
 # database
-prisma/dev.db
-prisma/dev.db-journal
 *.db
 *.db-journal
 
@@ -54,5 +38,5 @@ tmpclaude-*
 *.tmp
 *.log
 
-# prisma
-# prisma/migrations/* # Uncomment if you want to ignore migrations
+# deploy artifacts
+deploy.tar.gz
