@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getFileUrl, deleteFile } from "@/lib/storage";
+import { getFileUrl, deleteFile, isS3Configured, UPLOAD_DIR } from "@/lib/storage";
 import { authenticate } from "@/lib/middleware";
+import path from "path";
+import fs from "fs/promises";
 
 /**
  * GET /api/media/[id]
- * Serve a file - redirects to S3 signed URL or local file
+ * Serve a file - redirects to S3 signed URL or streams local file
  */
 export async function GET(
   request: NextRequest,
@@ -26,11 +28,23 @@ export async function GET(
       );
     }
 
-    // Get the file URL (signed S3 URL or local path)
-    const fileUrl = await getFileUrl(media.s3Key);
+    if (isS3Configured) {
+      // S3: redirect to signed URL
+      const fileUrl = await getFileUrl(media.s3Key);
+      return NextResponse.redirect(fileUrl);
+    }
 
-    // Redirect to the file URL
-    return NextResponse.redirect(new URL(fileUrl, request.url));
+    // Local: read and serve the file directly
+    const filePath = path.join(UPLOAD_DIR, media.s3Key);
+    const fileBuffer = await fs.readFile(filePath);
+
+    return new NextResponse(fileBuffer, {
+      headers: {
+        "Content-Type": media.mimeType,
+        "Content-Length": String(fileBuffer.length),
+        "Cache-Control": "public, max-age=31536000, immutable",
+      },
+    });
   } catch (error: any) {
     console.error("Media serve error:", error);
     return NextResponse.json(
