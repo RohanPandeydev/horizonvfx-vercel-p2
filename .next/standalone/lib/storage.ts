@@ -12,6 +12,9 @@ const isS3Configured = !!(
   process.env.AWS_S3_BUCKET
 );
 
+// Log storage mode once at startup for debugging
+console.log(`[Storage] mode=${isS3Configured ? 'S3' : 'local'}, UPLOAD_DIR=${process.env.UPLOAD_DIR || '(default)'}, AWS_S3_BUCKET=${process.env.AWS_S3_BUCKET || '(empty)'}`);
+
 // cPanel: save to public_html/uploads/ so Apache serves files directly
 const UPLOAD_DIR = path.resolve(process.env.UPLOAD_DIR || '/home/rcimimhd/public_html/uploads');
 
@@ -44,6 +47,14 @@ export async function uploadFile(
   const dir = path.dirname(filePath);
   await ensureDir(dir);
   await fs.writeFile(filePath, buffer);
+
+  // Verify the file was written
+  try {
+    const stat = await fs.stat(filePath);
+    console.log(`[Storage] File written: ${filePath} (${stat.size} bytes)`);
+  } catch (e) {
+    console.error(`[Storage] File verification FAILED: ${filePath}`, e);
+  }
 
   // Return the full public URL
   return `${SITE_URL}/uploads/${key}`;

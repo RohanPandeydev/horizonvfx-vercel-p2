@@ -27,6 +27,10 @@ const nextConfig: NextConfig = {
       // },
     ],
   },
+  // Exclude .env from standalone output (it has dev S3 credentials)
+  outputFileTracingExcludes: {
+    '*': ['.env', '.env.local'],
+  },
   // Enable experimental features for better performance
   experimental: {
     serverComponentsExternalPackages: ['@prisma/client', 'prisma'],

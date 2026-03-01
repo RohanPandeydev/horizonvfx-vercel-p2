@@ -6,7 +6,8 @@ process.env.TOKIO_WORKER_THREADS = '1';
 process.env.HOSTNAME = '0.0.0.0';
 process.env.PORT = process.env.PORT || '3000';
 
-// Load .env.production
+// Load .env.production - OVERRIDE mode: .env.production always wins
+// This prevents @next/env from loading .env S3 credentials bundled in standalone
 const fs = require('fs');
 const path = require('path');
 const envFile = path.join(__dirname, '.env.production');
@@ -22,9 +23,8 @@ if (fs.existsSync(envFile)) {
         if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
           val = val.slice(1, -1);
         }
-        if (!process.env[key]) {
-          process.env[key] = val;
-        }
+        // Always set from .env.production (override mode)
+        process.env[key] = val;
       }
     }
   }
