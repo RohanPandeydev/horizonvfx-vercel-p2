@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/lib/toast-context";
+import { getAccessToken } from "@/lib/auth-helper";
 import VideoModal from "@/components/VideoModal";
 
 interface ClientLogo {
@@ -232,8 +233,10 @@ export default function HomePageEditor() {
       formData.append('file', file);
       formData.append('category', field === 'videoUrl' ? 'hero' : 'clients');
 
+      const token = getAccessToken();
       const response = await fetch('/api/upload', {
         method: 'POST',
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
         body: formData,
       });
 
