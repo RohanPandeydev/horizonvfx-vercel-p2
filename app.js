@@ -1,10 +1,10 @@
 // cPanel Passenger entry point - loads Next.js standalone server
+// MUST set thread-limiting env vars BEFORE any require() to reduce
+// process/thread usage within CloudLinux LVE limits.
+process.env.UV_THREADPOOL_SIZE = '1';
+process.env.TOKIO_WORKER_THREADS = '1';
 process.env.HOSTNAME = '0.0.0.0';
 process.env.PORT = process.env.PORT || '3000';
-
-// Limit thread usage for CloudLinux/cPanel Passenger compatibility
-process.env.TOKIO_WORKER_THREADS = '1';
-process.env.UV_THREADPOOL_SIZE = '4';
 
 // Load .env.production
 const fs = require('fs');
