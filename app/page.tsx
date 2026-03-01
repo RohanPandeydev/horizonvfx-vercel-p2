@@ -109,6 +109,12 @@ export default function HomePage() {
   const [featuredReels, setFeaturedReels] = useState<VideoProject[]>([]);
   const [selectedVideo, setSelectedVideo] = useState<VideoProject | null>(null);
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
+  const [clientLogos, setClientLogos] = useState<string[]>([
+    "https://horizonvfx.in/images/c-logo1.jpg",
+    "https://horizonvfx.in/images/c-logo2.jpg",
+    "https://horizonvfx.in/images/c-logo3.jpg",
+    "https://horizonvfx.in/images/c-logo4.jpg",
+  ]);
   const { scrollY, scrollYProgress } = useScroll();
   const scaleX = useTransform(scrollYProgress, [0, 1], [0, 1]);
 
@@ -163,6 +169,18 @@ export default function HomePage() {
         const reelsResult = await reelsResponse.json();
         if (reelsResult.videos) {
           setFeaturedReels(reelsResult.videos);
+        }
+
+        // Fetch home page content (client logos)
+        const homeResponse = await fetch("/api/pages/home");
+        const homeResult = await homeResponse.json();
+        if (homeResult.success && homeResult.data?.content) {
+          const content = typeof homeResult.data.content === "string"
+            ? JSON.parse(homeResult.data.content)
+            : homeResult.data.content;
+          if (content.clients?.length > 0) {
+            setClientLogos(content.clients.map((c: { url: string }) => c.url));
+          }
         }
       } catch (error) {
         console.error("Error fetching home page data:", error);
@@ -242,13 +260,8 @@ export default function HomePage() {
   // Team leadership from team page data
   const team = teamData.leadership?.members || [];
 
-  // Clients logos
-  const clients = [
-    "https://horizonvfx.in/images/c-logo1.jpg",
-    "https://horizonvfx.in/images/c-logo2.jpg",
-    "https://horizonvfx.in/images/c-logo3.jpg",
-    "https://horizonvfx.in/images/c-logo4.jpg",
-  ];
+  // Clients logos (fetched from API)
+  const clients = clientLogos;
 
   return (
     <>
