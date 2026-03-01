@@ -93,7 +93,16 @@ export default function ShowcasePageEditor() {
       const result = await response.json();
 
       if (result.success && result.data && result.data.content) {
-        setContent(result.data.content);
+        const cmsData = result.data.content;
+        setContent({
+          hero: {
+            title: cmsData.hero?.title || DEFAULT_CONTENT.hero.title,
+            subtitle: cmsData.hero?.subtitle || DEFAULT_CONTENT.hero.subtitle,
+          },
+          services: Array.isArray(cmsData.services) ? cmsData.services : DEFAULT_CONTENT.services,
+          techStack: Array.isArray(cmsData.techStack) ? cmsData.techStack : DEFAULT_CONTENT.techStack,
+          industries: Array.isArray(cmsData.industries) ? cmsData.industries : DEFAULT_CONTENT.industries,
+        });
       }
     } catch (error) {
       console.error("Error loading content:", error);

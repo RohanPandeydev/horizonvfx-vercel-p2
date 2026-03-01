@@ -541,6 +541,35 @@ function MediaGridCard({ item, isEditing, onToggleEdit, onUpdate, onQuickUpdate,
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadStage, setUploadStage] = useState<string>('');
 
+  // Manage blob URLs for video and thumbnail files
+  React.useEffect(() => {
+    // Clean up function for blob URLs
+    let videoBlobUrl: string | null = null;
+    let thumbnailBlobUrl: string | null = null;
+
+    // Create blob URL for video file
+    if (item.videoFile) {
+      videoBlobUrl = URL.createObjectURL(item.videoFile);
+      onUpdate("videoUrl", videoBlobUrl);
+    }
+
+    // Create blob URL for thumbnail file
+    if (item.thumbnailFile) {
+      thumbnailBlobUrl = URL.createObjectURL(item.thumbnailFile);
+      onUpdate("thumbnailUrl", thumbnailBlobUrl);
+    }
+
+    // Cleanup: revoke blob URLs when component unmounts or files change
+    return () => {
+      if (videoBlobUrl) {
+        URL.revokeObjectURL(videoBlobUrl);
+      }
+      if (thumbnailBlobUrl) {
+        URL.revokeObjectURL(thumbnailBlobUrl);
+      }
+    };
+  }, [item.videoFile, item.thumbnailFile]);
+
   const validateField = (field: string, value: any) => {
     let error = "";
 
@@ -980,6 +1009,35 @@ function MediaListItem({ item, isEditing, onToggleEdit, onUpdate, onQuickUpdate,
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadStage, setUploadStage] = useState<string>('');
 
+  // Manage blob URLs for video and thumbnail files
+  React.useEffect(() => {
+    // Clean up function for blob URLs
+    let videoBlobUrl: string | null = null;
+    let thumbnailBlobUrl: string | null = null;
+
+    // Create blob URL for video file
+    if (item.videoFile) {
+      videoBlobUrl = URL.createObjectURL(item.videoFile);
+      onUpdate("videoUrl", videoBlobUrl);
+    }
+
+    // Create blob URL for thumbnail file
+    if (item.thumbnailFile) {
+      thumbnailBlobUrl = URL.createObjectURL(item.thumbnailFile);
+      onUpdate("thumbnailUrl", thumbnailBlobUrl);
+    }
+
+    // Cleanup: revoke blob URLs when component unmounts or files change
+    return () => {
+      if (videoBlobUrl) {
+        URL.revokeObjectURL(videoBlobUrl);
+      }
+      if (thumbnailBlobUrl) {
+        URL.revokeObjectURL(thumbnailBlobUrl);
+      }
+    };
+  }, [item.videoFile, item.thumbnailFile]);
+
   const validateField = (field: string, value: any) => {
     let error = "";
 
@@ -1181,9 +1239,6 @@ function MediaListItem({ item, isEditing, onToggleEdit, onUpdate, onQuickUpdate,
                   const file = e.target.files?.[0];
                   if (file) {
                     onUpdate("thumbnailFile", file);
-                    // Create preview URL
-                    const previewUrl = URL.createObjectURL(file);
-                    onUpdate("thumbnailUrl", previewUrl);
                     setErrors(prev => ({ ...prev, thumbnailUrl: "" }));
                   }
                 }}
