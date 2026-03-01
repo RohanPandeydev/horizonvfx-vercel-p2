@@ -79,72 +79,6 @@
       "namedRegex": "^/about(?:/)?$"
     },
     {
-      "page": "/admin/about",
-      "regex": "^/admin/about(?:/)?$",
-      "routeKeys": {},
-      "namedRegex": "^/admin/about(?:/)?$"
-    },
-    {
-      "page": "/admin/contact",
-      "regex": "^/admin/contact(?:/)?$",
-      "routeKeys": {},
-      "namedRegex": "^/admin/contact(?:/)?$"
-    },
-    {
-      "page": "/admin/dashboard",
-      "regex": "^/admin/dashboard(?:/)?$",
-      "routeKeys": {},
-      "namedRegex": "^/admin/dashboard(?:/)?$"
-    },
-    {
-      "page": "/admin/home",
-      "regex": "^/admin/home(?:/)?$",
-      "routeKeys": {},
-      "namedRegex": "^/admin/home(?:/)?$"
-    },
-    {
-      "page": "/admin/login",
-      "regex": "^/admin/login(?:/)?$",
-      "routeKeys": {},
-      "namedRegex": "^/admin/login(?:/)?$"
-    },
-    {
-      "page": "/admin/media",
-      "regex": "^/admin/media(?:/)?$",
-      "routeKeys": {},
-      "namedRegex": "^/admin/media(?:/)?$"
-    },
-    {
-      "page": "/admin/pages",
-      "regex": "^/admin/pages(?:/)?$",
-      "routeKeys": {},
-      "namedRegex": "^/admin/pages(?:/)?$"
-    },
-    {
-      "page": "/admin/services",
-      "regex": "^/admin/services(?:/)?$",
-      "routeKeys": {},
-      "namedRegex": "^/admin/services(?:/)?$"
-    },
-    {
-      "page": "/admin/settings",
-      "regex": "^/admin/settings(?:/)?$",
-      "routeKeys": {},
-      "namedRegex": "^/admin/settings(?:/)?$"
-    },
-    {
-      "page": "/admin/showcase",
-      "regex": "^/admin/showcase(?:/)?$",
-      "routeKeys": {},
-      "namedRegex": "^/admin/showcase(?:/)?$"
-    },
-    {
-      "page": "/admin/team",
-      "regex": "^/admin/team(?:/)?$",
-      "routeKeys": {},
-      "namedRegex": "^/admin/team(?:/)?$"
-    },
-    {
       "page": "/api/admin/pages",
       "regex": "^/api/admin/pages(?:/)?$",
       "routeKeys": {},
@@ -275,6 +209,72 @@
       "regex": "^/contact(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/contact(?:/)?$"
+    },
+    {
+      "page": "/hzn-ctrl-x9k2/about",
+      "regex": "^/hzn\\-ctrl\\-x9k2/about(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/hzn\\-ctrl\\-x9k2/about(?:/)?$"
+    },
+    {
+      "page": "/hzn-ctrl-x9k2/contact",
+      "regex": "^/hzn\\-ctrl\\-x9k2/contact(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/hzn\\-ctrl\\-x9k2/contact(?:/)?$"
+    },
+    {
+      "page": "/hzn-ctrl-x9k2/dashboard",
+      "regex": "^/hzn\\-ctrl\\-x9k2/dashboard(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/hzn\\-ctrl\\-x9k2/dashboard(?:/)?$"
+    },
+    {
+      "page": "/hzn-ctrl-x9k2/home",
+      "regex": "^/hzn\\-ctrl\\-x9k2/home(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/hzn\\-ctrl\\-x9k2/home(?:/)?$"
+    },
+    {
+      "page": "/hzn-ctrl-x9k2/login",
+      "regex": "^/hzn\\-ctrl\\-x9k2/login(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/hzn\\-ctrl\\-x9k2/login(?:/)?$"
+    },
+    {
+      "page": "/hzn-ctrl-x9k2/media",
+      "regex": "^/hzn\\-ctrl\\-x9k2/media(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/hzn\\-ctrl\\-x9k2/media(?:/)?$"
+    },
+    {
+      "page": "/hzn-ctrl-x9k2/pages",
+      "regex": "^/hzn\\-ctrl\\-x9k2/pages(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/hzn\\-ctrl\\-x9k2/pages(?:/)?$"
+    },
+    {
+      "page": "/hzn-ctrl-x9k2/services",
+      "regex": "^/hzn\\-ctrl\\-x9k2/services(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/hzn\\-ctrl\\-x9k2/services(?:/)?$"
+    },
+    {
+      "page": "/hzn-ctrl-x9k2/settings",
+      "regex": "^/hzn\\-ctrl\\-x9k2/settings(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/hzn\\-ctrl\\-x9k2/settings(?:/)?$"
+    },
+    {
+      "page": "/hzn-ctrl-x9k2/showcase",
+      "regex": "^/hzn\\-ctrl\\-x9k2/showcase(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/hzn\\-ctrl\\-x9k2/showcase(?:/)?$"
+    },
+    {
+      "page": "/hzn-ctrl-x9k2/team",
+      "regex": "^/hzn\\-ctrl\\-x9k2/team(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/hzn\\-ctrl\\-x9k2/team(?:/)?$"
     },
     {
       "page": "/services",

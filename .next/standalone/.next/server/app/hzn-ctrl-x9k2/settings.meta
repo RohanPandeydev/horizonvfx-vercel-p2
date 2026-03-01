@@ -1,0 +1,16 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/hzn-ctrl-x9k2/layout,_N_T_/hzn-ctrl-x9k2/settings/layout,_N_T_/hzn-ctrl-x9k2/settings/page,_N_T_/hzn-ctrl-x9k2/settings"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/hzn-ctrl-x9k2/settings/__PAGE__",
+    "/hzn-ctrl-x9k2/settings",
+    "/hzn-ctrl-x9k2",
+    "/_index",
+    "/_head"
+  ]
+}

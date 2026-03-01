@@ -32,71 +32,71 @@ function AdminLayoutContent({ children }: AdminLayoutProps) {
   const { user, logout, isLoading } = useAuth();
 
   // Skip auth checks for login page
-  const isLoginPage = pathname === '/admin/login';
+  const isLoginPage = pathname === '/hzn-ctrl-x9k2/login';
 
   // Redirect if not authenticated (skip for login page)
   useEffect(() => {
     if (!isLoginPage && !isLoading && !user) {
-      router.push('/admin/login');
+      router.push('/hzn-ctrl-x9k2/login');
     }
   }, [user, isLoading, router, isLoginPage]);
 
   const menuItems = [
     {
       name: "Dashboard",
-      href: "/admin/dashboard",
+      href: "/hzn-ctrl-x9k2/dashboard",
       icon: LayoutDashboard,
     },
     {
       name: "Home",
-      href: "/admin/home",
+      href: "/hzn-ctrl-x9k2/home",
       icon: HomeIcon,
     },
     {
       name: "Pages",
-      href: "/admin/pages",
+      href: "/hzn-ctrl-x9k2/pages",
       icon: FileText,
     },
     {
       name: "About",
-      href: "/admin/about",
+      href: "/hzn-ctrl-x9k2/about",
       icon: BookOpen,
     },
     {
       name: "Contact",
-      href: "/admin/contact",
+      href: "/hzn-ctrl-x9k2/contact",
       icon: Mail,
     },
     {
       name: "Services",
-      href: "/admin/services",
+      href: "/hzn-ctrl-x9k2/services",
       icon: Wrench,
     },
     {
       name: "Showcase",
-      href: "/admin/showcase",
+      href: "/hzn-ctrl-x9k2/showcase",
       icon: Film,
     },
     {
       name: "Team",
-      href: "/admin/team",
+      href: "/hzn-ctrl-x9k2/team",
       icon: Users,
     },
     {
       name: "Media",
-      href: "/admin/media",
+      href: "/hzn-ctrl-x9k2/media",
       icon: Image,
     },
     {
       name: "Settings",
-      href: "/admin/settings",
+      href: "/hzn-ctrl-x9k2/settings",
       icon: Settings,
     },
   ];
 
   const handleLogout = async () => {
     await logout();
-    router.push('/admin/login');
+    router.push('/hzn-ctrl-x9k2/login');
   };
 
   // For login page, just render children without the admin UI
@@ -132,7 +132,7 @@ function AdminLayoutContent({ children }: AdminLayoutProps) {
             >
               {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
-            <Link href="/admin/dashboard">
+            <Link href="/hzn-ctrl-x9k2/dashboard">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
                   <span className="text-white font-bold text-sm">H</span>

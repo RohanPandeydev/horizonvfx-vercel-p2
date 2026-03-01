@@ -15,7 +15,7 @@ export default function AdminAuthWrapper({ children }: { children: React.ReactNo
     setIsMounted(true);
   }, []);
 
-  const isLoginPage = pathname === '/admin/login';
+  const isLoginPage = pathname === '/hzn-ctrl-x9k2/login';
 
   useEffect(() => {
     // Skip auth check for login page
@@ -24,7 +24,7 @@ export default function AdminAuthWrapper({ children }: { children: React.ReactNo
     }
 
     if (!isLoading && (!user || user.role !== 'admin')) {
-      router.push('/admin/login');
+      router.push('/hzn-ctrl-x9k2/login');
     }
   }, [user, isLoading, router, isLoginPage]);
 

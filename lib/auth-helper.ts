@@ -93,7 +93,7 @@ export async function authFetch(url: string, options: FetchOptions = {}): Promis
   // If no token, redirect to login
   if (!token) {
     if (typeof window !== 'undefined') {
-      window.location.href = '/admin/login';
+      window.location.href = '/hzn-ctrl-x9k2/login';
     }
     throw new Error('No authentication token found');
   }
@@ -114,7 +114,7 @@ export async function authFetch(url: string, options: FetchOptions = {}): Promis
     if (!token) {
       // Redirect to login if refresh failed
       if (typeof window !== 'undefined') {
-        window.location.href = '/admin/login';
+        window.location.href = '/hzn-ctrl-x9k2/login';
       }
       throw new Error('Authentication failed');
     }

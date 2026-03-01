@@ -21,7 +21,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
   const smoothMouseY = useSpring(mouseY, { damping: 20, stiffness: 100 });
 
   // Don't use MainLayout for admin routes
-  if (pathname?.startsWith("/admin")) {
+  if (pathname?.startsWith("/hzn-ctrl-x9k2")) {
     return <>{children}</>;
   }
 
