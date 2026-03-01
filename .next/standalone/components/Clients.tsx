@@ -1,8 +1,8 @@
 "use client";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 
-const clients = [
+const DEFAULT_CLIENTS = [
   "https://horizonvfx.in/images/c-logo1.jpg",
   "https://horizonvfx.in/images/c-logo2.jpg",
   "https://horizonvfx.in/images/c-logo3.jpg",
@@ -10,6 +10,25 @@ const clients = [
 ];
 
 export default function Clients() {
+  const [clients, setClients] = useState<string[]>(DEFAULT_CLIENTS);
+
+  useEffect(() => {
+    fetch("/api/pages/home")
+      .then((res) => res.json())
+      .then((result) => {
+        if (result.success && result.data?.content) {
+          const content =
+            typeof result.data.content === "string"
+              ? JSON.parse(result.data.content)
+              : result.data.content;
+          if (content.clients?.length > 0) {
+            setClients(content.clients.map((c: { url: string }) => c.url));
+          }
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   return (
     <section className="py-16 md:py-24 px-4 md:px-6 max-w-[1400px] mx-auto">
       <motion.h2
