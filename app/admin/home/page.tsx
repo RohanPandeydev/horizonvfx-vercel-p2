@@ -127,6 +127,17 @@ export default function HomePageEditor() {
   };
 
   const handleSave = async () => {
+    // Prevent saving blob URLs to the database
+    if (content.hero.videoUrl.startsWith("blob:")) {
+      showError("Please wait for the video upload to complete before saving.");
+      return;
+    }
+    const hasBlobClient = content.clients.some((c) => c.url.startsWith("blob:"));
+    if (hasBlobClient) {
+      showError("Please wait for all image uploads to complete before saving.");
+      return;
+    }
+
     try {
       setSaveStatus("saving");
 
@@ -204,20 +215,47 @@ export default function HomePageEditor() {
     }
   };
 
-  const handleFileUpload = (
+  const [uploading, setUploading] = useState<string | null>(null);
+
+  const handleFileUpload = async (
     e: React.ChangeEvent<HTMLInputElement>,
     field: 'videoUrl' | 'clientLogo',
     index?: number
   ) => {
     const file = e.target.files?.[0];
-    if (file) {
-      // Create a temporary URL for preview
-      const url = URL.createObjectURL(file);
-      if (field === 'videoUrl') {
-        updateContent('hero', { videoUrl: url });
-      } else if (field === 'clientLogo' && typeof index === 'number') {
-        updateClient(index, url);
+    if (!file) return;
+
+    const uploadKey = field === 'clientLogo' ? `${field}-${index}` : field;
+    setUploading(uploadKey);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('category', field === 'videoUrl' ? 'hero' : 'clients');
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error || 'Upload failed');
       }
+
+      const serverUrl = result.data.url;
+      if (field === 'videoUrl') {
+        updateContent('hero', { videoUrl: serverUrl });
+      } else if (field === 'clientLogo' && typeof index === 'number') {
+        updateClient(index, serverUrl);
+      }
+      showSuccess(`${field === 'videoUrl' ? 'Video' : 'Image'} uploaded successfully!`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Upload failed';
+      showError(message);
+    } finally {
+      setUploading(null);
     }
   };
 
@@ -325,11 +363,11 @@ export default function HomePageEditor() {
                 </label>
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
-                    <label className="flex-1">
+                    <label className={`flex-1 ${uploading === 'videoUrl' ? 'pointer-events-none opacity-60' : ''}`}>
                       <div className="flex items-center gap-2 px-4 py-3 border-2 border-dashed border-slate-300 rounded-lg cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-colors">
                         <Upload size={20} className="text-slate-400" />
                         <span className="text-sm text-slate-600">
-                          Upload new video (MP4)
+                          {uploading === 'videoUrl' ? 'Uploading video...' : 'Upload new video (MP4)'}
                         </span>
                       </div>
                       <input
@@ -537,11 +575,11 @@ export default function HomePageEditor() {
                       <label className="block text-xs font-medium text-slate-600 mb-1.5">
                         Upload Logo Image
                       </label>
-                      <label className="block">
+                      <label className={`block ${uploading === `clientLogo-${index}` ? 'pointer-events-none opacity-60' : ''}`}>
                         <div className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-slate-300 rounded-lg cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-colors">
                           <Upload size={16} className="text-slate-400" />
                           <span className="text-xs text-slate-600">
-                            Choose image
+                            {uploading === `clientLogo-${index}` ? 'Uploading...' : 'Choose image'}
                           </span>
                         </div>
                         <input

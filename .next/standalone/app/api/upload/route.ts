@@ -34,8 +34,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate file size (max 50MB)
-    const maxSize = 50 * 1024 * 1024;
+    // Validate file size (max 500MB for videos, 10MB for images)
+    const isVideo = file.type.startsWith("video/");
+    const maxSize = isVideo ? 500 * 1024 * 1024 : 10 * 1024 * 1024;
     if (file.size > maxSize) {
       return NextResponse.json(
         { success: false, error: `File size exceeds ${maxSize / (1024 * 1024)}MB limit` },
@@ -86,12 +87,12 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Upload file
+    // Upload file - returns the full public URL
     console.log("Uploading file:", { fileKey, fileSize: file.size });
-    await uploadFile(buffer, fileKey, file.type);
-    console.log("Upload complete");
+    const publicUrl = await uploadFile(buffer, fileKey, file.type);
+    console.log("Upload complete:", publicUrl);
 
-    // Save metadata to database
+    // Save metadata to database with the direct public URL
     const media = await prisma.media.create({
       data: {
         filename: file.name,
@@ -101,7 +102,7 @@ export async function POST(request: NextRequest) {
         s3Key: fileKey,
         s3Bucket: process.env.AWS_S3_BUCKET || "local",
         s3Region: process.env.AWS_REGION || "local",
-        url: `/api/media/${fileKey}`,
+        url: publicUrl,
         uploadedBy: user.userId,
       },
     });
@@ -110,7 +111,7 @@ export async function POST(request: NextRequest) {
       success: true,
       data: {
         id: media.id,
-        url: `/api/media/${media.id}`,
+        url: publicUrl,
         filename: media.filename,
         mimeType: media.mimeType,
         size: media.size,

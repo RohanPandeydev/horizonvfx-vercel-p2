@@ -10,6 +10,9 @@ interface HeroProps {
   scrollY: any;
 }
 
+const DEFAULT_VIDEO_URL = "https://www.horizonvfx.in/images/Video1.mp4";
+const DEFAULT_TAGLINE = "Visual Effects • Animation • Post Production";
+
 export default function Hero({ loading, scrollY }: HeroProps) {
   const [heroParticles, setHeroParticles] = useState<Array<{
     x: number;
@@ -18,6 +21,8 @@ export default function Hero({ loading, scrollY }: HeroProps) {
     targetY: number;
     duration: number;
   }>>([]);
+  const [videoUrl, setVideoUrl] = useState(DEFAULT_VIDEO_URL);
+  const [tagline, setTagline] = useState(DEFAULT_TAGLINE);
 
   useEffect(() => {
     setHeroParticles(
@@ -29,6 +34,22 @@ export default function Hero({ loading, scrollY }: HeroProps) {
         duration: 5 + Math.random() * 5,
       }))
     );
+
+    // Fetch hero content from admin config
+    fetch("/api/admin/pages/home")
+      .then((res) => res.json())
+      .then((result) => {
+        if (result.success && result.data?.content?.hero) {
+          const hero = result.data.content.hero;
+          if (hero.videoUrl && !hero.videoUrl.startsWith("blob:")) {
+            setVideoUrl(hero.videoUrl);
+          }
+          if (hero.tagline) {
+            setTagline(hero.tagline);
+          }
+        }
+      })
+      .catch(() => {});
   }, []);
 
   return (
@@ -68,7 +89,7 @@ export default function Hero({ loading, scrollY }: HeroProps) {
             muted
             playsInline
             className="w-full h-full object-cover opacity-40"
-            src="https://www.horizonvfx.in/images/Video1.mp4"
+            src={videoUrl}
           />
           <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/80" />
 
@@ -147,7 +168,7 @@ export default function Hero({ loading, scrollY }: HeroProps) {
             className="leading-tight mt-2 md:mt-4"
           >
             <span className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl font-light italic tracking-tight text-gray-300">
-              Visual Effects • Animation • Post Production
+              {tagline}
             </span>
           </motion.div>
         </motion.div>

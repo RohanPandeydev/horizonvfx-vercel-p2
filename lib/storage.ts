@@ -1,7 +1,7 @@
 /**
  * Storage abstraction - uses S3 when configured, local filesystem otherwise.
- * For cPanel deployment: files go to UPLOAD_DIR (default: ./public/uploads)
- * For cloud deployment: files go to AWS S3
+ * For cPanel: files go to public_html/uploads/ so Apache serves them directly.
+ * For cloud: files go to AWS S3.
  */
 import path from 'path';
 import fs from 'fs/promises';
@@ -12,11 +12,12 @@ const isS3Configured = !!(
   process.env.AWS_S3_BUCKET
 );
 
-const UPLOAD_DIR = path.resolve(process.env.UPLOAD_DIR || './public/uploads');
+// cPanel: save to public_html/uploads/ so Apache serves files directly
+const UPLOAD_DIR = path.resolve(process.env.UPLOAD_DIR || '/home/rcimimhd/public_html/uploads');
 
-/**
- * Ensure the upload directory exists
- */
+// Base URL for serving uploaded files
+const SITE_URL = process.env.FRONTEND_URL || 'https://horizonvfx.in';
+
 async function ensureDir(dirPath: string) {
   try {
     await fs.mkdir(dirPath, { recursive: true });
@@ -26,7 +27,7 @@ async function ensureDir(dirPath: string) {
 }
 
 /**
- * Upload a file - routes to S3 or local filesystem
+ * Upload a file and return the public URL
  */
 export async function uploadFile(
   buffer: Buffer,
@@ -38,16 +39,18 @@ export async function uploadFile(
     return uploadToS3(buffer, key, contentType);
   }
 
-  // Local filesystem upload
+  // Save to public_html/uploads/ for direct Apache serving
   const filePath = path.join(UPLOAD_DIR, key);
   const dir = path.dirname(filePath);
   await ensureDir(dir);
   await fs.writeFile(filePath, buffer);
-  return key;
+
+  // Return the full public URL
+  return `${SITE_URL}/uploads/${key}`;
 }
 
 /**
- * Get a URL for serving a file
+ * Get the public URL for a file
  */
 export async function getFileUrl(key: string): Promise<string> {
   if (isS3Configured) {
@@ -55,8 +58,7 @@ export async function getFileUrl(key: string): Promise<string> {
     return getSignedUrl(key, 3600);
   }
 
-  // Local: serve from public/uploads via static path
-  return `/uploads/${key}`;
+  return `${SITE_URL}/uploads/${key}`;
 }
 
 /**
@@ -68,7 +70,6 @@ export async function deleteFile(key: string): Promise<void> {
     return deleteFromS3(key);
   }
 
-  // Local filesystem delete
   const filePath = path.join(UPLOAD_DIR, key);
   try {
     await fs.unlink(filePath);
