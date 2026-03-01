@@ -90,6 +90,7 @@ export default function HomePageEditor() {
   const [topServices] = useState<string[]>(DEFAULT_TOP_SERVICES);
   const [bottomServices] = useState<string[]>(DEFAULT_BOTTOM_SERVICES);
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
+  const [uploading, setUploading] = useState<string | null>(null);
 
   // Load content on mount
   useEffect(() => {
@@ -214,8 +215,6 @@ export default function HomePageEditor() {
       updateContent("clients", newClients);
     }
   };
-
-  const [uploading, setUploading] = useState<string | null>(null);
 
   const handleFileUpload = async (
     e: React.ChangeEvent<HTMLInputElement>,
