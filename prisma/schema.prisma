@@ -1,4 +1,4 @@
-// This is your Prisma schema file for MySQL (cPanel deployment)
+// Prisma schema for MySQL / TiDB Cloud Serverless
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
@@ -7,8 +7,9 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
+  provider     = "mysql"
+  url          = env("DATABASE_URL")
+  relationMode = "prisma"
 }
 
 model User {

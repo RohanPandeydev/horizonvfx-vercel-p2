@@ -40,3 +40,4 @@ tmpclaude-*
 
 # deploy artifacts
 deploy.tar.gz
+.vercel
