@@ -87,12 +87,15 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Upload file - returns the full public URL
+    // Upload file - uploadFile returns the S3 key (or local path key)
     console.log("Uploading file:", { fileKey, fileSize: file.size });
-    const publicUrl = await uploadFile(buffer, fileKey, file.type);
-    console.log("Upload complete:", publicUrl);
+    await uploadFile(buffer, fileKey, file.type);
+    console.log("Upload complete:", fileKey);
 
-    // Save metadata to database with the direct public URL
+    // Save metadata to database; the stable, browser-resolvable URL is the
+    // /api/media/<id> redirect route, which generates a fresh signed URL on
+    // each request. We can't know the id until after create(), so store the
+    // s3Key temporarily and update url right after.
     const media = await prisma.media.create({
       data: {
         filename: file.name,
@@ -102,16 +105,22 @@ export async function POST(request: NextRequest) {
         s3Key: fileKey,
         s3Bucket: process.env.AWS_S3_BUCKET || "local",
         s3Region: process.env.AWS_REGION || "local",
-        url: publicUrl,
+        url: "",
         uploadedBy: user.userId,
       },
+    });
+
+    const stableUrl = `/api/media/${media.id}`;
+    await prisma.media.update({
+      where: { id: media.id },
+      data: { url: stableUrl },
     });
 
     return NextResponse.json({
       success: true,
       data: {
         id: media.id,
-        url: publicUrl,
+        url: stableUrl,
         filename: media.filename,
         mimeType: media.mimeType,
         size: media.size,
