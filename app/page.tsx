@@ -110,10 +110,10 @@ export default function HomePage() {
   const [selectedVideo, setSelectedVideo] = useState<VideoProject | null>(null);
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
   const [clientLogos, setClientLogos] = useState<string[]>([
-    "https://horizonvfx.in/images/c-logo1.jpg",
-    "https://horizonvfx.in/images/c-logo2.jpg",
-    "https://horizonvfx.in/images/c-logo3.jpg",
-    "https://horizonvfx.in/images/c-logo4.jpg",
+    "/images-horizon/c-logo1.jpg",
+    "/images-horizon/c-logo2.jpg",
+    "/images-horizon/c-logo3.jpg",
+    "/images-horizon/c-logo4.jpg",
   ]);
   const { scrollY, scrollYProgress } = useScroll();
   const scaleX = useTransform(scrollYProgress, [0, 1], [0, 1]);

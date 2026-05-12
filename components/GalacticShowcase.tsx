@@ -4,13 +4,13 @@ import { motion } from "framer-motion";
 import { TW } from "@/lib/colors";
 
 const services = [
-  { title: "Film and OTT", image: "https://horizonvfx.in/images/flm.png" },
-  { title: "Game", image: "https://horizonvfx.in/images/game.jpg" },
+  { title: "Film and OTT", image: "/images-horizon/flm.png" },
+  { title: "Game", image: "/images-horizon/game.jpg" },
   {
     title: "Commercial",
-    image: "https://horizonvfx.in/images/Commercial.jpg",
+    image: "/images-horizon/Commercial.jpg",
   },
-  { title: "Unreal", image: "https://horizonvfx.in/images/unreal.jpg" },
+  { title: "Unreal", image: "/images-horizon/unreal.jpg" },
 ];
 
 export default function GalacticShowcase() {

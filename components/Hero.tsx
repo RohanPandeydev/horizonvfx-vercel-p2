@@ -10,7 +10,7 @@ interface HeroProps {
   scrollY: any;
 }
 
-const DEFAULT_VIDEO_URL = "https://www.horizonvfx.in/images/Video1.mp4";
+const DEFAULT_VIDEO_URL = "/images-horizon/Video1.mp4";
 const DEFAULT_TAGLINE = "Visual Effects • Animation • Post Production";
 
 export default function Hero({ loading, scrollY }: HeroProps) {

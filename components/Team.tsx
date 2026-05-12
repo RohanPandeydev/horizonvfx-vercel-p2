@@ -7,12 +7,12 @@ const team = [
   {
     name: "Dibakar Chakraborty",
     role: "Founder",
-    image: "https://horizonvfx.in/images/tm1.jpg",
+    image: "/images-horizon/tm1.jpg",
   },
   {
     name: "Mitun Dasgupta",
     role: "Founder",
-    image: "https://horizonvfx.in/images/tm2.jpg",
+    image: "/images-horizon/tm2.jpg",
   },
 ];
 

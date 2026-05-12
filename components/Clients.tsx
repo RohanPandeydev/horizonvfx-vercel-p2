@@ -3,10 +3,10 @@ import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 
 const DEFAULT_CLIENTS = [
-  "https://horizonvfx.in/images/c-logo1.jpg",
-  "https://horizonvfx.in/images/c-logo2.jpg",
-  "https://horizonvfx.in/images/c-logo3.jpg",
-  "https://horizonvfx.in/images/c-logo4.jpg",
+  "/images-horizon/c-logo1.jpg",
+  "/images-horizon/c-logo2.jpg",
+  "/images-horizon/c-logo3.jpg",
+  "/images-horizon/c-logo4.jpg",
 ];
 
 export default function Clients() {
