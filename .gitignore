@@ -20,10 +20,14 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (allow .env.production for deployment)
+# env files
 .env
 .env.local
 .env.development
+.env.production
+
+# claude local settings (contains credentials in allowlist entries)
+.claude/settings.local.json
 
 # typescript
 *.tsbuildinfo
