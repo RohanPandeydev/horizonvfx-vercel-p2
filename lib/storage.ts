@@ -64,6 +64,12 @@ export async function uploadFile(
  * Get the public URL for a file
  */
 export async function getFileUrl(key: string): Promise<string> {
+  // Pass through fully-qualified URLs and local public-folder paths as-is.
+  // Used for seeded fallback assets that live in /public, e.g. "/images-horizon/foo.png".
+  if (key.startsWith('http://') || key.startsWith('https://') || key.startsWith('/')) {
+    return key;
+  }
+
   if (isS3Configured) {
     const { getSignedUrl } = await import('./s3');
     return getSignedUrl(key, 3600);
