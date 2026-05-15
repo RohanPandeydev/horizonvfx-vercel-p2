@@ -43,14 +43,14 @@ interface HomePageSections {
 
 const DEFAULT_CONTENT: HomePageContent = {
   hero: {
-    videoUrl: "https://www.horizonvfx.in/images/Video1.mp4",
+    videoUrl: "https://www.horizonvfx.in/images-horizon/Video1.mp4",
     tagline: "Visual Effects • Animation • Post Production",
   },
   clients: [
-    { url: "https://horizonvfx.in/images/c-logo1.jpg" },
-    { url: "https://horizonvfx.in/images/c-logo2.jpg" },
-    { url: "https://horizonvfx.in/images/c-logo3.jpg" },
-    { url: "https://horizonvfx.in/images/c-logo4.jpg" },
+    { url: "https://horizonvfx.in/images-horizon/c-logo1.jpg" },
+    { url: "https://horizonvfx.in/images-horizon/c-logo2.jpg" },
+    { url: "https://horizonvfx.in/images-horizon/c-logo3.jpg" },
+    { url: "https://horizonvfx.in/images-horizon/c-logo4.jpg" },
   ],
 };
 
@@ -385,7 +385,7 @@ export default function HomePageEditor() {
                     value={content.hero.videoUrl}
                     onChange={(e) => updateContent('hero', { videoUrl: e.target.value })}
                     className="w-full px-4 py-3 text-black border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-black"
-                    placeholder="https://www.horizonvfx.in/images/Video1.mp4"
+                    placeholder="https://www.horizonvfx.in/images-horizon/Video1.mp4"
                   />
                 </div>
               </div>
@@ -602,7 +602,7 @@ export default function HomePageEditor() {
                         value={client.url}
                         onChange={(e) => updateClient(index, e.target.value)}
                         className="w-full px-3 py-2 text-sm text-black border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-black"
-                        placeholder="https://horizonvfx.in/images/c-logo1.jpg"
+                        placeholder="https://horizonvfx.in/images-horizon/c-logo1.jpg"
                       />
                     </div>
 

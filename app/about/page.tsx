@@ -76,7 +76,7 @@ const DEFAULT_CONTENT: AboutContent = {
       "Welcome to HorizonVFX, where the magic of imagination meets the precision of expertise. Born from the collective brilliance of a group of freelance artists with over two decades of industry mastery, we have embarked on a journey to redefine the very fabric of visual storytelling through cutting-edge visual effects.",
       "Our tale begins with a passion for transforming dreams into reality. With each stroke of creativity and pixel perfected, our team of seasoned artists has sculpted a narrative that goes beyond the ordinary. We are not just a VFX company; we are architects of awe, crafting cinematic experiences that linger in the hearts and minds of audiences.",
     ],
-    image: "https://horizonvfx.in/images/about-us1.jpg",
+    image: "https://horizonvfx.in/images-horizon/about-us1.jpg",
     badge: {
       value: "20+",
       label: "Years",

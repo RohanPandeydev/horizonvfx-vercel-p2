@@ -65,10 +65,10 @@ const DEFAULT_CONTENT: ShowcaseContent = {
     { name: "Substance", icon: "🎭", color: "from-pink-500 to-rose-500" },
   ],
   industries: [
-    { title: "Film and OTT", image: "https://horizonvfx.in/images/flm.png" },
-    { title: "Game", image: "https://horizonvfx.in/images/game.jpg" },
-    { title: "Commercial", image: "https://horizonvfx.in/images/Commercial.jpg" },
-    { title: "Unreal", image: "https://horizonvfx.in/images/unreal.jpg" },
+    { title: "Film and OTT", image: "https://horizonvfx.in/images-horizon/flm.png" },
+    { title: "Game", image: "https://horizonvfx.in/images-horizon/game.jpg" },
+    { title: "Commercial", image: "https://horizonvfx.in/images-horizon/Commercial.jpg" },
+    { title: "Unreal", image: "https://horizonvfx.in/images-horizon/unreal.jpg" },
   ],
 };
 
@@ -497,7 +497,7 @@ export default function ShowcasePageEditor() {
                           value={industry.image}
                           onChange={(e) => updateIndustry(index, "image", e.target.value)}
                           className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-black placeholder:text-black"
-                          placeholder="https://horizonvfx.in/images/flm.png"
+                          placeholder="https://horizonvfx.in/images-horizon/flm.png"
                         />
                       </div>
 

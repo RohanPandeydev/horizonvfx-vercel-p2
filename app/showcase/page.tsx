@@ -75,10 +75,10 @@ const DEFAULT_CONTENT: ShowcaseContent = {
     { name: "Substance", icon: "🎭", color: "from-pink-500 to-rose-500" },
   ],
   industries: [
-    { title: "Film and OTT", image: "https://horizonvfx.in/images/flm.png" },
-    { title: "Game", image: "https://horizonvfx.in/images/game.jpg" },
-    { title: "Commercial", image: "https://horizonvfx.in/images/Commercial.jpg" },
-    { title: "Unreal", image: "https://horizonvfx.in/images/unreal.jpg" },
+    { title: "Film and OTT", image: "https://horizonvfx.in/images-horizon/flm.png" },
+    { title: "Game", image: "https://horizonvfx.in/images-horizon/game.jpg" },
+    { title: "Commercial", image: "https://horizonvfx.in/images-horizon/Commercial.jpg" },
+    { title: "Unreal", image: "https://horizonvfx.in/images-horizon/unreal.jpg" },
   ],
 };
 
