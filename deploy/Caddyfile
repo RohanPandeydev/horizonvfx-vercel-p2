@@ -20,3 +20,18 @@ horizonvfx.in {
         header_up X-Real-IP {remote_host}
     }
 }
+
+# Webmail proxy → cPanel Roundcube on the external mail server.
+# Lets users access /webmail at a clean HTTPS URL with a real cert
+# instead of http://mail.horizonvfx.in:2096 (mixed-content + ugly port).
+# Mail (MX/A) DNS records are intentionally unchanged.
+webmail.horizonvfx.in {
+    encode gzip zstd
+    reverse_proxy https://mail.horizonvfx.in:2096 {
+        header_up Host {host}:2096
+        transport http {
+            tls
+            tls_insecure_skip_verify
+        }
+    }
+}
