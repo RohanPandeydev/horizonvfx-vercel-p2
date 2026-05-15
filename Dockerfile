@@ -16,7 +16,13 @@ RUN apt-get update \
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-ENV NEXT_TELEMETRY_DISABLED=1
+# Placeholders to satisfy build-time env validation. Real values come from
+# /srv/horizonvfx/.env.production via env_file at container runtime.
+ENV NEXT_TELEMETRY_DISABLED=1 \
+    DATABASE_URL=mysql://build:build@localhost:3306/build \
+    JWT_ACCESS_SECRET=build-only-placeholder-not-used-at-runtime-ever \
+    JWT_REFRESH_SECRET=build-only-placeholder-not-used-at-runtime-eve \
+    ENCRYPTION_SECRET=build-only-placeholder-32-bytes-x
 RUN npx prisma generate
 RUN npm run build
 
