@@ -32,15 +32,18 @@ model User {
 
 model Token {
   id           String    @id @default(cuid())
-  token        String    @unique(length: 191) @db.VarChar(500)
+  token        String    @db.VarChar(500)
   userId       String
-  type         String    // 'access' or 'refresh'
+  type         String    @db.VarChar(20) // 'access' or 'refresh'
   expiresAt    DateTime
   createdAt    DateTime  @default(now())
   user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  // Compound unique on (type, token-first-191-chars). MySQL caps utf8mb4 index
+  // entries at 191 chars; JWTs share an identical 150+ char prefix so a single
+  // `@unique` on token alone collides across access+refresh in one createMany.
+  @@unique([type, token(length: 191)])
   @@index([userId])
-  @@index([token(length: 191)])
 }
 
 // Page Content Model - Stores JSON content for dynamic pages
