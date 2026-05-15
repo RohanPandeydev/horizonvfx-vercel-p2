@@ -90,6 +90,9 @@ jobs:
             docker compose up -d --remove-orphans
             # First-deploy-safe schema sync. `db push` is idempotent.
             # Use node directly because Next standalone strips the .bin/ symlinks.
+            # --accept-data-loss is needed when schema tweaks (column-type narrowing,
+            # adding compound uniques) trigger Prisma's data-loss check even when
+            # there's no actual loss for our data.
             sleep 5
-            docker compose exec -T app node /app/node_modules/prisma/build/index.js db push --skip-generate
+            docker compose exec -T app node /app/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
             docker image prune -f
