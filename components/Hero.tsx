@@ -174,25 +174,6 @@ export default function Hero({ loading, scrollY }: HeroProps) {
         </motion.div>
       </motion.div>
 
-      {/* Enhanced scroll indicator */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: loading ? 0 : 1 }}
-        transition={{ delay: 2.5, duration: 1 }}
-        className="absolute bottom-12 left-1/2 -translate-x-1/2"
-      >
-        <motion.div
-          animate={{ y: [0, 10, 0] }}
-          transition={{ repeat: Infinity, duration: 1.5 }}
-          className="w-6 h-10 border-2 border-white/50 rounded-full flex items-start justify-center p-2 backdrop-blur-sm bg-white/5"
-        >
-          <motion.div
-            className="w-1.5 h-1.5 bg-gradient-to-b from-blue-500 to-green-500 rounded-full"
-            animate={{ y: [0, 16, 0] }}
-            transition={{ repeat: Infinity, duration: 1.5 }}
-          />
-        </motion.div>
-      </motion.div>
     </section>
   );
 }

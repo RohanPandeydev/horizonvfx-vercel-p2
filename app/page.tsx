@@ -2,12 +2,115 @@
 import { useState, useEffect, useRef } from "react";
 import { useScroll, useInView, useTransform } from "framer-motion";
 import { motion } from "framer-motion";
-import { Play, ArrowRight, ChevronUp } from "lucide-react";
+import { Play, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import Hero from "@/components/Hero";
 import ServicesMarquee from "@/components/ServicesMarquee";
 import VideoModal from "@/components/VideoModal";
+import DynamicIcon from "@/components/DynamicIcon";
 import React from "react";
+
+interface ServiceOffering {
+  title: string;
+  description: string;
+  icon: string;
+  gradient: string;
+  features: string[];
+}
+
+const DEFAULT_SERVICE_OFFERINGS: ServiceOffering[] = [
+  {
+    title: "Visual Effects",
+    description: "CGI, compositing, and green screen integration for films and commercials",
+    icon: "🎥",
+    gradient: "from-cyan-500 to-blue-500",
+    features: ["Green Screen", "CGI", "Rotoscope", "Match Move"],
+  },
+  {
+    title: "3D Animation",
+    description: "Character animation, rigging, and motion graphics for any medium",
+    icon: "🎬",
+    gradient: "from-blue-500 to-purple-500",
+    features: ["Character Rigging", "Motion Graphics", "Mocap", "Keyframe Animation"],
+  },
+  {
+    title: "Game Cinematics",
+    description: "High-impact cinematic sequences and trailers for gaming projects",
+    icon: "🎮",
+    gradient: "from-purple-500 to-pink-500",
+    features: ["Real-time Renders", "Game Trailers", "Cutscenes", "Asset Creation"],
+  },
+  {
+    title: "Pre-visualization",
+    description: "Storyboard animation and previs to plan your shots effectively",
+    icon: "📋",
+    gradient: "from-pink-500 to-rose-500",
+    features: ["Storyboarding", "3D Previs", "Techvis", "Postvis"],
+  },
+  {
+    title: "Color Grading",
+    description: "Professional color correction and grading for cinematic looks",
+    icon: "🎨",
+    gradient: "from-rose-500 to-orange-500",
+    features: ["Color Correction", "Look Development", "HDR Grading", "Film Emulation"],
+  },
+  {
+    title: "Virtual Production",
+    description: "LED wall volumes and real-time rendering for on-set VFX",
+    icon: "🖥️",
+    gradient: "from-orange-500 to-yellow-500",
+    features: ["LED Volumes", "Real-time Rendering", "Camera Tracking", "Virtual Sets"],
+  },
+  {
+    title: "Web Development",
+    description: "Modern, responsive websites and web apps built with the latest stack",
+    icon: "🌐",
+    gradient: "from-yellow-500 to-emerald-500",
+    features: ["Next.js / React", "Headless CMS", "E-commerce", "SEO & Performance"],
+  },
+  {
+    title: "App Development",
+    description: "Cross-platform mobile apps for iOS and Android with native-grade performance",
+    icon: "📱",
+    gradient: "from-emerald-500 to-teal-500",
+    features: ["iOS & Android", "React Native", "Flutter", "App Store Launch"],
+  },
+  {
+    title: "UI / UX Design",
+    description: "Product design, prototyping, and design systems that scale with your brand",
+    icon: "🎯",
+    gradient: "from-teal-500 to-cyan-500",
+    features: ["Wireframing", "Prototyping", "Design Systems", "User Research"],
+  },
+  {
+    title: "AI & Automation",
+    description: "Custom AI integrations, generative pipelines, and workflow automation",
+    icon: "🤖",
+    gradient: "from-indigo-500 to-purple-500",
+    features: ["LLM Integrations", "GenAI Pipelines", "RAG Systems", "Workflow Bots"],
+  },
+  {
+    title: "Cloud & DevOps",
+    description: "Scalable cloud infrastructure, CI/CD, and managed deployments",
+    icon: "☁️",
+    gradient: "from-sky-500 to-blue-600",
+    features: ["AWS / GCP", "Docker / K8s", "CI/CD Pipelines", "Monitoring"],
+  },
+  {
+    title: "AR / VR Experiences",
+    description: "Immersive AR and VR experiences for marketing, training, and entertainment",
+    icon: "🕶️",
+    gradient: "from-fuchsia-500 to-pink-500",
+    features: ["WebXR", "Unity / Unreal", "3D Interactions", "Spatial UI"],
+  },
+  {
+    title: "IT Consulting & Support",
+    description: "End-to-end IT advisory, system integration, and ongoing managed support",
+    icon: "🛠️",
+    gradient: "from-amber-500 to-red-500",
+    features: ["Architecture Audit", "System Integration", "Managed Support", "Migrations"],
+  },
+];
 
 interface HomePageSections {
   showExcellence: boolean;
@@ -88,7 +191,6 @@ interface VideoProject {
 export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [activeSection, setActiveSection] = useState(0);
-  const [showBackToTop, setShowBackToTop] = useState(false);
   const [sectionsConfig, setSectionsConfig] = useState<HomePageSections>({
     showExcellence: true,
     showLeadership: true,
@@ -107,6 +209,7 @@ export default function HomePage() {
   });
   const [featuredProjects, setFeaturedProjects] = useState<VideoProject[]>([]);
   const [featuredReels, setFeaturedReels] = useState<VideoProject[]>([]);
+  const [serviceOfferings, setServiceOfferings] = useState<ServiceOffering[]>(DEFAULT_SERVICE_OFFERINGS);
   const [selectedVideo, setSelectedVideo] = useState<VideoProject | null>(null);
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
   const [clientLogos, setClientLogos] = useState<string[]>([
@@ -157,6 +260,16 @@ export default function HomePage() {
           setShowcaseData(showcaseResult.data);
         }
 
+        // Fetch services page data (service offerings)
+        const servicesResponse = await fetch("/api/pages/services");
+        const servicesResult = await servicesResponse.json();
+        if (servicesResult.success && servicesResult.data) {
+          const cmsData = servicesResult.data.content || servicesResult.data;
+          if (Array.isArray(cmsData.services) && cmsData.services.length > 0) {
+            setServiceOfferings(cmsData.services);
+          }
+        }
+
         // Fetch featured projects (type=project, isFeatured=true)
         const projectsResponse = await fetch("/api/videos?public=true&type=project&isFeatured=true");
         const projectsResult = await projectsResponse.json();
@@ -192,12 +305,9 @@ export default function HomePage() {
 
   // Track active section and show/hide back-to-top button
   useEffect(() => {
-    const sections = ["hero", "projects", "showreel", "clients", "excellence", "techstack", "stats", "team"];
+    const sections = ["hero", "projects", "showreel", "services", "clients", "excellence", "stats", "team"];
 
     const handleScroll = () => {
-      // Show back-to-top button after scrolling 500px
-      setShowBackToTop(window.scrollY > 500);
-
       // Determine active section
       const scrollPosition = window.scrollY + 300;
 
@@ -224,9 +334,9 @@ export default function HomePage() {
     { id: "hero", label: "Home", icon: "🏠" },
     { id: "projects", label: "Projects", icon: "🎬" },
     { id: "showreel", label: "Showreel", icon: "🎥" },
+    { id: "services", label: "Services", icon: "🛠️" },
     { id: "clients", label: "Clients", icon: "👥" },
     { id: "excellence", label: "Excellence", icon: "⭐" },
-    { id: "techstack", label: "Tech Stack", icon: "🛠️" },
     { id: "stats", label: "Stats", icon: "📊" },
     { id: "team", label: "Team", icon: "👨‍💼" },
   ];
@@ -239,10 +349,6 @@ export default function HomePage() {
     }
   };
 
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
   const handleOpenVideoModal = (project: VideoProject) => {
     setSelectedVideo(project);
     setIsVideoModalOpen(true);
@@ -250,9 +356,6 @@ export default function HomePage() {
 
   // Excellence features from About page data
   const excellenceFeatures = aboutData.excellence?.featureCards || aboutData.excellence?.cards || [];
-
-  // Tech stack from showcase page data
-  const techStack = showcaseData.techStack || [];
 
   // Stats from showcase page data
   const stats = showcaseData.stats || [];
@@ -303,18 +406,6 @@ export default function HomePage() {
         ))}
       </div>
 
-      {/* Back to Top Button */}
-      <motion.button
-        onClick={scrollToTop}
-        className="fixed bottom-8 right-8 z-40 w-14 h-14 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center text-white shadow-lg shadow-cyan-500/30"
-        initial={{ opacity: 0, scale: 0 }}
-        animate={{ opacity: showBackToTop ? 1 : 0, scale: showBackToTop ? 1 : 0 }}
-        whileHover={{ scale: 1.1, y: -5 }}
-        whileTap={{ scale: 0.9 }}
-      >
-        <ChevronUp size={24} />
-      </motion.button>
-
       {/* Hero Section */}
       <div id="hero">
         <Hero loading={loading} scrollY={scrollY} />
@@ -354,7 +445,7 @@ export default function HomePage() {
           />
         </div>
 
-        <div className="max-w-7xl mx-auto relative z-10">
+        <div className="max-w-[1400px] mx-auto relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -446,6 +537,78 @@ export default function HomePage() {
       </section>
       )}
 
+      {/* Our Services - Comprehensive VFX Services */}
+      <section id="services" className="py-20 md:py-32 px-4 md:px-6 bg-black">
+        <div className="max-w-[1400px] mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
+              <span className="bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent">
+                Comprehensive VFX Services
+              </span>
+            </h2>
+            <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+              End-to-end visual effects solutions for films, games, commercials, and more
+            </p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {serviceOfferings.map((service, index) => (
+              <motion.div
+                key={`service-${index}-${service.title}`}
+                initial={{ opacity: 0, y: 50 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                whileHover={{ y: -10 }}
+                className="group"
+              >
+                <div className="p-8 rounded-3xl bg-gradient-to-br from-zinc-800/50 to-zinc-900/50 backdrop-blur-sm border border-white/10 h-full relative overflow-hidden">
+                  <motion.div
+                    className={`absolute inset-0 bg-gradient-to-r ${service.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300`}
+                  />
+                  <div className="relative z-10">
+                    <motion.div
+                      className="text-6xl mb-6"
+                      animate={{ rotate: [0, 10, -10, 0] }}
+                      transition={{
+                        duration: 3,
+                        repeat: Infinity,
+                        delay: index * 0.2,
+                      }}
+                    >
+                      <DynamicIcon name={service.icon} size={64} />
+                    </motion.div>
+                    <h3
+                      className={`text-2xl font-bold mb-3 bg-gradient-to-r ${service.gradient} bg-clip-text text-transparent`}
+                    >
+                      {service.title}
+                    </h3>
+                    <p className="text-gray-400 mb-6 leading-relaxed">
+                      {service.description}
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {service.features.map((feature) => (
+                        <span
+                          key={feature}
+                          className="px-3 py-1 rounded-full bg-white/5 text-sm text-gray-300 border border-white/10"
+                        >
+                          {feature}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Clients - Auto Running Slider */}
       {sectionsConfig.showClients && (
         <section id="clients" className="py-20 md:py-32 px-4 md:px-6 bg-gradient-to-b from-black via-zinc-950 to-black relative overflow-hidden">
@@ -523,67 +686,6 @@ export default function HomePage() {
                 <p className="text-gray-400 leading-relaxed">
                   {feature.description}
                 </p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-      )}
-
-      {/* Our Tech Stack - From Showcase */}
-      {sectionsConfig.showTechStack && (
-        <section id="techstack" className="py-20 md:py-32 px-4 md:px-6 bg-black">
-        <div className="max-w-7xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-              <span className="bg-gradient-to-r from-cyan-400 via-blue-500 to-green-400 bg-clip-text text-transparent">
-                Our Tech Stack
-              </span>
-            </h2>
-            <p className="text-xl text-gray-400">
-              Powered by industry-leading tools
-            </p>
-          </motion.div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {techStack.map((tech, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, scale: 0.8 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.05 }}
-                whileHover={{ y: -10, scale: 1.05 }}
-                className="relative group"
-              >
-                <div className="p-8 rounded-3xl bg-gradient-to-br from-zinc-800/50 to-zinc-900/50 backdrop-blur-sm border border-white/10 text-center">
-                  <motion.div
-                    className="text-6xl mb-4"
-                    animate={{
-                      rotate: [0, 5, -5, 0],
-                    }}
-                    transition={{
-                      duration: 3,
-                      repeat: Infinity,
-                      delay: i * 0.1,
-                    }}
-                  >
-                    {tech.icon}
-                  </motion.div>
-                  <div
-                    className={`text-sm font-semibold bg-gradient-to-r ${tech.color} bg-clip-text text-transparent`}
-                  >
-                    {tech.name}
-                  </div>
-                  <div
-                    className={`absolute inset-0 rounded-3xl bg-gradient-to-r ${tech.color} opacity-0 group-hover:opacity-10 transition-opacity duration-300 -z-10 blur-2xl`}
-                  />
-                </div>
               </motion.div>
             ))}
           </div>

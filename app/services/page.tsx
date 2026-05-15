@@ -398,7 +398,7 @@ function InteractiveFlowchart({
     <>
       {/* Main Flowchart Structure */}
       <div className="relative max-w-6xl mx-auto pb-32">
-        <div className="relative" style={{ minHeight: `${flowchartNodes.length * 400}px` }}>
+        <div className="relative">
         {/* Connection SVG Lines */}
         <svg
           className="absolute inset-0 w-full h-full pointer-events-none"
