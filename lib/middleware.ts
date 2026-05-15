@@ -37,8 +37,8 @@ export async function authenticate(request: NextRequest): Promise<{
     }
 
     // Check if token exists in database
-    const storedToken = await prisma.token.findUnique({
-      where: { token: accessToken },
+    const storedToken = await prisma.token.findFirst({
+      where: { token: accessToken, type: 'access' },
     });
 
     if (!storedToken || storedToken.type !== 'access') {

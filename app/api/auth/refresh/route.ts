@@ -26,8 +26,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if refresh token exists in database
-    const storedToken = await prisma.token.findUnique({
-      where: { token: refreshToken },
+    const storedToken = await prisma.token.findFirst({
+      where: { token: refreshToken, type: 'refresh' },
       include: { user: true },
     });
 
