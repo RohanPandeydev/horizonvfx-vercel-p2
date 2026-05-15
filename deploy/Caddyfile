@@ -1,0 +1,22 @@
+# Lives on the VPS at /srv/horizonvfx/Caddyfile
+# Caddy handles TLS automatically via Let's Encrypt once DNS points here.
+
+www.horizonvfx.in {
+    redir https://horizonvfx.in{uri} permanent
+}
+
+horizonvfx.in {
+    encode gzip zstd
+
+    # Serve uploaded media directly from the host volume (bypasses Node).
+    handle_path /uploads/* {
+        root * /srv/uploads
+        file_server
+    }
+
+    # Everything else → Next.js standalone server in the `app` container.
+    reverse_proxy app:3000 {
+        header_up X-Forwarded-Proto {scheme}
+        header_up X-Real-IP {remote_host}
+    }
+}

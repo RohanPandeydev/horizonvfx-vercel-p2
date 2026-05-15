@@ -1,0 +1,53 @@
+# Lives on the VPS at /srv/horizonvfx/docker-compose.yml
+# Image is pulled from GHCR; the app source is NOT on the VPS.
+
+services:
+  app:
+    image: ghcr.io/rohanpandeydev/horizonvfx-vercel-p2:latest
+    restart: unless-stopped
+    env_file:
+      - .env.production
+    volumes:
+      - ./uploads:/app/public/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - internal
+
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    env_file:
+      - .env.production
+    volumes:
+      - ./mysql-data:/var/lib/mysql
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./caddy-data:/data
+      - ./caddy-config:/config
+      - ./uploads:/srv/uploads:ro
+    depends_on:
+      - app
+    networks:
+      - internal
+
+networks:
+  internal:
+    driver: bridge
