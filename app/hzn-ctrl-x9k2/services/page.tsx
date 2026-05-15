@@ -1,5 +1,6 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { computeDiff, isEmptyPatch } from "@/lib/merge";
 import { motion } from "framer-motion";
 import {
   Save,
@@ -178,6 +179,9 @@ export default function ServicesPageEditor() {
   const [content, setContent] = useState<ServicesContent>(DEFAULT_CONTENT);
   const [isLoading, setIsLoading] = useState(true);
 
+  const savedContentRef = useRef<typeof content | null>(null);
+  const pageExistsRef = useRef<boolean>(false);
+
   // Load content on mount
   useEffect(() => {
     loadContent();
@@ -189,25 +193,28 @@ export default function ServicesPageEditor() {
       const response = await fetch("/api/admin/pages/services");
       const result = await response.json();
 
-      console.log("API Response:", result);
-
       if (result.success && result.data && result.data.content) {
         const loadedContent = result.data.content;
-
-        // Ensure services is an array
         if (Array.isArray(loadedContent.services)) {
           setContent(loadedContent);
+          savedContentRef.current = loadedContent;
+          pageExistsRef.current = true;
         } else {
           console.warn("Services data is not an array, using default");
           setContent(DEFAULT_CONTENT);
+          savedContentRef.current = null;
+          pageExistsRef.current = false;
         }
       } else {
-        console.log("No content found, using default");
         setContent(DEFAULT_CONTENT);
+        savedContentRef.current = null;
+        pageExistsRef.current = false;
       }
     } catch (error) {
       console.error("Error loading content:", error);
       setContent(DEFAULT_CONTENT);
+      savedContentRef.current = null;
+      pageExistsRef.current = false;
     } finally {
       setIsLoading(false);
     }
@@ -217,20 +224,32 @@ export default function ServicesPageEditor() {
     try {
       setSaveStatus("saving");
 
+      const contentPatch = pageExistsRef.current && savedContentRef.current
+        ? computeDiff(savedContentRef.current, content)
+        : undefined;
+      const body = !pageExistsRef.current
+        ? { slug: "services", title: "Services Page", content, published: true }
+        : isEmptyPatch(contentPatch)
+        ? null
+        : { slug: "services", contentPatch };
+
+      if (body == null) {
+        setSaveStatus("idle");
+        showSuccess("Nothing to save — no changes detected.");
+        return;
+      }
+
       const response = await fetch("/api/admin/pages", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          slug: "services",
-          title: "Services Page",
-          content,
-          published: true,
-        }),
+        body: JSON.stringify(body),
       });
 
       const result = await response.json();
 
       if (result.success) {
+        savedContentRef.current = content;
+        pageExistsRef.current = true;
         setSaveStatus("saved");
         showSuccess("Services page saved successfully!");
         setTimeout(() => setSaveStatus("idle"), 2000);

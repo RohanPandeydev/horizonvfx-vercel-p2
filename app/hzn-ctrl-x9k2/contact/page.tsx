@@ -1,5 +1,6 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { computeDiff, isEmptyPatch } from "@/lib/merge";
 import { motion } from "framer-motion";
 import {
   Save,
@@ -77,6 +78,9 @@ export default function ContactPageEditor() {
   const inputClassSm = "w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black placeholder:text-black";
 
   // Load content on mount
+  const savedContentRef = useRef<typeof content | null>(null);
+  const pageExistsRef = useRef<boolean>(false);
+
   useEffect(() => {
     loadContent();
   }, []);
@@ -89,6 +93,11 @@ export default function ContactPageEditor() {
 
       if (result.success && result.data) {
         setContent(result.data.content);
+        savedContentRef.current = result.data.content;
+        pageExistsRef.current = true;
+      } else {
+        savedContentRef.current = null;
+        pageExistsRef.current = false;
       }
     } catch (error) {
       console.error("Error loading content:", error);
@@ -101,20 +110,32 @@ export default function ContactPageEditor() {
     try {
       setSaveStatus("saving");
 
+      const contentPatch = pageExistsRef.current && savedContentRef.current
+        ? computeDiff(savedContentRef.current, content)
+        : undefined;
+      const body = !pageExistsRef.current
+        ? { slug: "contact", title: "Contact Page", content, published: true }
+        : isEmptyPatch(contentPatch)
+        ? null
+        : { slug: "contact", contentPatch };
+
+      if (body == null) {
+        setSaveStatus("idle");
+        showSuccess("Nothing to save — no changes detected.");
+        return;
+      }
+
       const response = await fetch("/api/admin/pages", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          slug: "contact",
-          title: "Contact Page",
-          content,
-          published: true,
-        }),
+        body: JSON.stringify(body),
       });
 
       const result = await response.json();
 
       if (result.success) {
+        savedContentRef.current = content;
+        pageExistsRef.current = true;
         setSaveStatus("saved");
         showSuccess("Contact page saved successfully!");
         setTimeout(() => setSaveStatus("idle"), 2000);

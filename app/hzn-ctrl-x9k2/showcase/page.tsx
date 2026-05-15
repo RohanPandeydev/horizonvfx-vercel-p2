@@ -1,5 +1,6 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { computeDiff, isEmptyPatch } from "@/lib/merge";
 import { motion } from "framer-motion";
 import {
   Save,
@@ -81,6 +82,9 @@ export default function ShowcasePageEditor() {
   const [content, setContent] = useState<ShowcaseContent>(DEFAULT_CONTENT);
   const [isLoading, setIsLoading] = useState(true);
 
+  const savedContentRef = useRef<typeof content | null>(null);
+  const pageExistsRef = useRef<boolean>(false);
+
   // Load content on mount
   useEffect(() => {
     loadContent();
@@ -94,7 +98,7 @@ export default function ShowcasePageEditor() {
 
       if (result.success && result.data && result.data.content) {
         const cmsData = result.data.content;
-        setContent({
+        const normalized = {
           hero: {
             title: cmsData.hero?.title || DEFAULT_CONTENT.hero.title,
             subtitle: cmsData.hero?.subtitle || DEFAULT_CONTENT.hero.subtitle,
@@ -102,7 +106,13 @@ export default function ShowcasePageEditor() {
           services: Array.isArray(cmsData.services) ? cmsData.services : DEFAULT_CONTENT.services,
           techStack: Array.isArray(cmsData.techStack) ? cmsData.techStack : DEFAULT_CONTENT.techStack,
           industries: Array.isArray(cmsData.industries) ? cmsData.industries : DEFAULT_CONTENT.industries,
-        });
+        };
+        setContent(normalized);
+        savedContentRef.current = normalized;
+        pageExistsRef.current = true;
+      } else {
+        savedContentRef.current = null;
+        pageExistsRef.current = false;
       }
     } catch (error) {
       console.error("Error loading content:", error);
@@ -115,20 +125,32 @@ export default function ShowcasePageEditor() {
     try {
       setSaveStatus("saving");
 
+      const contentPatch = pageExistsRef.current && savedContentRef.current
+        ? computeDiff(savedContentRef.current, content)
+        : undefined;
+      const body = !pageExistsRef.current
+        ? { slug: "showcase", title: "Showcase Page", content, published: true }
+        : isEmptyPatch(contentPatch)
+        ? null
+        : { slug: "showcase", contentPatch };
+
+      if (body == null) {
+        setSaveStatus("idle");
+        showSuccess("Nothing to save — no changes detected.");
+        return;
+      }
+
       const response = await fetch("/api/admin/pages", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          slug: "showcase",
-          title: "Showcase Page",
-          content,
-          published: true,
-        }),
+        body: JSON.stringify(body),
       });
 
       const result = await response.json();
 
       if (result.success) {
+        savedContentRef.current = content;
+        pageExistsRef.current = true;
         setSaveStatus("saved");
         showSuccess("Showcase page saved successfully!");
         setTimeout(() => setSaveStatus("idle"), 2000);

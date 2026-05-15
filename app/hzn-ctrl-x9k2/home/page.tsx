@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import {
   Save,
@@ -18,6 +18,7 @@ import Link from "next/link";
 import { useToast } from "@/lib/toast-context";
 import { getAccessToken } from "@/lib/auth-helper";
 import VideoModal from "@/components/VideoModal";
+import { computeDiff, isEmptyPatch } from "@/lib/merge";
 
 interface ClientLogo {
   url: string;
@@ -93,6 +94,12 @@ export default function HomePageEditor() {
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
   const [uploading, setUploading] = useState<string | null>(null);
 
+  // Snapshots of the last-saved state. Diffed against `content`/`sections` on
+  // save so we only ship the fields the user actually changed.
+  const savedContentRef = useRef<HomePageContent | null>(null);
+  const savedSectionsRef = useRef<HomePageSections | null>(null);
+  const pageExistsRef = useRef<boolean>(false);
+
   // Load content on mount
   useEffect(() => {
     loadContent();
@@ -107,6 +114,12 @@ export default function HomePageEditor() {
 
       if (result.success && result.data && result.data.content) {
         setContent(result.data.content);
+        savedContentRef.current = result.data.content;
+        pageExistsRef.current = true;
+      } else {
+        // No row yet — defaults will be sent in full on first save.
+        savedContentRef.current = null;
+        pageExistsRef.current = false;
       }
     } catch (error) {
       console.error("Error loading content:", error);
@@ -122,6 +135,7 @@ export default function HomePageEditor() {
 
       if (result.success && result.data) {
         setSections(result.data);
+        savedSectionsRef.current = result.data;
       }
     } catch (error) {
       console.error("Error loading sections:", error);
@@ -143,24 +157,72 @@ export default function HomePageEditor() {
     try {
       setSaveStatus("saving");
 
-      // Save both content and sections
-      await Promise.all([
-        fetch("/api/admin/pages", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            slug: "home",
-            title: "Home Page",
-            content,
-            published: true,
-          }),
-        }),
-        fetch("/api/home/config", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(sections),
-        }),
-      ]);
+      // Compute diffs; skip API calls for unchanged data.
+      const contentPatch = pageExistsRef.current && savedContentRef.current
+        ? computeDiff(savedContentRef.current, content)
+        : undefined;
+      const sectionsPatch = savedSectionsRef.current
+        ? computeDiff(savedSectionsRef.current, sections)
+        : undefined;
+
+      const calls: Promise<unknown>[] = [];
+
+      if (!pageExistsRef.current) {
+        // First save for this slug — send full content so the row gets created.
+        calls.push(
+          fetch("/api/admin/pages", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              slug: "home",
+              title: "Home Page",
+              content,
+              published: true,
+            }),
+          })
+        );
+      } else if (!isEmptyPatch(contentPatch)) {
+        calls.push(
+          fetch("/api/admin/pages", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              slug: "home",
+              contentPatch,
+            }),
+          })
+        );
+      }
+
+      if (savedSectionsRef.current == null) {
+        // First sections save — send full payload.
+        calls.push(
+          fetch("/api/home/config", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(sections),
+          })
+        );
+      } else if (!isEmptyPatch(sectionsPatch)) {
+        calls.push(
+          fetch("/api/home/config", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(sectionsPatch),
+          })
+        );
+      }
+
+      if (calls.length === 0) {
+        setSaveStatus("idle");
+        showSuccess("Nothing to save — no changes detected.");
+        return;
+      }
+
+      await Promise.all(calls);
+      savedContentRef.current = content;
+      savedSectionsRef.current = sections;
+      pageExistsRef.current = true;
 
       setSaveStatus("saved");
       showSuccess("Home page saved successfully!");

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import { deepMerge } from '@/lib/merge';
 
 const prisma = new PrismaClient();
 
@@ -37,7 +38,9 @@ export async function GET(
   }
 }
 
-// PUT /api/admin/pages/[slug] - Update a page
+// PUT /api/admin/pages/[slug] - Update a page.
+// Accepts EITHER `content` (full replace) OR `contentPatch` (merged into existing).
+// See app/api/admin/pages/route.ts for details on the patch shape.
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
@@ -45,14 +48,35 @@ export async function PUT(
   try {
     const { slug } = await params;
     const body = await request.json();
-    const { title, content, published } = body;
+    const { title, content, contentPatch, published } = body;
+
+    const existing = await prisma.pageContent.findUnique({ where: { slug } });
+    if (!existing) {
+      return NextResponse.json(
+        { success: false, error: 'Page not found' },
+        { status: 404 }
+      );
+    }
+
+    let nextContent: Record<string, unknown>;
+    if (contentPatch != null) {
+      const existingContent = JSON.parse(existing.content) as Record<string, unknown>;
+      nextContent = deepMerge(existingContent, contentPatch);
+    } else if (content != null) {
+      nextContent = content;
+    } else {
+      return NextResponse.json(
+        { success: false, error: 'Must provide either content or contentPatch' },
+        { status: 400 }
+      );
+    }
 
     const page = await prisma.pageContent.update({
       where: { slug },
       data: {
-        title,
-        content: JSON.stringify(content),
-        published,
+        title: title ?? existing.title,
+        content: JSON.stringify(nextContent),
+        published: published ?? existing.published,
       },
     });
 

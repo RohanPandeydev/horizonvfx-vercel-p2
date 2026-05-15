@@ -1,5 +1,6 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { computeDiff, isEmptyPatch } from "@/lib/merge";
 import { motion } from "framer-motion";
 import {
   Save,
@@ -113,6 +114,9 @@ export default function TeamPageEditor() {
   const [content, setContent] = useState<TeamContent>(DEFAULT_CONTENT);
   const [isLoading, setIsLoading] = useState(true);
 
+  const savedContentRef = useRef<typeof content | null>(null);
+  const pageExistsRef = useRef<boolean>(false);
+
   // Load content on mount
   useEffect(() => {
     loadContent();
@@ -126,6 +130,11 @@ export default function TeamPageEditor() {
 
       if (result.success && result.data) {
         setContent(result.data.content);
+        savedContentRef.current = result.data.content;
+        pageExistsRef.current = true;
+      } else {
+        savedContentRef.current = null;
+        pageExistsRef.current = false;
       }
     } catch (error) {
       console.error("Error loading content:", error);
@@ -138,20 +147,32 @@ export default function TeamPageEditor() {
     try {
       setSaveStatus("saving");
 
+      const contentPatch = pageExistsRef.current && savedContentRef.current
+        ? computeDiff(savedContentRef.current, content)
+        : undefined;
+      const body = !pageExistsRef.current
+        ? { slug: "team", title: "Team Page", content, published: true }
+        : isEmptyPatch(contentPatch)
+        ? null
+        : { slug: "team", contentPatch };
+
+      if (body == null) {
+        setSaveStatus("idle");
+        showSuccess("Nothing to save — no changes detected.");
+        return;
+      }
+
       const response = await fetch("/api/admin/pages", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          slug: "team",
-          title: "Team Page",
-          content,
-          published: true,
-        }),
+        body: JSON.stringify(body),
       });
 
       const result = await response.json();
 
       if (result.success) {
+        savedContentRef.current = content;
+        pageExistsRef.current = true;
         setSaveStatus("saved");
         showSuccess("Team page saved successfully!");
         setTimeout(() => setSaveStatus("idle"), 2000);
