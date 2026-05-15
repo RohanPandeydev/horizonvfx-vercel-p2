@@ -51,8 +51,8 @@ export async function authenticate(request: NextRequest): Promise<{
     // Check if token is expired
     if (storedToken.expiresAt < new Date()) {
       // Delete expired token
-      await prisma.token.delete({
-        where: { token: accessToken },
+      await prisma.token.deleteMany({
+        where: { token: accessToken, type: 'access' },
       });
       return {
         error: 'Token expired',

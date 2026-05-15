@@ -41,8 +41,8 @@ export async function POST(request: NextRequest) {
     // Check if token is expired
     if (storedToken.expiresAt < new Date()) {
       // Delete expired token
-      await prisma.token.delete({
-        where: { token: refreshToken },
+      await prisma.token.deleteMany({
+        where: { token: refreshToken, type: 'refresh' },
       });
       return NextResponse.json(
         { error: 'Refresh token expired' },
@@ -72,8 +72,8 @@ export async function POST(request: NextRequest) {
     });
 
     // Update refresh token (delete old, create new)
-    await prisma.token.delete({
-      where: { token: refreshToken },
+    await prisma.token.deleteMany({
+      where: { token: refreshToken, type: 'refresh' },
     });
 
     await prisma.token.create({
