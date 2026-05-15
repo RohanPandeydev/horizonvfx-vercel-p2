@@ -42,7 +42,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma/client ./node_modules/@prisma/client
+# Whole @prisma scope (client + engines + internals) so the prisma CLI can
+# run `db push` and `migrate deploy` from inside the runtime container.
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/prisma ./node_modules/prisma
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/tsx ./node_modules/tsx
 USER nextjs
