@@ -62,14 +62,15 @@ jobs:
           mkdir -p ~/.ssh
           printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          # Strip any whitespace from secrets (covers trailing-newline copy-paste)
           host=$(printf '%s' "$VPS_HOST" | tr -d '[:space:]')
           user=$(printf '%s' "$VPS_USER" | tr -d '[:space:]')
-          ssh-keyscan -H "$host" >> ~/.ssh/known_hosts 2>/dev/null
-          scp -i ~/.ssh/deploy_key \
+          echo "scp target: ${user}@${host}:/srv/horizonvfx/"
+          scp -v -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+            -o ConnectTimeout=15 -o ServerAliveInterval=10 \
+            -i ~/.ssh/deploy_key \
             deploy/docker-compose.yml \
             deploy/Caddyfile \
-            "${user}@${host}:/srv/horizonvfx/"
+            "${user}@${host}:/srv/horizonvfx/" 2>&1 | tail -40
 
       - name: Pull image, restart services, run prisma db push
         uses: appleboy/ssh-action@v1.0.3
