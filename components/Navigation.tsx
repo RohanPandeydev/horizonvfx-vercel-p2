@@ -49,7 +49,7 @@ export default function Navigation({ loading }: NavigationProps) {
             whileTap={{ scale: 0.95 }}
             className="cursor-pointer"
           >
-            <img src="/logo.png" alt="HorizonVFX" className="h-8 md:h-10 lg:h-12 w-auto" />
+            <img src="/logo.png" alt="HorizonVFX" className="h-16 md:h-20 lg:h-24 w-auto" />
           </motion.div>
         </Link>
         <div className="hidden md:flex items-center gap-6 lg:gap-8">
