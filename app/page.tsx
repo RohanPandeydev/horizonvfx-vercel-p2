@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useScroll, useInView, useTransform } from "framer-motion";
 import { motion } from "framer-motion";
-import { Play, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import Hero from "@/components/Hero";
 import ServicesMarquee from "@/components/ServicesMarquee";
@@ -880,27 +880,17 @@ function ParallaxProjectCard({
         }}
       >
         {/* Image with parallax effect */}
-        <div className="aspect-video overflow-hidden relative">
+        <div className="aspect-video overflow-hidden relative bg-black">
           <motion.img
             src={project.thumbnailUrl}
             alt={project.title}
-            className="w-full h-full object-cover"
-            animate={isHovered ? { scale: 1.1 } : { scale: 1 }}
+            className="w-full h-full object-contain"
+            animate={isHovered ? { scale: 1.05 } : { scale: 1 }}
             transition={{ duration: 0.5 }}
           />
           <motion.div
-            className={`absolute inset-0 bg-gradient-to-t ${project.gradient} opacity-0 group-hover:opacity-60 transition-opacity duration-500`}
+            className={`absolute inset-0 bg-gradient-to-t ${project.gradient} opacity-0 group-hover:opacity-60 transition-opacity duration-500 pointer-events-none`}
           />
-          <motion.div
-            className="absolute inset-0 flex items-center justify-center"
-            initial={{ scale: 0 }}
-            animate={isHovered ? { scale: 1 } : { scale: 0 }}
-            transition={{ duration: 0.3, delay: 0.1 }}
-          >
-            <div className="w-20 h-20 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border-2 border-white/30">
-              <Play className="text-white" size={32} fill="white" />
-            </div>
-          </motion.div>
         </div>
 
         {/* Content */}
